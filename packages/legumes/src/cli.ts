@@ -29,7 +29,7 @@ import {
 import fs from 'fs'
 import path from 'path'
 import { Drawing, round_polylines } from './drawing'
-import { Score_itf } from './common'
+import { Score_itf } from './type'
 
 let build_date = 'sed-auto-replace-date-yyyy-mm-dd'
 

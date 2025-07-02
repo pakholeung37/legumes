@@ -1,5 +1,4 @@
-export type Key_signature = [number, number]
-export type Time_signature = [number, number]
+import { Note_itf, Rest_itf, Staff_itf } from './type'
 
 export const NOTE_LENGTH: Record<string, number> = {
   WHOLE: 64,
@@ -74,97 +73,6 @@ export const BRACKET: Record<string, number> = {
   NONE: 0,
   BRACE: 1,
   BRACKET: 2,
-}
-
-export interface Tuplet_itf {
-  id: string
-  display_duration: number
-  label: number
-}
-
-export interface Note_itf {
-  id?: string
-  begin: number
-  duration: number
-  modifier: boolean
-  accidental: number | null
-  name: string
-  octave: number
-  voice: number
-  staff_pos: number
-  prev_in_chord: number | null
-  next_in_chord: number | null
-  stem_dir: number
-  tuplet: Tuplet_itf | null
-  lyric?: string
-  articulation?: number
-  cue?: Cue_itf
-}
-
-export interface Cue_itf {
-  position: number
-  data: string
-}
-
-export interface Rest_itf {
-  begin: number
-  duration: number
-  voice: number
-  tuplet: Tuplet_itf | null
-  cue?: Cue_itf
-}
-
-export interface Measure_itf {
-  duration: number
-  barline: number
-  staves: Staff_itf[]
-}
-
-export interface Staff_itf {
-  time_signature: Time_signature
-  key_signature: Key_signature
-  clef: number
-  voices: number
-  rests: Rest_itf[]
-  notes: Note_itf[]
-  grace: Measure_itf[]
-  beams: number[][]
-}
-
-export interface Slur_itf {
-  left: string
-  right: string
-  is_tie: boolean
-}
-
-export interface Cresc_itf {
-  left: string
-  right: string
-  val_left: number
-  val_right: number
-}
-
-export interface Tempo_itf {
-  text?: string
-  duration?: number
-  modifier?: boolean
-  bpm?: number
-}
-
-export interface Instrument_group_itf {
-  bracket: number
-  names: string[]
-  connect_barlines: boolean[]
-}
-
-export interface Score_itf {
-  title: string[]
-  composer: string[]
-  tempo?: Tempo_itf
-  instruments: Instrument_group_itf[]
-  slurs: Slur_itf[]
-  measures: Measure_itf[]
-  crescs: Cresc_itf[]
 }
 
 export function note_name_to_staff_pos(name: string, clef: number) {

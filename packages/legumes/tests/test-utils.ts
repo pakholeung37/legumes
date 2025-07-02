@@ -7,8 +7,8 @@ import {
   render_score,
   export_svg,
   parse_txt,
-  Score,
 } from '../src/main'
+import { Score } from '../src/type'
 
 export function testMidiFile(file: string) {
   const p = path.join(__dirname, 'midi', file)

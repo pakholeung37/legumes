@@ -1,15 +1,16 @@
 import { Midi_file, Midi_track, Midi_event, parse_midi } from './midifmt'
 import {
-  ACCIDENTAL,
-  ORDER_OF_ACCIDENTALS,
-  CLEF,
+  Score_itf,
   Time_signature,
   Key_signature,
   Note_itf,
   Rest_itf,
-  Slur_itf,
   Measure_itf,
-  Score_itf,
+} from './type'
+import {
+  ACCIDENTAL,
+  ORDER_OF_ACCIDENTALS,
+  CLEF,
   get_median_staff_pos,
   note_name_to_staff_pos,
   get_note_name_accidental,

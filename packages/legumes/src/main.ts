@@ -7,13 +7,6 @@ import {
   ARTICULATION,
   BARLINE,
   BRACKET,
-  Note_itf,
-  Staff_itf,
-  Rest_itf,
-  Measure_itf,
-  Score_itf,
-  Cresc_itf,
-  Tempo_itf,
   note_name_to_staff_pos,
   get_median_staff_pos,
 } from './common'
@@ -24,6 +17,20 @@ import {
   hf_drawing_polylines,
 } from './drawing'
 import { FONT, get_text_width } from './hershey'
+import {
+  Measure,
+  Note,
+  Note_register,
+  Pack,
+  Rest,
+  Score,
+  Slot,
+  Staff,
+  Note_itf,
+  Score_itf,
+  Cresc_itf,
+  Tempo_itf,
+} from './type'
 
 export * from './common'
 export * from './drawing'
@@ -32,7 +39,7 @@ export * from './txtfmt'
 export * from './fx'
 export * from './hershey'
 export * from './midicompile'
-
+export * from './type'
 export const CONFIG: Record<string, any> = {
   PAGE_WIDTH: 1200,
   LINE_HEIGHT: 9,
@@ -88,77 +95,6 @@ const NOTE_LENGTH_MODIFIER = 1.5
 const FONT_INHERENT_HEIGHT = 24
 function CONTENT_WIDTH() {
   return CONFIG.PAGE_WIDTH - CONFIG.PAGE_MARGIN_X * 2
-}
-
-interface Note extends Note_itf {
-  stem_len: number
-  flag_count: number
-  twisted: boolean
-  beamed: boolean
-  articulation_pos?: [number, number]
-  slot_shift: number
-  modifier_shift: number
-}
-
-interface Beam extends Array<number> {
-  m: number
-  b: number
-}
-
-interface Staff extends Staff_itf {
-  notes: Note[]
-  rests: Rest[]
-  grace: Measure[]
-  beams: Beam[]
-  coords: {
-    x: number
-    y: number
-    w: number
-    local_y_min: number
-    local_y_max: number
-    col: number
-    row: number
-  }
-  flags: {
-    need_keysig: { accidental: number; count: number } | null
-    need_timesig: boolean
-    need_clef: boolean
-    need_lyric: boolean
-    need_cue: boolean
-  }
-}
-
-interface Measure extends Measure_itf {
-  staves: Staff[]
-  slots: Slot[]
-  is_first_col: boolean
-  is_last_col: boolean
-  pad: { left: number; right: number; inter: number }
-}
-
-export interface Rest extends Rest_itf {
-  staff_pos: number
-}
-
-export interface Score extends Score_itf {
-  indent: number
-  first_col_measure_indices: number[]
-  measures: Measure[]
-  slurred_ids: Record<string, boolean>
-}
-
-export interface Note_register {
-  note: Note
-  staff_idx: number
-  measure: Measure
-  row: number
-  col: number
-  chord_head_x: number
-  chord_head_y: number
-  head_x: number
-  head_y: number
-  tail_x: number
-  tail_y: number
 }
 
 let id_registry: Record<string, Note_register> = {}
@@ -672,29 +608,6 @@ function least_sq_regress(pts: { x: number; y: number }[]): [number, number] {
   let m = (n * sum_xy - sum_x * sum_y) / denom
   let b = (sum_y - m * sum_x) / n
   return [m, b]
-}
-
-interface Slot {
-  acc_pack: Pack
-  mid_pack: Pack
-  mid_note: number
-  left_grace: number
-  left_squiggle: number
-  left_deco: number
-  left_note: number
-  right_note: number
-  right_deco: number
-  right_spacing: number
-}
-
-interface Pack_interval {
-  x: number
-  top: number
-  bottom: number
-  idx: number
-}
-interface Pack {
-  intervals: Pack_interval[][]
 }
 
 function interval_overlap(

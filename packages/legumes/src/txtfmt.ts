@@ -1,4 +1,17 @@
 import {
+  CLEF,
+  ACCIDENTAL,
+  ORDER_OF_ACCIDENTALS,
+  NOTE_LENGTH,
+  note_name_to_staff_pos,
+  chord_and_beam_staff,
+  short_id,
+  ARTICULATION,
+  BARLINE,
+  BRACKET,
+} from './common'
+import { CONFIG } from './main'
+import {
   Score_itf,
   Staff_itf,
   Measure_itf,
@@ -7,21 +20,8 @@ import {
   Slur_itf,
   Cresc_itf,
   Time_signature,
-  CLEF,
-  ACCIDENTAL,
-  ORDER_OF_ACCIDENTALS,
-  NOTE_LENGTH,
-  note_name_to_staff_pos,
-  get_median_staff_pos,
-  chord_and_beam_staff,
-  short_id,
   Tuplet_itf,
-  ARTICULATION,
-  BARLINE,
-  BRACKET,
-} from './common'
-
-import { CONFIG } from './main'
+} from './type'
 
 const ARTICULATION_SYMBOL_LOOKUP: Record<string, number> = {
   '>': ARTICULATION.ACCENT,
