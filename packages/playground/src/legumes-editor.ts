@@ -242,8 +242,7 @@ export class LegumesEditor {
     // Set configuration
     this.legumes.CONFIG.PAGE_WIDTH = window.innerWidth * 0.7 - 20
     this.legumes.CONFIG.INTER_NOTE_WIDTH = 0
-
-    const score = this.legumes.parse_txt(this.codeMirror.getValue())
+    const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     ;(window as any).score = score
     const drawing = this.legumes.render_score(score as any)
@@ -282,15 +281,17 @@ export class LegumesEditor {
       for (let j = 0; j < midiFile.tracks[i].events.length; j++) {
         const e = midiFile.tracks[i].events[j]
         T += e.delta_time
-
+        // @ts-expect-error
         const id = `${i}-${e.data.key}`
         if (e.type === 'NOTE_ON') {
           if (!this.synths[id] && (window as any).Tone) {
             this.synths[id] = new (window as any).Tone.Synth().toDestination()
+            // @ts-expect-error
             this.synths[id].volume.value = (64 - e.data.key) / 3
           }
           if (this.synths[id]) {
             this.synths[id].triggerAttack(
+              // @ts-expect-error
               nameMidiKey[e.data.key],
               now + T * spd + (epsilon += dEpsilon),
             )
@@ -364,7 +365,7 @@ export class LegumesEditor {
     const score = this.legumes.parse_txt(this.codeMirror.getValue())
     const midiFile = this.legumes.score_to_midi(score)
     const bytes = this.legumes.export_midi(midiFile)
-    downloadBin('score.mid', bytes)
+    downloadBin('score.mid', new Uint8Array(bytes))
   }
 
   public importTxt() {
