@@ -2081,6 +2081,1344 @@ function export_gif(dr, { scale = 1, iter = 2 } = {}) {
   return bytes;
 }
 
+// src/midifmt.ts
+var META_EVENT = {
+  0: ["SEQUENCE_NUMBER", "value"],
+  1: ["TEXT_EVENT", "text"],
+  2: ["COPYRIGHT_NOTICE", "text"],
+  3: ["SEQUENCE_OR_TRACK_NAME", "text"],
+  4: ["INSTRUMENT_NAME", "text"],
+  5: ["LYRIC", "text"],
+  6: ["MARKER", "text"],
+  7: ["CUE_POINT", "text"],
+  32: ["CHANNEL_PREFIX", "value"],
+  33: ["PORT", "value"],
+  47: ["END_OF_TRACK"],
+  84: ["SMPTE_OFFSET", "hour", "min", "sec", "frame", "frac_frame"],
+  81: ["SET_TEMPO", "data"],
+  88: [
+    "TIME_SIGNATURE",
+    "numerator",
+    "denominator_exp",
+    "clocks_per_metronome_click",
+    "notated_32nd_per_quarter_note"
+  ],
+  89: ["KEY_SIGNATURE", "num_sharps_or_flats", "is_minor"],
+  127: ["SEQUENCER_SPECIFIC_EVENT", "data"]
+};
+var MIDI_EVENT = {
+  8: ["NOTE_OFF", "key", "velocity"],
+  9: ["NOTE_ON", "key", "velocity"],
+  10: ["POLYPHONIC_KEY_PRESSURE", "key", "pressure"],
+  11: ["CONTROL_CHANGE", "controller", "value"],
+  12: ["PROGRAM_CHANGE", "value"],
+  13: ["CHANNEL_PRESSURE", "value"],
+  14: ["PITCH_WHEEL_CHANGE", "lsb", "msb"]
+};
+var SYSTEM_EVENT = {
+  2: ["SONG_POSITION_POINTER", "lsb", "msb"],
+  3: ["SONG_SELECT", "value"],
+  6: ["TUNE_REQUEST"],
+  7: ["END_OF_EXCLUSIVE"],
+  8: ["TIMING_CLOCK"],
+  10: ["START"],
+  11: ["CONTINUE"],
+  12: ["STOP"],
+  14: ["ACTIVE_SENSING"],
+  15: ["RESET"]
+};
+var META_EVENT_LOOKUP = Object.fromEntries(
+  Object.entries(META_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
+);
+var MIDI_EVENT_LOOKUP = Object.fromEntries(
+  Object.entries(MIDI_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
+);
+var SYSTEM_EVENT_LOOKUP = Object.fromEntries(
+  Object.entries(SYSTEM_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
+);
+function parse_midi(bytes) {
+  var _a2, _b, _c;
+  let ptr = 0;
+  function read_str(n) {
+    let s = String.fromCharCode(...bytes.slice(ptr, ptr + n));
+    ptr += n;
+    return s;
+  }
+  function read_u8() {
+    return bytes[ptr++];
+  }
+  function read_u32() {
+    let s = (bytes[ptr] << 24 | bytes[ptr + 1] << 16 | bytes[ptr + 2] << 8 | bytes[ptr + 3]) >>> 0;
+    ptr += 4;
+    return s;
+  }
+  function read_u16() {
+    let s = bytes[ptr] << 8 | bytes[ptr + 1];
+    ptr += 2;
+    return s;
+  }
+  function read_u(n_bytes) {
+    let s = 0;
+    for (let i2 = 0; i2 < n_bytes; i2++) {
+      s = (s << 8 | bytes[ptr]) >>> 0;
+      ptr++;
+    }
+    return s;
+  }
+  function read_vlen() {
+    let is_last = false;
+    let s = 0;
+    do {
+      let n = bytes[ptr] & 127;
+      s = (s << 7 | n) >>> 0;
+      is_last = !(bytes[ptr] >> 7 & 1);
+      ptr++;
+    } while (!is_last);
+    return s;
+  }
+  let magic = read_str(4);
+  let hd_len = read_u32();
+  let hd_fmt = read_u16();
+  let hd_ntk = read_u16();
+  let div_fmt = bytes[ptr] >> 7 & 1;
+  let ot = {};
+  if (div_fmt) {
+    let x = read_u16() & 32767;
+    ot.negative_SMPTE_format = -((~(x >> 8) & 127) + 1);
+    ot.ticks_per_frame = x & 255;
+  } else {
+    ot.ticks_per_quarter_note = read_u16() & 32767;
+  }
+  let o = __spreadProps(__spreadValues({
+    magic,
+    num_tracks: hd_ntk,
+    format: hd_fmt,
+    time_format: div_fmt ? "TIME_CODE" : "METRIC"
+  }, ot), {
+    tracks: []
+  });
+  while (read_str(4) == "MTrk") {
+    let track_len = read_u32();
+    let p0 = ptr;
+    let trk = { events: [] };
+    while (ptr < p0 + track_len) {
+      let dt = read_vlen();
+      let e = { type: "UNDEFINED", delta_time: dt, data: {} };
+      if (bytes[ptr] == 255) {
+        let tmpl = (_a2 = META_EVENT[bytes[++ptr]]) != null ? _a2 : ["UNDEFINED"];
+        ptr++;
+        let len = read_vlen();
+        e.type = tmpl[0];
+        let chunk = ~~(len / (tmpl.length - 1));
+        for (let i2 = 1; i2 < tmpl.length; i2++) {
+          if (tmpl[i2] == "text") {
+            e.data["text"] = read_str(chunk);
+          } else if (tmpl[i2] == "data") {
+            e.data = bytes.slice(ptr, ptr + chunk);
+            ptr += chunk;
+          } else {
+            e.data[tmpl[i2]] = read_u(chunk);
+            if (tmpl[i2] == "num_sharps_or_flats") {
+              let x = e.data[tmpl[i2]];
+              if (x > 127) {
+                x = -((~x & 255) + 1);
+              }
+              e.data[tmpl[i2]] = x;
+            }
+          }
+        }
+      } else if (bytes[ptr] == 240 || bytes[ptr] == 247) {
+        e.type = "SYSEX";
+        e.data = [];
+        do {
+          e.data.push(bytes[ptr++]);
+        } while (bytes[ptr] != 240 && bytes[ptr] != 247);
+        e.data.push(bytes[ptr++]);
+      } else {
+        let type = bytes[ptr] >> 4 & 15;
+        let chan = bytes[ptr] & 15;
+        ptr++;
+        let tmpl = ["UNDEFINED"];
+        if (type == 15) {
+          tmpl = (_b = SYSTEM_EVENT[chan]) != null ? _b : tmpl;
+        } else {
+          tmpl = (_c = MIDI_EVENT[type]) != null ? _c : tmpl;
+        }
+        if (tmpl[0] == "UNDEFINED" && trk.events.length) {
+          ptr--;
+          chan = trk.events[trk.events.length - 1].data["channel"];
+          tmpl = Object.values(MIDI_EVENT).find(
+            (x) => x[0] == trk.events[trk.events.length - 1].type
+          );
+        }
+        e.type = tmpl[0];
+        for (let i2 = 1; i2 < tmpl.length; i2++) {
+          e.data[tmpl[i2]] = read_u8();
+        }
+        e.data["channel"] = chan;
+      }
+      trk.events.push(e);
+    }
+    o.tracks.push(trk);
+  }
+  return o;
+}
+function export_midi(pattern) {
+  let bytes = [];
+  function write_str(s) {
+    for (let i2 = 0; i2 < s.length; i2++) {
+      bytes.push(s.charCodeAt(i2));
+    }
+  }
+  function write_u8(n) {
+    return bytes.push(n);
+  }
+  function write_u32(n) {
+    bytes.push(n >> 24 & 255);
+    bytes.push(n >> 16 & 255);
+    bytes.push(n >> 8 & 255);
+    bytes.push(n & 255);
+  }
+  function write_u16(n) {
+    bytes.push(n >> 8 & 255);
+    bytes.push(n & 255);
+  }
+  function write_u(n, n_bytes) {
+    for (let i2 = 0; i2 < n_bytes; i2++) {
+      bytes.push(n >> (n_bytes - i2 - 1 << 3) & 255);
+    }
+  }
+  function write_vlen(n) {
+    let b = [];
+    while (n > 0) {
+      b.push(n & 127);
+      n = n >>> 7;
+    }
+    if (!b.length) b.push(0);
+    b.reverse();
+    for (let i2 = 0; i2 < b.length - 1; i2++) {
+      b[i2] |= 128;
+    }
+    bytes.push(...b);
+  }
+  write_str(pattern.magic);
+  write_u32(6);
+  write_u16(1);
+  write_u16(pattern.num_tracks);
+  if (pattern.time_format == "METRIC") {
+    write_u16(pattern.ticks_per_quarter_note);
+  } else {
+    write_u16(
+      pattern.ticks_per_frame | ~(-pattern.negative_SMPTE_format - 1) << 8
+    );
+  }
+  for (let i2 = 0; i2 < pattern.tracks.length; i2++) {
+    write_str("MTrk");
+    let len_pos = bytes.length;
+    bytes.push(0, 0, 0, 0);
+    for (let j = 0; j < pattern.tracks[i2].events.length; j++) {
+      let e = pattern.tracks[i2].events[j];
+      write_vlen(e.delta_time);
+      if (META_EVENT_LOOKUP[e.type]) {
+        let k = META_EVENT_LOOKUP[e.type][0];
+        write_u8(255);
+        write_u8(Number(k));
+        if (META_EVENT[k][1] == "text") {
+          write_vlen(e.data["text"].length);
+          write_str(e.data["text"]);
+        } else if (META_EVENT[k][1] == "value") {
+          if (e.type == "SEQUENCE_NUMBER") {
+            write_u8(2);
+            write_u16(e.data["value"]);
+          } else {
+            write_u8(1);
+            write_u8(e.data["value"]);
+          }
+        } else if (META_EVENT[k][1] == "data") {
+          write_vlen(e.data.length);
+          bytes.push(...e.data);
+        } else {
+          write_vlen(META_EVENT[k].length - 1);
+          for (let j2 = 1; j2 < META_EVENT[k].length; j2++) {
+            let x = e.data[META_EVENT[k][j2]];
+            if (META_EVENT[k][j2] == "num_sharps_or_flats" && x < 0) {
+              x = (~-x & 255) + 1;
+            }
+            bytes.push(x);
+          }
+        }
+      } else if (MIDI_EVENT_LOOKUP[e.type]) {
+        let k = Number(MIDI_EVENT_LOOKUP[e.type][0]);
+        bytes.push(k << 4 | e.data["channel"]);
+        for (let j2 = 1; j2 < MIDI_EVENT[k].length; j2++) {
+          write_u8(e.data[MIDI_EVENT[k][j2]]);
+        }
+      } else if (SYSTEM_EVENT_LOOKUP[e.type]) {
+        let k = Number(SYSTEM_EVENT_LOOKUP[e.type][0]);
+        bytes.push(15 << 4 | k);
+        for (let j2 = 1; j2 < SYSTEM_EVENT[k].length; j2++) {
+          write_u8(e.data[SYSTEM_EVENT[k][j2]]);
+        }
+      } else {
+        for (let j2 = 1; j2 < e.data.length; j2++) {
+          write_u8(e.data[j2]);
+        }
+      }
+    }
+    let n = bytes.length - len_pos - 4;
+    bytes[len_pos] = n >> 24 & 255;
+    bytes[len_pos + 1] = n >> 16 & 255;
+    bytes[len_pos + 2] = n >> 8 & 255;
+    bytes[len_pos + 3] = n & 255;
+  }
+  return bytes;
+}
+
+// src/txtfmt.ts
+var ARTICULATION_SYMBOL_LOOKUP = {
+  ">": ARTICULATION.ACCENT,
+  "^": ARTICULATION.MARCATO,
+  ".": ARTICULATION.STACCATO,
+  "-": ARTICULATION.TENUTO,
+  ",": ARTICULATION.SPICCATO,
+  "?": ARTICULATION.FERMATA,
+  "+": ARTICULATION.TREMBLEMENT,
+  t: ARTICULATION.TRILL,
+  o: ARTICULATION.FLAGEOLET,
+  m: ARTICULATION.MORDENT,
+  s: ARTICULATION.TURN,
+  v: ARTICULATION.UP_BOW,
+  "{": ARTICULATION.ARPEGGIATED
+};
+var ARTICULATION_SYMBOL = Object.fromEntries(
+  Object.entries(ARTICULATION_SYMBOL_LOOKUP).map((x) => [x[1], x[0]])
+);
+function parse_txt(txt) {
+  txt = txt.replace(/[\n\r\t]/g, " ");
+  let swap_sp = "\uFFFF";
+  let swap_sp_re = new RegExp(swap_sp, "g");
+  let swap_qt = "\uFFFE";
+  let swap_qt_re = new RegExp(swap_qt, "g");
+  txt = txt.replace(/\\'/g, swap_qt);
+  txt = txt.split("'").map((x, i3) => i3 % 2 ? x.replace(/ /g, swap_sp) : x).join("'");
+  txt = txt.split(";").filter((_, i3) => !(i3 % 2)).join(" ");
+  let words = txt.split(" ").filter((x) => x.length).map((x) => x.replace(swap_sp_re, " ").replace(swap_qt_re, "'"));
+  let score2 = {
+    title: [],
+    instruments: [],
+    composer: [],
+    slurs: [],
+    measures: [],
+    crescs: []
+  };
+  let measure;
+  let staff;
+  let note;
+  let rest;
+  let slur;
+  let cresc;
+  let i2 = 0;
+  let state = [];
+  let begin = 0;
+  let voice = 0;
+  let begin0 = 0;
+  let rest_hidden = false;
+  let tup_state = [];
+  function curr_state(s) {
+    return state[state.length - 1] == s;
+  }
+  function pop_short_state() {
+    let curr = state[state.length - 1];
+    if (curr) {
+      if (curr == "note") {
+        state.pop();
+        if (note.tuplet && note.tuplet.display_duration === null) {
+          note.tuplet.display_duration = note.duration;
+          note.duration = Math.max(
+            1,
+            ~~(note.duration * tup_state[tup_state.length - 1].mul)
+          );
+        }
+        if (note.tuplet) tup_state[tup_state.length - 1].members.push(note);
+        if (curr_state("grace") || state.includes("grace")) {
+          if (!staff.grace[begin0]) {
+            staff.grace[begin0] = {
+              duration: 0,
+              barline: BARLINE.NONE,
+              staves: [
+                {
+                  clef: staff.clef,
+                  time_signature: [1, 1],
+                  key_signature: staff.key_signature,
+                  notes: [],
+                  grace: [],
+                  rests: [],
+                  voices: 1,
+                  beams: []
+                }
+              ]
+            };
+          }
+          staff.grace[begin0].staves[0].notes.push(note);
+        } else {
+          staff.notes.push(note);
+        }
+        measure.duration = Math.max(measure.duration, begin + note.duration);
+        if (!curr_state("chord")) {
+          begin += note.duration;
+        }
+      } else if (curr == "rest") {
+        state.pop();
+        if (rest.tuplet && rest.tuplet.display_duration === null) {
+          rest.tuplet.display_duration = rest.duration;
+          rest.duration = Math.max(
+            1,
+            ~~(rest.duration * tup_state[tup_state.length - 1].mul)
+          );
+        }
+        if (rest.tuplet && !rest_hidden)
+          tup_state[tup_state.length - 1].members.push(rest);
+        measure.duration = Math.max(measure.duration, begin + rest.duration);
+        begin += rest.duration;
+        if (!rest_hidden) staff.rests.push(rest);
+      } else if (curr == "title" || curr == "composer" || curr == "instruments" || curr == "tempo") {
+        state.pop();
+      } else if (curr == "slur") {
+        state.pop();
+        score2.slurs.push(slur);
+      } else if (curr == "cresc") {
+        state.pop();
+        score2.crescs.push(cresc);
+      }
+    }
+  }
+  function switch_state(s) {
+    pop_short_state();
+    state.push(s);
+  }
+  function parse_dur(x) {
+    if (x[x.length - 1] == ".") {
+      return [96 / Number(x.slice(0, -1)), true];
+    } else {
+      return [64 / Number(x), false];
+    }
+  }
+  while (i2 < words.length) {
+    let x = words[i2];
+    if (x == "end") {
+      pop_short_state();
+      if (curr_state("staff")) {
+        compile_staff(staff);
+        measure.staves.push(staff);
+      } else if (curr_state("measure")) {
+        score2.measures.push(measure);
+      } else if (curr_state("chord")) {
+        if (state.includes("grace")) {
+          begin += staff.grace[begin0].staves[0].notes[staff.grace[begin0].staves[0].notes.length - 1].duration;
+        } else {
+          begin += staff.notes[staff.notes.length - 1].duration;
+        }
+      } else if (curr_state("voice")) {
+        voice++;
+        begin = 0;
+      } else if (curr_state("grace")) {
+        staff.grace[begin0].duration = Math.max(
+          staff.grace[begin0].duration,
+          begin
+        );
+        compile_staff(staff.grace[begin0].staves[0], -1);
+        begin = begin0;
+      } else if (curr_state("tuplet")) {
+        let tup = tup_state.pop();
+        let sum = tup.members[tup.members.length - 1].begin - tup.begin + tup.members[tup.members.length - 1].duration;
+        let remain = tup.dur - sum;
+        for (let i3 = tup.members.length - 1; i3 >= 0; i3--) {
+          if (tup.members[i3].begin == tup.members[tup.members.length - 1].begin) {
+            tup.members[i3].duration += remain;
+          } else {
+            break;
+          }
+        }
+        begin = tup.begin + tup.dur;
+      }
+      state.pop();
+    } else if (x == "title") {
+      switch_state("title");
+    } else if (x == "composer") {
+      switch_state("composer");
+    } else if (x == "instruments") {
+      switch_state("instruments");
+    } else if (x == "tempo") {
+      switch_state("tempo");
+    } else if (x == "measure") {
+      switch_state("measure");
+      measure = {
+        duration: 0,
+        barline: BARLINE.SINGLE,
+        staves: []
+      };
+    } else if (x == "staff") {
+      switch_state("staff");
+      staff = {
+        clef: CLEF.TREBLE,
+        time_signature: [4, 4],
+        key_signature: [0, 0],
+        notes: [],
+        grace: [],
+        rests: [],
+        voices: 1,
+        beams: []
+      };
+      if (score2.measures[score2.measures.length - 1]) {
+        if (score2.measures[score2.measures.length - 1].staves[measure.staves.length]) {
+          let prev = score2.measures[score2.measures.length - 1].staves[measure.staves.length];
+          staff.time_signature[0] = prev.time_signature[0];
+          staff.time_signature[1] = prev.time_signature[1];
+          staff.key_signature[0] = prev.key_signature[0];
+          staff.key_signature[1] = prev.key_signature[1];
+          staff.clef = prev.clef;
+        }
+      }
+      begin = 0;
+      voice = 0;
+    } else if (x == "note") {
+      switch_state("note");
+      note = {
+        begin: null,
+        duration: null,
+        accidental: null,
+        modifier: false,
+        octave: null,
+        name: null,
+        voice: null,
+        staff_pos: null,
+        stem_dir: null,
+        prev_in_chord: null,
+        next_in_chord: null,
+        tuplet: null
+      };
+      if (state[state.length - 2] == "grace" && staff.grace[begin0] && staff.grace[begin0].staves[0].notes.length) {
+        let notes = staff.grace[begin0].staves[0].notes;
+        if (notes[notes.length - 1]) {
+          Object.assign(note, notes[notes.length - 1]);
+        }
+      } else {
+        if (staff.notes[staff.notes.length - 1]) {
+          Object.assign(note, staff.notes[staff.notes.length - 1]);
+        }
+      }
+      note.begin = begin;
+      note.accidental = null;
+      note.voice = voice;
+      if (note.id) {
+        delete note.id;
+      }
+      if (note.lyric) {
+        delete note.lyric;
+      }
+      if (note.articulation) {
+        delete note.articulation;
+      }
+      if (note.cue) {
+        delete note.cue;
+      }
+      if (state[state.length - 2] != "grace") {
+        let tup = tup_state[tup_state.length - 1];
+        if (note.tuplet && tup) {
+          if (note.tuplet.id != tup.id) {
+            note.tuplet = {
+              id: tup.id,
+              display_duration: null,
+              label: tup.num
+            };
+          }
+        } else if (tup && !note.tuplet) {
+          note.tuplet = { id: tup.id, display_duration: null, label: tup.num };
+        } else if (!tup && note.tuplet) {
+          note.tuplet = null;
+        }
+      } else {
+        note.tuplet = null;
+      }
+    } else if (x == "rest") {
+      switch_state("rest");
+      rest = {
+        begin: null,
+        duration: null,
+        voice: null,
+        tuplet: null
+      };
+      rest_hidden = false;
+      if (staff.rests[staff.rests.length - 1]) {
+        Object.assign(rest, staff.rests[staff.rests.length - 1]);
+      }
+      rest.begin = begin;
+      rest.voice = voice;
+      if (rest.cue) {
+        delete rest.cue;
+      }
+      if (state[state.length - 2] != "grace") {
+        let tup = tup_state[tup_state.length - 1];
+        if (rest.tuplet && tup) {
+          if (rest.tuplet.id != tup.id) {
+            rest.tuplet = {
+              id: tup.id,
+              display_duration: null,
+              label: tup.num
+            };
+          }
+        } else if (tup && !rest.tuplet) {
+          rest.tuplet = { id: tup.id, display_duration: null, label: tup.num };
+        } else if (!tup && rest.tuplet) {
+          rest.tuplet = null;
+        }
+      } else {
+        rest.tuplet = null;
+      }
+    } else if (x == "chord") {
+      switch_state("chord");
+    } else if (x == "grace") {
+      switch_state("grace");
+      begin0 = begin;
+      begin = 0;
+    } else if (x == "tuplet") {
+      switch_state("tuplet");
+      tup_state.push({
+        id: short_id(),
+        mul: 1,
+        begin,
+        dur: 0,
+        num: 3,
+        members: []
+      });
+    } else if (x == "voice") {
+      switch_state("voice");
+    } else if (x == "slur") {
+      switch_state("slur");
+      slur = {
+        left: null,
+        right: null,
+        is_tie: false
+      };
+    } else if (x == "tie") {
+      switch_state("slur");
+      slur = {
+        left: null,
+        right: null,
+        is_tie: true
+      };
+    } else if (x == "cresc") {
+      switch_state("cresc");
+      cresc = {
+        left: null,
+        right: null,
+        val_left: null,
+        val_right: null
+      };
+    } else if (curr_state("measure")) {
+      if (x.startsWith("|") || x.startsWith(":")) {
+        if (x == "|") {
+          measure.barline = BARLINE.SINGLE;
+        } else if (x == "||") {
+          measure.barline = BARLINE.DOUBLE;
+        } else if (x == "|||") {
+          measure.barline = BARLINE.END;
+        } else if (x == "|:") {
+          measure.barline = BARLINE.REPEAT_BEGIN;
+        } else if (x == ":|") {
+          measure.barline = BARLINE.REPEAT_END;
+        } else if (x == ":|:") {
+          measure.barline = BARLINE.REPEAT_END_BEGIN;
+        }
+      }
+    } else if (curr_state("staff")) {
+      if (x == "G") {
+        staff.clef = CLEF.TREBLE;
+      } else if (x == "F") {
+        staff.clef = CLEF.BASS;
+      } else if (x == "Ca" || x == "C") {
+        staff.clef = CLEF.ALTO;
+      } else if (x == "Ct") {
+        staff.clef = CLEF.TENOR;
+      } else if (x == "Cm") {
+        staff.clef = CLEF.MEZZO_SOPRANO;
+      } else if (x == "Cs") {
+        staff.clef = CLEF.SOPRANO;
+      } else if (x == "Cb") {
+        staff.clef = CLEF.BARITONE;
+      } else if (x == "~") {
+        staff.key_signature = [0, 0];
+      } else if (x.startsWith("b")) {
+        staff.key_signature = [ACCIDENTAL.FLAT, x.length];
+      } else if (x.startsWith("#")) {
+        staff.key_signature = [ACCIDENTAL.SHARP, x.length];
+      } else if (x.includes("/")) {
+        let s = x.split("/");
+        staff.time_signature = [Number(s[0]), Number(s[1])];
+      }
+    } else if (curr_state("note")) {
+      if (/^[A-Z].*/.test(x)) {
+        note.name = x[0];
+        note.octave = Number(x.slice(1));
+      } else if (x[0] == "d") {
+        let [dur, mod] = parse_dur(x.slice(1));
+        note.duration = dur;
+        note.modifier = mod;
+        if (note.tuplet) note.tuplet.display_duration = null;
+      } else if (x[0] == "$") {
+        note.id = x.slice(1);
+      } else if (x[0] == "#") {
+        note.accidental = ACCIDENTAL.SHARP;
+      } else if (x[0] == "b") {
+        note.accidental = ACCIDENTAL.FLAT;
+      } else if (x[0] == "~") {
+        note.accidental = ACCIDENTAL.NATURAL;
+      } else if (x[0] == "l") {
+        note.lyric = x.slice(1).replace(/(^')|('$)/g, "");
+      } else if (x[0] == "a") {
+        if (ARTICULATION_SYMBOL_LOOKUP[x[1]]) {
+          note.articulation = ARTICULATION_SYMBOL_LOOKUP[x[1]];
+        } else {
+          note.articulation = Number(x[1]);
+        }
+        if (x[2] == "|") {
+          note.articulation = -note.articulation;
+        }
+      } else if (x[0] == "|") {
+        note.cue = { position: 0, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      } else if (x[0] == "[") {
+        note.cue = { position: -1, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      } else if (x[0] == "]") {
+        note.cue = { position: 1, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      }
+    } else if (curr_state("rest")) {
+      if (x[0] == "d") {
+        let dur = 64 / Number(x.slice(1));
+        rest.duration = dur;
+        if (rest.tuplet) rest.tuplet.display_duration = null;
+      } else if (x[0] == "|") {
+        rest.cue = { position: 0, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      } else if (x[0] == "[") {
+        rest.cue = { position: -1, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      } else if (x[0] == "]") {
+        rest.cue = { position: 1, data: x.slice(1).replace(/(^')|('$)/g, "") };
+      } else if (x[0] == "-") {
+        rest_hidden = true;
+      }
+    } else if (curr_state("slur")) {
+      if (x[0] == "$") {
+        if (slur.left == null) {
+          slur.left = x.slice(1);
+        } else {
+          slur.right = x.slice(1);
+        }
+      }
+    } else if (curr_state("cresc")) {
+      if (x[0] == "$") {
+        if (cresc.left == null) {
+          cresc.left = x.slice(1);
+        } else {
+          cresc.right = x.slice(1);
+        }
+      } else {
+        if (cresc.val_left === null) {
+          cresc.val_left = Number(x);
+        } else {
+          cresc.val_right = Number(x);
+        }
+      }
+    } else if (curr_state("tuplet")) {
+      if (x[0] == "d") {
+        let [a_, b_] = x.slice(1).split("/");
+        let a = parse_dur(a_)[0];
+        let b = parse_dur(b_)[0];
+        tup_state[tup_state.length - 1].mul = a / b;
+        tup_state[tup_state.length - 1].dur = a;
+      } else {
+        let n = Number(x);
+        tup_state[tup_state.length - 1].num = n;
+      }
+    } else if (curr_state("title")) {
+      score2.title.push(x.replace(/(^')|('$)/g, ""));
+    } else if (curr_state("composer")) {
+      score2.composer.push(x.replace(/(^')|('$)/g, ""));
+    } else if (curr_state("instruments")) {
+      if (x == "{") {
+        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
+          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
+            false
+          );
+        score2.instruments.push({
+          bracket: BRACKET.BRACE,
+          names: [],
+          connect_barlines: []
+        });
+      } else if (x == "[") {
+        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
+          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
+            false
+          );
+        score2.instruments.push({
+          bracket: BRACKET.BRACKET,
+          names: [],
+          connect_barlines: []
+        });
+      } else if (x == "|") {
+        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
+          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
+            false
+          );
+        score2.instruments.push({
+          bracket: BRACKET.NONE,
+          names: [],
+          connect_barlines: []
+        });
+      } else if (x == "-") {
+        score2.instruments[score2.instruments.length - 1].connect_barlines.push(
+          true
+        );
+      } else {
+        if (!score2.instruments.length) {
+          score2.instruments.push({
+            bracket: BRACKET.NONE,
+            names: [],
+            connect_barlines: []
+          });
+        }
+        let group = score2.instruments[score2.instruments.length - 1];
+        if (group.connect_barlines.length < group.names.length) {
+          group.connect_barlines.push(false);
+        }
+        group.names.push(x.replace(/(^')|('$)/g, ""));
+      }
+    } else if (curr_state("tempo")) {
+      if (!score2.tempo) {
+        score2.tempo = {};
+      }
+      if (x[0] == "d") {
+        let [dur, mod] = parse_dur(x.slice(1));
+        score2.tempo.duration = dur;
+        score2.tempo.modifier = mod;
+      } else if (x[0] == "=") {
+        score2.tempo.bpm = Number(x.slice(1));
+      } else {
+        score2.tempo.text = x.replace(/(^')|('$)/g, "");
+      }
+    }
+    i2++;
+  }
+  pop_short_state();
+  return score2;
+}
+function compile_staff(staff, force_stem_dir = 0) {
+  for (let i2 = 0; i2 < staff.notes.length; i2++) {
+    staff.voices = Math.max(staff.notes[i2].voice + 1, staff.voices);
+  }
+  for (let i2 = 0; i2 < staff.rests.length; i2++) {
+    staff.voices = Math.max(staff.rests[i2].voice + 1, staff.voices);
+  }
+  function get_beat_length(time_sig) {
+    if (CONFIG.BEAM_POLICY == 0) {
+      return 1;
+    } else if (CONFIG.BEAM_POLICY == 1) {
+      return ~~(NOTE_LENGTH.WHOLE / time_sig[1]);
+    } else {
+      let beat_length2 = ~~(NOTE_LENGTH.WHOLE / time_sig[1]);
+      beat_length2 *= time_sig[0] % 2 || time_sig[0] <= 2 && time_sig[1] > 2 ? time_sig[0] : time_sig[0] / 2;
+      return beat_length2;
+    }
+  }
+  let beat_length = get_beat_length(staff.time_signature);
+  function get_beat_idx(note) {
+    return ~~(note.begin / beat_length);
+  }
+  function get_notes_in_beat(beat_idx) {
+    let notes = [];
+    for (let m of staff.notes) {
+      if (get_beat_idx(m) == beat_idx) {
+        notes.push(m);
+      }
+    }
+    return notes;
+  }
+  function calc_stem_dir(note) {
+    let notes_in_beat;
+    if (note.duration < NOTE_LENGTH.QUARTER) {
+      let beat_idx = get_beat_idx(note);
+      if (note.tuplet) {
+        notes_in_beat = staff.notes.filter(
+          (x) => x.tuplet && x.tuplet.id == note.tuplet.id
+        );
+      } else {
+        notes_in_beat = get_notes_in_beat(beat_idx).filter(
+          (x) => x.duration < NOTE_LENGTH.QUARTER
+        );
+      }
+    } else {
+      notes_in_beat = [];
+      for (let m of staff.notes) {
+        if (m.begin == note.begin) {
+          notes_in_beat.push(m);
+        }
+      }
+    }
+    let avg_line = notes_in_beat.reduce(
+      (acc, x) => acc + x.staff_pos,
+      0
+    ) / notes_in_beat.length;
+    if (avg_line < 4) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  let [measure_acc, num_acc] = staff.key_signature;
+  let acc_names = ORDER_OF_ACCIDENTALS[measure_acc].slice(0, num_acc).split("");
+  let acc_history = {};
+  for (let i2 = 0; i2 < staff.notes.length; i2++) {
+    let note = staff.notes[i2];
+    let note_bname = note.name;
+    let key = note_bname + "_" + note.octave;
+    if (note.accidental != null) {
+      note.name = note_bname + ["b", "", "s"][note.accidental + 1];
+      acc_history[key] = note.accidental;
+    } else {
+      if (acc_history[key] === void 0) {
+        if (acc_names.includes(note_bname)) {
+          note.name = note_bname + ["b", null, "s"][measure_acc + 1];
+          acc_history[key] = measure_acc;
+        } else {
+          note.name = note_bname;
+        }
+      } else {
+        note.name = note_bname + ["b", "", "s"][acc_history[key] + 1];
+      }
+    }
+    note.name += "_";
+    note.name += note.octave;
+    note.staff_pos = note_name_to_staff_pos(note.name, staff.clef);
+  }
+  for (let i2 = 0; i2 < staff.notes.length; i2++) {
+    let note = staff.notes[i2];
+    let stem_dir;
+    if (staff.voices == 1) {
+      stem_dir = force_stem_dir || calc_stem_dir(note);
+    } else {
+      stem_dir = note.voice % 2 ? 1 : -1;
+    }
+    note.stem_dir = stem_dir;
+  }
+  chord_and_beam_staff(staff, beat_length);
+}
+function export_txt(score2) {
+  let o = "";
+  o += `title '${score2.title.map((x) => x.replace(/'/g, "\\'")).join("' '")}'
+`;
+  if (score2.composer) {
+    o += `composer '${score2.composer}'
+`;
+  }
+  if (score2.tempo) {
+    o += `tempo`;
+    if (score2.tempo.text) {
+      o += ` '` + score2.tempo.text.replace(/'/g, "\\'") + `'`;
+    }
+    if (score2.tempo.duration) {
+      if (score2.tempo.modifier) {
+        o += " d" + (96 / score2.tempo.duration).toString() + ".";
+      } else {
+        o += " d" + (64 / score2.tempo.duration).toString();
+      }
+      if (score2.tempo.bpm) {
+        o += " =" + score2.tempo.bpm;
+      }
+    }
+    o += "\n";
+  }
+  if (score2.instruments.length) {
+    o += "instruments ";
+    for (let i2 = 0; i2 < score2.instruments.length; i2++) {
+      o += ["", "{", "["][score2.instruments[i2].bracket] + " ";
+      for (let j = 0; j < score2.instruments[i2].names.length; j++) {
+        if (j && score2.instruments[i2].connect_barlines[j - 1]) {
+          o += " - ";
+        }
+        o += `'${score2.instruments[i2].names[j].replace(/'/g, "\\'")}' `;
+      }
+    }
+    o += "\n";
+  }
+  for (let i2 = 0; i2 < score2.measures.length; i2++) {
+    let measure = score2.measures[i2];
+    o += `measure`;
+    if (measure.barline == BARLINE.DOUBLE) {
+      o += ` ||`;
+    } else if (measure.barline == BARLINE.REPEAT_BEGIN) {
+      o += ` |:`;
+    } else if (measure.barline == BARLINE.REPEAT_END) {
+      o += ` :|`;
+    } else if (measure.barline == BARLINE.END) {
+      o += ` |||`;
+    } else if (measure.barline == BARLINE.REPEAT_END_BEGIN) {
+      o += ` :|:`;
+    }
+    o += `
+`;
+    for (let j = 0; j < measure.staves.length; j++) {
+      let staff = measure.staves[j];
+      o += `  staff ${staff.clef == CLEF.TREBLE ? "G" : "F"} ${["b", "", "#"][staff.key_signature[0] + 1].repeat(staff.key_signature[1])} ${staff.time_signature[0]}/${staff.time_signature[1]}
+`;
+      for (let k = 0; k < staff.voices; k++) {
+        let do_items = function(items2) {
+          var _a2;
+          for (let l = 0; l < items2.length; l++) {
+            let done = items2[l][2];
+            if (done) {
+              continue;
+            }
+            if (items2[l][1].tuplet) {
+              let count = function() {
+                let begin = -1;
+                let real = 0;
+                let disp = 0;
+                for (let m = l; m < items2.length; m++) {
+                  if (!items2[m][1].tuplet || items2[m][1].tuplet.id != items2[l][1].tuplet.id) {
+                    break;
+                  }
+                  if (items2[m][1].begin != begin) {
+                    begin = items2[m][1].begin;
+                    disp += items2[m][1].tuplet.display_duration;
+                  }
+                  real = items2[m][1].begin - items2[l][1].begin + items2[m][1].duration;
+                }
+                function to_str(n) {
+                  if (64 / n == ~~(64 / n)) {
+                    return (~~(64 / n)).toString();
+                  } else {
+                    return (~~(96 / n)).toString() + ".";
+                  }
+                }
+                let real_str = to_str(real);
+                let disp_str = to_str(disp);
+                return [real_str, disp_str];
+              };
+              let prev_tup_id = null;
+              for (let m = l - 1; m >= 0; m--) {
+                let e = items2[m][1];
+                if (e.tuplet) {
+                  prev_tup_id = items2[m][1].tuplet.id;
+                  break;
+                }
+              }
+              if (!items2[l - 1] || prev_tup_id === null) {
+                o += `   tuplet ${items2[l][1].tuplet.label} d${count().join("/")}
+`;
+              } else if (prev_tup_id !== null && prev_tup_id != items2[l][1].tuplet.id) {
+                o += `   end
+   tuplet ${items2[l][1].tuplet.label} d${count().join("/")}
+`;
+              }
+            } else if (items2[l - 1] && items2[l - 1][1].tuplet) {
+              let next_tup_id = null;
+              for (let m = l + 1; m < items2.length; m++) {
+                let e = items2[m][1];
+                if (e.tuplet) {
+                  next_tup_id = items2[m][1].tuplet.id;
+                  break;
+                }
+              }
+              if (items2[l - 1][1].tuplet.id != next_tup_id) {
+                o += `   end
+`;
+              }
+            }
+            if (items2[l][0] == "note") {
+              let e = items2[l][1];
+              while (e.prev_in_chord !== null) {
+                e = staff.notes[e.prev_in_chord];
+              }
+              let is_chord = e.next_in_chord !== null;
+              if (is_chord) o += "    chord\n";
+              do {
+                items2.find((x) => x[1] == e)[2] = true;
+                let s = ["note"];
+                s.push(e.name[0] + e.octave);
+                if (e.accidental !== null) {
+                  s.push(["b", "~", "#"][e.accidental + 1]);
+                }
+                let dur = e.duration;
+                if (e.tuplet) {
+                  dur = e.tuplet.display_duration;
+                }
+                if (e.modifier) {
+                  s.push("d" + (96 / dur).toString() + ".");
+                } else {
+                  s.push("d" + (64 / dur).toString());
+                }
+                if (e.articulation) {
+                  s.push(
+                    "a" + ((_a2 = ARTICULATION_SYMBOL[e.articulation]) != null ? _a2 : e.articulation)
+                  );
+                }
+                if (e.cue) {
+                  s.push(
+                    `${["[", "|", "]"][e.cue.position + 1]}'${e.cue.data.replace(/'/g, "\\'")}'`
+                  );
+                }
+                if (e.lyric) {
+                  s.push(`l'${e.lyric.replace(/'/g, "\\'")}'`);
+                }
+                let t = "    ";
+                if (is_chord) t += "  ";
+                t += s.join(" ");
+                if (e.id) {
+                  t = t.padEnd(50, " ") + " $" + e.id;
+                }
+                o += t + "\n";
+                e = staff.notes[e.next_in_chord];
+              } while (e);
+              if (is_chord) o += "    end\n";
+            } else if (items2[l][0] == "rest") {
+              let e = items2[l][1];
+              let dur = e.duration;
+              if (e.tuplet) {
+                dur = e.tuplet.display_duration;
+              }
+              o += `    rest d${64 / dur}`;
+              if (e.cue) {
+                o += ` ${["[", "|", "]"][e.cue.position + 1]}'${e.cue.data.replace(/'/g, "\\'")}'`;
+              }
+              o += "\n";
+            } else if (items2[l][0] == "grace") {
+              o += `   grace
+`;
+              do_items(
+                items2[l][1].items
+              );
+              o += `   end
+`;
+            } else {
+            }
+          }
+          if (items2[items2.length - 1] && items2[items2.length - 1][1].tuplet) {
+            o += `   end
+`;
+          }
+        };
+        let items = [];
+        for (let l = 0; l < staff.notes.length; l++) {
+          if (staff.notes[l].voice == k) {
+            items.push(["note", staff.notes[l], false]);
+          }
+        }
+        for (let l = 0; l < staff.rests.length; l++) {
+          if (staff.rests[l].voice == k) {
+            items.push(["rest", staff.rests[l], false]);
+          }
+        }
+        for (let l = 0; l < staff.grace.length; l++) {
+          if (!staff.grace[l]) {
+            continue;
+          }
+          let grace_item = [
+            "grace",
+            { begin: l - 1e-3, duration: staff.grace[l].duration, items: [] },
+            false
+          ];
+          for (let m = 0; m < staff.grace[l].staves[0].notes.length; m++) {
+            let n = staff.grace[l].staves[0].notes[m];
+            if (n.voice == k) {
+              grace_item[1].items.push(["note", n, false]);
+            }
+          }
+          for (let m = 0; m < staff.grace[l].staves[0].rests.length; m++) {
+            let n = staff.grace[l].staves[0].rests[m];
+            if (n.voice == k) {
+              grace_item[1].items.push(["rest", n, false]);
+            }
+          }
+          grace_item[1].items.sort(
+            (a, b) => a[1].begin - b[1].begin
+          );
+          if (grace_item[1].items.length) items.push(grace_item);
+        }
+        items.sort((a, b) => a[1].begin - b[1].begin);
+        if (staff.voices > 1) {
+          o += "   voice\n";
+        }
+        do_items(items);
+        if (staff.voices > 1) {
+          o += "   end\n";
+        }
+      }
+      o += `  end
+`;
+    }
+    o += `end
+`;
+  }
+  for (let i2 = 0; i2 < score2.slurs.length; i2++) {
+    let slur = score2.slurs[i2];
+    if (slur.is_tie) {
+      o += `tie $${slur.left} $${slur.right}
+`;
+    } else {
+      o += `slur $${slur.left} $${slur.right}
+`;
+    }
+  }
+  for (let i2 = 0; i2 < score2.crescs.length; i2++) {
+    let cresc = score2.crescs[i2];
+    o += `cresc ${cresc.val_left} ${cresc.val_right} $${cresc.left} $${cresc.right}
+`;
+  }
+  return o;
+}
+
+// src/fx.ts
+var PERLIN_YWRAPB = 4;
+var PERLIN_YWRAP = 1 << PERLIN_YWRAPB;
+var PERLIN_ZWRAPB = 8;
+var PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB;
+var PERLIN_SIZE = 4095;
+var perlin_octaves = 4;
+var perlin_amp_falloff = 0.5;
+var scaled_cosine = function(i2) {
+  return 0.5 * (1 - Math.cos(i2 * Math.PI));
+};
+var p_perlin;
+function noise(x, y = 0, z = 0) {
+  if (p_perlin == null) {
+    p_perlin = new Array(PERLIN_SIZE + 1);
+    for (let i2 = 0; i2 < PERLIN_SIZE + 1; i2++) {
+      p_perlin[i2] = Math.random();
+    }
+  }
+  if (x < 0) {
+    x = -x;
+  }
+  if (y < 0) {
+    y = -y;
+  }
+  if (z < 0) {
+    z = -z;
+  }
+  let xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  let xf = x - xi;
+  let yf = y - yi;
+  let zf = z - zi;
+  let rxf, ryf;
+  let r = 0;
+  let ampl = 0.5;
+  let n1, n2, n3;
+  for (let o = 0; o < perlin_octaves; o++) {
+    let of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
+    rxf = scaled_cosine(xf);
+    ryf = scaled_cosine(yf);
+    n1 = p_perlin[of & PERLIN_SIZE];
+    n1 += rxf * (p_perlin[of + 1 & PERLIN_SIZE] - n1);
+    n2 = p_perlin[of + PERLIN_YWRAP & PERLIN_SIZE];
+    n2 += rxf * (p_perlin[of + PERLIN_YWRAP + 1 & PERLIN_SIZE] - n2);
+    n1 += ryf * (n2 - n1);
+    of += PERLIN_ZWRAP;
+    n2 = p_perlin[of & PERLIN_SIZE];
+    n2 += rxf * (p_perlin[of + 1 & PERLIN_SIZE] - n2);
+    n3 = p_perlin[of + PERLIN_YWRAP & PERLIN_SIZE];
+    n3 += rxf * (p_perlin[of + PERLIN_YWRAP + 1 & PERLIN_SIZE] - n3);
+    n2 += ryf * (n3 - n2);
+    n1 += scaled_cosine(zf) * (n2 - n1);
+    r += n1 * ampl;
+    ampl *= perlin_amp_falloff;
+    xi <<= 1;
+    xf *= 2;
+    yi <<= 1;
+    yf *= 2;
+    zi <<= 1;
+    zf *= 2;
+    if (xf >= 1) {
+      xi++;
+      xf--;
+    }
+    if (yf >= 1) {
+      yi++;
+      yf--;
+    }
+    if (zf >= 1) {
+      zi++;
+      zf--;
+    }
+  }
+  return r;
+}
+function resample_polyline(polyline, l, L) {
+  let q = [];
+  for (let i2 = 0; i2 < polyline.length - 1; i2++) {
+    let a = polyline[i2];
+    let b = polyline[i2 + 1];
+    let s = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    let n = Math.ceil(s / l);
+    if (s >= L) {
+      n = 1;
+    }
+    for (let j = 0; j < n; j++) {
+      let t = j / n;
+      let c = [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
+      q.push(c);
+    }
+    q.push(b.slice());
+  }
+  return q;
+}
+function disturb_polylines(elements, polylines, multiplier = 1) {
+  let content_y = 0;
+  for (let i2 = 0; i2 < elements.length; i2++) {
+    if (elements[i2].type == "composer" || elements[i2].type == "tempo" || elements[i2].type == "title" || elements[i2].type == "subtitle") {
+      content_y = Math.max(content_y, elements[i2].y + elements[i2].h);
+    }
+  }
+  let q = [];
+  for (let i2 = 0; i2 < polylines.length; i2++) {
+    let qq = [];
+    let bbox = bounding_box(polylines[i2]);
+    if (bbox.y - 4 <= content_y) {
+      for (let j = 0; j < polylines[i2].length; j++) {
+        let [x, y] = polylines[i2][j];
+        x += (noise(x * 0.01, y * 0.01, 1 + i2 * 0.1) * 2 - 1) * 2 * multiplier;
+        y += (noise(x * 0.01, y * 0.01, 2 + i2 * 0.1) * 2 - 1) * 2 * multiplier;
+        x -= Math.min(y * 0.1, 20) * multiplier;
+        y -= Math.min(x * 0.01, 20) * multiplier;
+        qq.push([x, y]);
+      }
+    } else {
+      for (let j = 0; j < polylines[i2].length; j++) {
+        let [x, y] = polylines[i2][j];
+        x += (noise(x * 0.01, y * 0.01, 1 + i2 * 0.1) * 2 - 1) * 6 * multiplier;
+        y += (noise(x * 0.01, y * 0.01, 2 + i2 * 0.1) * 2 - 1) * 5 * multiplier;
+        x -= Math.min(y * 0.015, 20) * multiplier;
+        y -= Math.min(x * 0.01, 20) * multiplier;
+        qq.push([x, y]);
+      }
+    }
+    q.push(qq);
+  }
+  return q;
+}
+function export_sketch_svg(dr, { noise_mul = 1 } = {}) {
+  let p = dr.polylines.map((x) => resample_polyline(x, 5, 500));
+  p = disturb_polylines(dr.elements, p, noise_mul);
+  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="${dr.w}" height="${dr.h}">`;
+  o += `<rect x="0" y="0" width="${dr.w}" height="${dr.h}" fill="antiquewhite"></rect>`;
+  for (let i2 = 0; i2 < p.length; i2++) {
+    o += `<path stroke="#2B1100" stroke-opacity="${Math.random() * 0.1 + 0.6}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M `;
+    for (let j = 0; j < p[i2].length; j++) {
+      o += p[i2][j] + " ";
+    }
+    o += `"/>`;
+  }
+  o += `</svg>`;
+  return o;
+}
+
 // src/midicompile.ts
 var MAX_VOICES = 2;
 var NOTE_LENGTH2 = {
@@ -2711,7 +4049,7 @@ function tick_table_to_measures(tick_table) {
   }
   return measures;
 }
-function compile_staff(measure, staff_idx) {
+function compile_staff2(measure, staff_idx) {
   var _a2, _b;
   let staff = measure.staves[staff_idx];
   let [measure_acc, num_acc] = staff.key_signature;
@@ -2952,7 +4290,7 @@ function score_from_midi(pattern) {
         }
       }
       measure.staves[j].rests.push(...find_rests(measure, j, ch_group));
-      compile_staff(measure, j);
+      compile_staff2(measure, j);
     }
     measure.duration *= 2;
     score2.measures.push(measure);
@@ -3156,1344 +4494,6 @@ function score_to_midi(score2) {
     ticks_per_quarter_note: 96
   };
   return pattern;
-}
-
-// src/fx.ts
-var PERLIN_YWRAPB = 4;
-var PERLIN_YWRAP = 1 << PERLIN_YWRAPB;
-var PERLIN_ZWRAPB = 8;
-var PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB;
-var PERLIN_SIZE = 4095;
-var perlin_octaves = 4;
-var perlin_amp_falloff = 0.5;
-var scaled_cosine = function(i2) {
-  return 0.5 * (1 - Math.cos(i2 * Math.PI));
-};
-var p_perlin;
-function noise(x, y = 0, z = 0) {
-  if (p_perlin == null) {
-    p_perlin = new Array(PERLIN_SIZE + 1);
-    for (let i2 = 0; i2 < PERLIN_SIZE + 1; i2++) {
-      p_perlin[i2] = Math.random();
-    }
-  }
-  if (x < 0) {
-    x = -x;
-  }
-  if (y < 0) {
-    y = -y;
-  }
-  if (z < 0) {
-    z = -z;
-  }
-  let xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-  let xf = x - xi;
-  let yf = y - yi;
-  let zf = z - zi;
-  let rxf, ryf;
-  let r = 0;
-  let ampl = 0.5;
-  let n1, n2, n3;
-  for (let o = 0; o < perlin_octaves; o++) {
-    let of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB);
-    rxf = scaled_cosine(xf);
-    ryf = scaled_cosine(yf);
-    n1 = p_perlin[of & PERLIN_SIZE];
-    n1 += rxf * (p_perlin[of + 1 & PERLIN_SIZE] - n1);
-    n2 = p_perlin[of + PERLIN_YWRAP & PERLIN_SIZE];
-    n2 += rxf * (p_perlin[of + PERLIN_YWRAP + 1 & PERLIN_SIZE] - n2);
-    n1 += ryf * (n2 - n1);
-    of += PERLIN_ZWRAP;
-    n2 = p_perlin[of & PERLIN_SIZE];
-    n2 += rxf * (p_perlin[of + 1 & PERLIN_SIZE] - n2);
-    n3 = p_perlin[of + PERLIN_YWRAP & PERLIN_SIZE];
-    n3 += rxf * (p_perlin[of + PERLIN_YWRAP + 1 & PERLIN_SIZE] - n3);
-    n2 += ryf * (n3 - n2);
-    n1 += scaled_cosine(zf) * (n2 - n1);
-    r += n1 * ampl;
-    ampl *= perlin_amp_falloff;
-    xi <<= 1;
-    xf *= 2;
-    yi <<= 1;
-    yf *= 2;
-    zi <<= 1;
-    zf *= 2;
-    if (xf >= 1) {
-      xi++;
-      xf--;
-    }
-    if (yf >= 1) {
-      yi++;
-      yf--;
-    }
-    if (zf >= 1) {
-      zi++;
-      zf--;
-    }
-  }
-  return r;
-}
-function resample_polyline(polyline, l, L) {
-  let q = [];
-  for (let i2 = 0; i2 < polyline.length - 1; i2++) {
-    let a = polyline[i2];
-    let b = polyline[i2 + 1];
-    let s = Math.hypot(a[0] - b[0], a[1] - b[1]);
-    let n = Math.ceil(s / l);
-    if (s >= L) {
-      n = 1;
-    }
-    for (let j = 0; j < n; j++) {
-      let t = j / n;
-      let c = [a[0] * (1 - t) + b[0] * t, a[1] * (1 - t) + b[1] * t];
-      q.push(c);
-    }
-    q.push(b.slice());
-  }
-  return q;
-}
-function disturb_polylines(elements, polylines, multiplier = 1) {
-  let content_y = 0;
-  for (let i2 = 0; i2 < elements.length; i2++) {
-    if (elements[i2].type == "composer" || elements[i2].type == "tempo" || elements[i2].type == "title" || elements[i2].type == "subtitle") {
-      content_y = Math.max(content_y, elements[i2].y + elements[i2].h);
-    }
-  }
-  let q = [];
-  for (let i2 = 0; i2 < polylines.length; i2++) {
-    let qq = [];
-    let bbox = bounding_box(polylines[i2]);
-    if (bbox.y - 4 <= content_y) {
-      for (let j = 0; j < polylines[i2].length; j++) {
-        let [x, y] = polylines[i2][j];
-        x += (noise(x * 0.01, y * 0.01, 1 + i2 * 0.1) * 2 - 1) * 2 * multiplier;
-        y += (noise(x * 0.01, y * 0.01, 2 + i2 * 0.1) * 2 - 1) * 2 * multiplier;
-        x -= Math.min(y * 0.1, 20) * multiplier;
-        y -= Math.min(x * 0.01, 20) * multiplier;
-        qq.push([x, y]);
-      }
-    } else {
-      for (let j = 0; j < polylines[i2].length; j++) {
-        let [x, y] = polylines[i2][j];
-        x += (noise(x * 0.01, y * 0.01, 1 + i2 * 0.1) * 2 - 1) * 6 * multiplier;
-        y += (noise(x * 0.01, y * 0.01, 2 + i2 * 0.1) * 2 - 1) * 5 * multiplier;
-        x -= Math.min(y * 0.015, 20) * multiplier;
-        y -= Math.min(x * 0.01, 20) * multiplier;
-        qq.push([x, y]);
-      }
-    }
-    q.push(qq);
-  }
-  return q;
-}
-function export_sketch_svg(dr, { noise_mul = 1 } = {}) {
-  let p = dr.polylines.map((x) => resample_polyline(x, 5, 500));
-  p = disturb_polylines(dr.elements, p, noise_mul);
-  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="${dr.w}" height="${dr.h}">`;
-  o += `<rect x="0" y="0" width="${dr.w}" height="${dr.h}" fill="antiquewhite"></rect>`;
-  for (let i2 = 0; i2 < p.length; i2++) {
-    o += `<path stroke="#2B1100" stroke-opacity="${Math.random() * 0.1 + 0.6}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M `;
-    for (let j = 0; j < p[i2].length; j++) {
-      o += p[i2][j] + " ";
-    }
-    o += `"/>`;
-  }
-  o += `</svg>`;
-  return o;
-}
-
-// src/midifmt.ts
-var META_EVENT = {
-  0: ["SEQUENCE_NUMBER", "value"],
-  1: ["TEXT_EVENT", "text"],
-  2: ["COPYRIGHT_NOTICE", "text"],
-  3: ["SEQUENCE_OR_TRACK_NAME", "text"],
-  4: ["INSTRUMENT_NAME", "text"],
-  5: ["LYRIC", "text"],
-  6: ["MARKER", "text"],
-  7: ["CUE_POINT", "text"],
-  32: ["CHANNEL_PREFIX", "value"],
-  33: ["PORT", "value"],
-  47: ["END_OF_TRACK"],
-  84: ["SMPTE_OFFSET", "hour", "min", "sec", "frame", "frac_frame"],
-  81: ["SET_TEMPO", "data"],
-  88: [
-    "TIME_SIGNATURE",
-    "numerator",
-    "denominator_exp",
-    "clocks_per_metronome_click",
-    "notated_32nd_per_quarter_note"
-  ],
-  89: ["KEY_SIGNATURE", "num_sharps_or_flats", "is_minor"],
-  127: ["SEQUENCER_SPECIFIC_EVENT", "data"]
-};
-var MIDI_EVENT = {
-  8: ["NOTE_OFF", "key", "velocity"],
-  9: ["NOTE_ON", "key", "velocity"],
-  10: ["POLYPHONIC_KEY_PRESSURE", "key", "pressure"],
-  11: ["CONTROL_CHANGE", "controller", "value"],
-  12: ["PROGRAM_CHANGE", "value"],
-  13: ["CHANNEL_PRESSURE", "value"],
-  14: ["PITCH_WHEEL_CHANGE", "lsb", "msb"]
-};
-var SYSTEM_EVENT = {
-  2: ["SONG_POSITION_POINTER", "lsb", "msb"],
-  3: ["SONG_SELECT", "value"],
-  6: ["TUNE_REQUEST"],
-  7: ["END_OF_EXCLUSIVE"],
-  8: ["TIMING_CLOCK"],
-  10: ["START"],
-  11: ["CONTINUE"],
-  12: ["STOP"],
-  14: ["ACTIVE_SENSING"],
-  15: ["RESET"]
-};
-var META_EVENT_LOOKUP = Object.fromEntries(
-  Object.entries(META_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
-);
-var MIDI_EVENT_LOOKUP = Object.fromEntries(
-  Object.entries(MIDI_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
-);
-var SYSTEM_EVENT_LOOKUP = Object.fromEntries(
-  Object.entries(SYSTEM_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]])
-);
-function parse_midi(bytes) {
-  var _a2, _b, _c;
-  let ptr = 0;
-  function read_str(n) {
-    let s = String.fromCharCode(...bytes.slice(ptr, ptr + n));
-    ptr += n;
-    return s;
-  }
-  function read_u8() {
-    return bytes[ptr++];
-  }
-  function read_u32() {
-    let s = (bytes[ptr] << 24 | bytes[ptr + 1] << 16 | bytes[ptr + 2] << 8 | bytes[ptr + 3]) >>> 0;
-    ptr += 4;
-    return s;
-  }
-  function read_u16() {
-    let s = bytes[ptr] << 8 | bytes[ptr + 1];
-    ptr += 2;
-    return s;
-  }
-  function read_u(n_bytes) {
-    let s = 0;
-    for (let i2 = 0; i2 < n_bytes; i2++) {
-      s = (s << 8 | bytes[ptr]) >>> 0;
-      ptr++;
-    }
-    return s;
-  }
-  function read_vlen() {
-    let is_last = false;
-    let s = 0;
-    do {
-      let n = bytes[ptr] & 127;
-      s = (s << 7 | n) >>> 0;
-      is_last = !(bytes[ptr] >> 7 & 1);
-      ptr++;
-    } while (!is_last);
-    return s;
-  }
-  let magic = read_str(4);
-  let hd_len = read_u32();
-  let hd_fmt = read_u16();
-  let hd_ntk = read_u16();
-  let div_fmt = bytes[ptr] >> 7 & 1;
-  let ot = {};
-  if (div_fmt) {
-    let x = read_u16() & 32767;
-    ot.negative_SMPTE_format = -((~(x >> 8) & 127) + 1);
-    ot.ticks_per_frame = x & 255;
-  } else {
-    ot.ticks_per_quarter_note = read_u16() & 32767;
-  }
-  let o = __spreadProps(__spreadValues({
-    magic,
-    num_tracks: hd_ntk,
-    format: hd_fmt,
-    time_format: div_fmt ? "TIME_CODE" : "METRIC"
-  }, ot), {
-    tracks: []
-  });
-  while (read_str(4) == "MTrk") {
-    let track_len = read_u32();
-    let p0 = ptr;
-    let trk = { events: [] };
-    while (ptr < p0 + track_len) {
-      let dt = read_vlen();
-      let e = { type: "UNDEFINED", delta_time: dt, data: {} };
-      if (bytes[ptr] == 255) {
-        let tmpl = (_a2 = META_EVENT[bytes[++ptr]]) != null ? _a2 : ["UNDEFINED"];
-        ptr++;
-        let len = read_vlen();
-        e.type = tmpl[0];
-        let chunk = ~~(len / (tmpl.length - 1));
-        for (let i2 = 1; i2 < tmpl.length; i2++) {
-          if (tmpl[i2] == "text") {
-            e.data["text"] = read_str(chunk);
-          } else if (tmpl[i2] == "data") {
-            e.data = bytes.slice(ptr, ptr + chunk);
-            ptr += chunk;
-          } else {
-            e.data[tmpl[i2]] = read_u(chunk);
-            if (tmpl[i2] == "num_sharps_or_flats") {
-              let x = e.data[tmpl[i2]];
-              if (x > 127) {
-                x = -((~x & 255) + 1);
-              }
-              e.data[tmpl[i2]] = x;
-            }
-          }
-        }
-      } else if (bytes[ptr] == 240 || bytes[ptr] == 247) {
-        e.type = "SYSEX";
-        e.data = [];
-        do {
-          e.data.push(bytes[ptr++]);
-        } while (bytes[ptr] != 240 && bytes[ptr] != 247);
-        e.data.push(bytes[ptr++]);
-      } else {
-        let type = bytes[ptr] >> 4 & 15;
-        let chan = bytes[ptr] & 15;
-        ptr++;
-        let tmpl = ["UNDEFINED"];
-        if (type == 15) {
-          tmpl = (_b = SYSTEM_EVENT[chan]) != null ? _b : tmpl;
-        } else {
-          tmpl = (_c = MIDI_EVENT[type]) != null ? _c : tmpl;
-        }
-        if (tmpl[0] == "UNDEFINED" && trk.events.length) {
-          ptr--;
-          chan = trk.events[trk.events.length - 1].data["channel"];
-          tmpl = Object.values(MIDI_EVENT).find(
-            (x) => x[0] == trk.events[trk.events.length - 1].type
-          );
-        }
-        e.type = tmpl[0];
-        for (let i2 = 1; i2 < tmpl.length; i2++) {
-          e.data[tmpl[i2]] = read_u8();
-        }
-        e.data["channel"] = chan;
-      }
-      trk.events.push(e);
-    }
-    o.tracks.push(trk);
-  }
-  return o;
-}
-function export_midi(pattern) {
-  let bytes = [];
-  function write_str(s) {
-    for (let i2 = 0; i2 < s.length; i2++) {
-      bytes.push(s.charCodeAt(i2));
-    }
-  }
-  function write_u8(n) {
-    return bytes.push(n);
-  }
-  function write_u32(n) {
-    bytes.push(n >> 24 & 255);
-    bytes.push(n >> 16 & 255);
-    bytes.push(n >> 8 & 255);
-    bytes.push(n & 255);
-  }
-  function write_u16(n) {
-    bytes.push(n >> 8 & 255);
-    bytes.push(n & 255);
-  }
-  function write_u(n, n_bytes) {
-    for (let i2 = 0; i2 < n_bytes; i2++) {
-      bytes.push(n >> (n_bytes - i2 - 1 << 3) & 255);
-    }
-  }
-  function write_vlen(n) {
-    let b = [];
-    while (n > 0) {
-      b.push(n & 127);
-      n = n >>> 7;
-    }
-    if (!b.length) b.push(0);
-    b.reverse();
-    for (let i2 = 0; i2 < b.length - 1; i2++) {
-      b[i2] |= 128;
-    }
-    bytes.push(...b);
-  }
-  write_str(pattern.magic);
-  write_u32(6);
-  write_u16(1);
-  write_u16(pattern.num_tracks);
-  if (pattern.time_format == "METRIC") {
-    write_u16(pattern.ticks_per_quarter_note);
-  } else {
-    write_u16(
-      pattern.ticks_per_frame | ~(-pattern.negative_SMPTE_format - 1) << 8
-    );
-  }
-  for (let i2 = 0; i2 < pattern.tracks.length; i2++) {
-    write_str("MTrk");
-    let len_pos = bytes.length;
-    bytes.push(0, 0, 0, 0);
-    for (let j = 0; j < pattern.tracks[i2].events.length; j++) {
-      let e = pattern.tracks[i2].events[j];
-      write_vlen(e.delta_time);
-      if (META_EVENT_LOOKUP[e.type]) {
-        let k = META_EVENT_LOOKUP[e.type][0];
-        write_u8(255);
-        write_u8(Number(k));
-        if (META_EVENT[k][1] == "text") {
-          write_vlen(e.data["text"].length);
-          write_str(e.data["text"]);
-        } else if (META_EVENT[k][1] == "value") {
-          if (e.type == "SEQUENCE_NUMBER") {
-            write_u8(2);
-            write_u16(e.data["value"]);
-          } else {
-            write_u8(1);
-            write_u8(e.data["value"]);
-          }
-        } else if (META_EVENT[k][1] == "data") {
-          write_vlen(e.data.length);
-          bytes.push(...e.data);
-        } else {
-          write_vlen(META_EVENT[k].length - 1);
-          for (let j2 = 1; j2 < META_EVENT[k].length; j2++) {
-            let x = e.data[META_EVENT[k][j2]];
-            if (META_EVENT[k][j2] == "num_sharps_or_flats" && x < 0) {
-              x = (~-x & 255) + 1;
-            }
-            bytes.push(x);
-          }
-        }
-      } else if (MIDI_EVENT_LOOKUP[e.type]) {
-        let k = Number(MIDI_EVENT_LOOKUP[e.type][0]);
-        bytes.push(k << 4 | e.data["channel"]);
-        for (let j2 = 1; j2 < MIDI_EVENT[k].length; j2++) {
-          write_u8(e.data[MIDI_EVENT[k][j2]]);
-        }
-      } else if (SYSTEM_EVENT_LOOKUP[e.type]) {
-        let k = Number(SYSTEM_EVENT_LOOKUP[e.type][0]);
-        bytes.push(15 << 4 | k);
-        for (let j2 = 1; j2 < SYSTEM_EVENT[k].length; j2++) {
-          write_u8(e.data[SYSTEM_EVENT[k][j2]]);
-        }
-      } else {
-        for (let j2 = 1; j2 < e.data.length; j2++) {
-          write_u8(e.data[j2]);
-        }
-      }
-    }
-    let n = bytes.length - len_pos - 4;
-    bytes[len_pos] = n >> 24 & 255;
-    bytes[len_pos + 1] = n >> 16 & 255;
-    bytes[len_pos + 2] = n >> 8 & 255;
-    bytes[len_pos + 3] = n & 255;
-  }
-  return bytes;
-}
-
-// src/txtfmt.ts
-var ARTICULATION_SYMBOL_LOOKUP = {
-  ">": ARTICULATION.ACCENT,
-  "^": ARTICULATION.MARCATO,
-  ".": ARTICULATION.STACCATO,
-  "-": ARTICULATION.TENUTO,
-  ",": ARTICULATION.SPICCATO,
-  "?": ARTICULATION.FERMATA,
-  "+": ARTICULATION.TREMBLEMENT,
-  t: ARTICULATION.TRILL,
-  o: ARTICULATION.FLAGEOLET,
-  m: ARTICULATION.MORDENT,
-  s: ARTICULATION.TURN,
-  v: ARTICULATION.UP_BOW,
-  "{": ARTICULATION.ARPEGGIATED
-};
-var ARTICULATION_SYMBOL = Object.fromEntries(
-  Object.entries(ARTICULATION_SYMBOL_LOOKUP).map((x) => [x[1], x[0]])
-);
-function parse_txt(txt) {
-  txt = txt.replace(/[\n\r\t]/g, " ");
-  let swap_sp = "\uFFFF";
-  let swap_sp_re = new RegExp(swap_sp, "g");
-  let swap_qt = "\uFFFE";
-  let swap_qt_re = new RegExp(swap_qt, "g");
-  txt = txt.replace(/\\'/g, swap_qt);
-  txt = txt.split("'").map((x, i3) => i3 % 2 ? x.replace(/ /g, swap_sp) : x).join("'");
-  txt = txt.split(";").filter((_, i3) => !(i3 % 2)).join(" ");
-  let words = txt.split(" ").filter((x) => x.length).map((x) => x.replace(swap_sp_re, " ").replace(swap_qt_re, "'"));
-  let score2 = {
-    title: [],
-    instruments: [],
-    composer: [],
-    slurs: [],
-    measures: [],
-    crescs: []
-  };
-  let measure;
-  let staff;
-  let note;
-  let rest;
-  let slur;
-  let cresc;
-  let i2 = 0;
-  let state = [];
-  let begin = 0;
-  let voice = 0;
-  let begin0 = 0;
-  let rest_hidden = false;
-  let tup_state = [];
-  function curr_state(s) {
-    return state[state.length - 1] == s;
-  }
-  function pop_short_state() {
-    let curr = state[state.length - 1];
-    if (curr) {
-      if (curr == "note") {
-        state.pop();
-        if (note.tuplet && note.tuplet.display_duration === null) {
-          note.tuplet.display_duration = note.duration;
-          note.duration = Math.max(
-            1,
-            ~~(note.duration * tup_state[tup_state.length - 1].mul)
-          );
-        }
-        if (note.tuplet) tup_state[tup_state.length - 1].members.push(note);
-        if (curr_state("grace") || state.includes("grace")) {
-          if (!staff.grace[begin0]) {
-            staff.grace[begin0] = {
-              duration: 0,
-              barline: BARLINE.NONE,
-              staves: [
-                {
-                  clef: staff.clef,
-                  time_signature: [1, 1],
-                  key_signature: staff.key_signature,
-                  notes: [],
-                  grace: [],
-                  rests: [],
-                  voices: 1,
-                  beams: []
-                }
-              ]
-            };
-          }
-          staff.grace[begin0].staves[0].notes.push(note);
-        } else {
-          staff.notes.push(note);
-        }
-        measure.duration = Math.max(measure.duration, begin + note.duration);
-        if (!curr_state("chord")) {
-          begin += note.duration;
-        }
-      } else if (curr == "rest") {
-        state.pop();
-        if (rest.tuplet && rest.tuplet.display_duration === null) {
-          rest.tuplet.display_duration = rest.duration;
-          rest.duration = Math.max(
-            1,
-            ~~(rest.duration * tup_state[tup_state.length - 1].mul)
-          );
-        }
-        if (rest.tuplet && !rest_hidden)
-          tup_state[tup_state.length - 1].members.push(rest);
-        measure.duration = Math.max(measure.duration, begin + rest.duration);
-        begin += rest.duration;
-        if (!rest_hidden) staff.rests.push(rest);
-      } else if (curr == "title" || curr == "composer" || curr == "instruments" || curr == "tempo") {
-        state.pop();
-      } else if (curr == "slur") {
-        state.pop();
-        score2.slurs.push(slur);
-      } else if (curr == "cresc") {
-        state.pop();
-        score2.crescs.push(cresc);
-      }
-    }
-  }
-  function switch_state(s) {
-    pop_short_state();
-    state.push(s);
-  }
-  function parse_dur(x) {
-    if (x[x.length - 1] == ".") {
-      return [96 / Number(x.slice(0, -1)), true];
-    } else {
-      return [64 / Number(x), false];
-    }
-  }
-  while (i2 < words.length) {
-    let x = words[i2];
-    if (x == "end") {
-      pop_short_state();
-      if (curr_state("staff")) {
-        compile_staff2(staff);
-        measure.staves.push(staff);
-      } else if (curr_state("measure")) {
-        score2.measures.push(measure);
-      } else if (curr_state("chord")) {
-        if (state.includes("grace")) {
-          begin += staff.grace[begin0].staves[0].notes[staff.grace[begin0].staves[0].notes.length - 1].duration;
-        } else {
-          begin += staff.notes[staff.notes.length - 1].duration;
-        }
-      } else if (curr_state("voice")) {
-        voice++;
-        begin = 0;
-      } else if (curr_state("grace")) {
-        staff.grace[begin0].duration = Math.max(
-          staff.grace[begin0].duration,
-          begin
-        );
-        compile_staff2(staff.grace[begin0].staves[0], -1);
-        begin = begin0;
-      } else if (curr_state("tuplet")) {
-        let tup = tup_state.pop();
-        let sum = tup.members[tup.members.length - 1].begin - tup.begin + tup.members[tup.members.length - 1].duration;
-        let remain = tup.dur - sum;
-        for (let i3 = tup.members.length - 1; i3 >= 0; i3--) {
-          if (tup.members[i3].begin == tup.members[tup.members.length - 1].begin) {
-            tup.members[i3].duration += remain;
-          } else {
-            break;
-          }
-        }
-        begin = tup.begin + tup.dur;
-      }
-      state.pop();
-    } else if (x == "title") {
-      switch_state("title");
-    } else if (x == "composer") {
-      switch_state("composer");
-    } else if (x == "instruments") {
-      switch_state("instruments");
-    } else if (x == "tempo") {
-      switch_state("tempo");
-    } else if (x == "measure") {
-      switch_state("measure");
-      measure = {
-        duration: 0,
-        barline: BARLINE.SINGLE,
-        staves: []
-      };
-    } else if (x == "staff") {
-      switch_state("staff");
-      staff = {
-        clef: CLEF.TREBLE,
-        time_signature: [4, 4],
-        key_signature: [0, 0],
-        notes: [],
-        grace: [],
-        rests: [],
-        voices: 1,
-        beams: []
-      };
-      if (score2.measures[score2.measures.length - 1]) {
-        if (score2.measures[score2.measures.length - 1].staves[measure.staves.length]) {
-          let prev = score2.measures[score2.measures.length - 1].staves[measure.staves.length];
-          staff.time_signature[0] = prev.time_signature[0];
-          staff.time_signature[1] = prev.time_signature[1];
-          staff.key_signature[0] = prev.key_signature[0];
-          staff.key_signature[1] = prev.key_signature[1];
-          staff.clef = prev.clef;
-        }
-      }
-      begin = 0;
-      voice = 0;
-    } else if (x == "note") {
-      switch_state("note");
-      note = {
-        begin: null,
-        duration: null,
-        accidental: null,
-        modifier: false,
-        octave: null,
-        name: null,
-        voice: null,
-        staff_pos: null,
-        stem_dir: null,
-        prev_in_chord: null,
-        next_in_chord: null,
-        tuplet: null
-      };
-      if (state[state.length - 2] == "grace" && staff.grace[begin0] && staff.grace[begin0].staves[0].notes.length) {
-        let notes = staff.grace[begin0].staves[0].notes;
-        if (notes[notes.length - 1]) {
-          Object.assign(note, notes[notes.length - 1]);
-        }
-      } else {
-        if (staff.notes[staff.notes.length - 1]) {
-          Object.assign(note, staff.notes[staff.notes.length - 1]);
-        }
-      }
-      note.begin = begin;
-      note.accidental = null;
-      note.voice = voice;
-      if (note.id) {
-        delete note.id;
-      }
-      if (note.lyric) {
-        delete note.lyric;
-      }
-      if (note.articulation) {
-        delete note.articulation;
-      }
-      if (note.cue) {
-        delete note.cue;
-      }
-      if (state[state.length - 2] != "grace") {
-        let tup = tup_state[tup_state.length - 1];
-        if (note.tuplet && tup) {
-          if (note.tuplet.id != tup.id) {
-            note.tuplet = {
-              id: tup.id,
-              display_duration: null,
-              label: tup.num
-            };
-          }
-        } else if (tup && !note.tuplet) {
-          note.tuplet = { id: tup.id, display_duration: null, label: tup.num };
-        } else if (!tup && note.tuplet) {
-          note.tuplet = null;
-        }
-      } else {
-        note.tuplet = null;
-      }
-    } else if (x == "rest") {
-      switch_state("rest");
-      rest = {
-        begin: null,
-        duration: null,
-        voice: null,
-        tuplet: null
-      };
-      rest_hidden = false;
-      if (staff.rests[staff.rests.length - 1]) {
-        Object.assign(rest, staff.rests[staff.rests.length - 1]);
-      }
-      rest.begin = begin;
-      rest.voice = voice;
-      if (rest.cue) {
-        delete rest.cue;
-      }
-      if (state[state.length - 2] != "grace") {
-        let tup = tup_state[tup_state.length - 1];
-        if (rest.tuplet && tup) {
-          if (rest.tuplet.id != tup.id) {
-            rest.tuplet = {
-              id: tup.id,
-              display_duration: null,
-              label: tup.num
-            };
-          }
-        } else if (tup && !rest.tuplet) {
-          rest.tuplet = { id: tup.id, display_duration: null, label: tup.num };
-        } else if (!tup && rest.tuplet) {
-          rest.tuplet = null;
-        }
-      } else {
-        rest.tuplet = null;
-      }
-    } else if (x == "chord") {
-      switch_state("chord");
-    } else if (x == "grace") {
-      switch_state("grace");
-      begin0 = begin;
-      begin = 0;
-    } else if (x == "tuplet") {
-      switch_state("tuplet");
-      tup_state.push({
-        id: short_id(),
-        mul: 1,
-        begin,
-        dur: 0,
-        num: 3,
-        members: []
-      });
-    } else if (x == "voice") {
-      switch_state("voice");
-    } else if (x == "slur") {
-      switch_state("slur");
-      slur = {
-        left: null,
-        right: null,
-        is_tie: false
-      };
-    } else if (x == "tie") {
-      switch_state("slur");
-      slur = {
-        left: null,
-        right: null,
-        is_tie: true
-      };
-    } else if (x == "cresc") {
-      switch_state("cresc");
-      cresc = {
-        left: null,
-        right: null,
-        val_left: null,
-        val_right: null
-      };
-    } else if (curr_state("measure")) {
-      if (x.startsWith("|") || x.startsWith(":")) {
-        if (x == "|") {
-          measure.barline = BARLINE.SINGLE;
-        } else if (x == "||") {
-          measure.barline = BARLINE.DOUBLE;
-        } else if (x == "|||") {
-          measure.barline = BARLINE.END;
-        } else if (x == "|:") {
-          measure.barline = BARLINE.REPEAT_BEGIN;
-        } else if (x == ":|") {
-          measure.barline = BARLINE.REPEAT_END;
-        } else if (x == ":|:") {
-          measure.barline = BARLINE.REPEAT_END_BEGIN;
-        }
-      }
-    } else if (curr_state("staff")) {
-      if (x == "G") {
-        staff.clef = CLEF.TREBLE;
-      } else if (x == "F") {
-        staff.clef = CLEF.BASS;
-      } else if (x == "Ca" || x == "C") {
-        staff.clef = CLEF.ALTO;
-      } else if (x == "Ct") {
-        staff.clef = CLEF.TENOR;
-      } else if (x == "Cm") {
-        staff.clef = CLEF.MEZZO_SOPRANO;
-      } else if (x == "Cs") {
-        staff.clef = CLEF.SOPRANO;
-      } else if (x == "Cb") {
-        staff.clef = CLEF.BARITONE;
-      } else if (x == "~") {
-        staff.key_signature = [0, 0];
-      } else if (x.startsWith("b")) {
-        staff.key_signature = [ACCIDENTAL.FLAT, x.length];
-      } else if (x.startsWith("#")) {
-        staff.key_signature = [ACCIDENTAL.SHARP, x.length];
-      } else if (x.includes("/")) {
-        let s = x.split("/");
-        staff.time_signature = [Number(s[0]), Number(s[1])];
-      }
-    } else if (curr_state("note")) {
-      if (/^[A-Z].*/.test(x)) {
-        note.name = x[0];
-        note.octave = Number(x.slice(1));
-      } else if (x[0] == "d") {
-        let [dur, mod] = parse_dur(x.slice(1));
-        note.duration = dur;
-        note.modifier = mod;
-        if (note.tuplet) note.tuplet.display_duration = null;
-      } else if (x[0] == "$") {
-        note.id = x.slice(1);
-      } else if (x[0] == "#") {
-        note.accidental = ACCIDENTAL.SHARP;
-      } else if (x[0] == "b") {
-        note.accidental = ACCIDENTAL.FLAT;
-      } else if (x[0] == "~") {
-        note.accidental = ACCIDENTAL.NATURAL;
-      } else if (x[0] == "l") {
-        note.lyric = x.slice(1).replace(/(^')|('$)/g, "");
-      } else if (x[0] == "a") {
-        if (ARTICULATION_SYMBOL_LOOKUP[x[1]]) {
-          note.articulation = ARTICULATION_SYMBOL_LOOKUP[x[1]];
-        } else {
-          note.articulation = Number(x[1]);
-        }
-        if (x[2] == "|") {
-          note.articulation = -note.articulation;
-        }
-      } else if (x[0] == "|") {
-        note.cue = { position: 0, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      } else if (x[0] == "[") {
-        note.cue = { position: -1, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      } else if (x[0] == "]") {
-        note.cue = { position: 1, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      }
-    } else if (curr_state("rest")) {
-      if (x[0] == "d") {
-        let dur = 64 / Number(x.slice(1));
-        rest.duration = dur;
-        if (rest.tuplet) rest.tuplet.display_duration = null;
-      } else if (x[0] == "|") {
-        rest.cue = { position: 0, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      } else if (x[0] == "[") {
-        rest.cue = { position: -1, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      } else if (x[0] == "]") {
-        rest.cue = { position: 1, data: x.slice(1).replace(/(^')|('$)/g, "") };
-      } else if (x[0] == "-") {
-        rest_hidden = true;
-      }
-    } else if (curr_state("slur")) {
-      if (x[0] == "$") {
-        if (slur.left == null) {
-          slur.left = x.slice(1);
-        } else {
-          slur.right = x.slice(1);
-        }
-      }
-    } else if (curr_state("cresc")) {
-      if (x[0] == "$") {
-        if (cresc.left == null) {
-          cresc.left = x.slice(1);
-        } else {
-          cresc.right = x.slice(1);
-        }
-      } else {
-        if (cresc.val_left === null) {
-          cresc.val_left = Number(x);
-        } else {
-          cresc.val_right = Number(x);
-        }
-      }
-    } else if (curr_state("tuplet")) {
-      if (x[0] == "d") {
-        let [a_, b_] = x.slice(1).split("/");
-        let a = parse_dur(a_)[0];
-        let b = parse_dur(b_)[0];
-        tup_state[tup_state.length - 1].mul = a / b;
-        tup_state[tup_state.length - 1].dur = a;
-      } else {
-        let n = Number(x);
-        tup_state[tup_state.length - 1].num = n;
-      }
-    } else if (curr_state("title")) {
-      score2.title.push(x.replace(/(^')|('$)/g, ""));
-    } else if (curr_state("composer")) {
-      score2.composer.push(x.replace(/(^')|('$)/g, ""));
-    } else if (curr_state("instruments")) {
-      if (x == "{") {
-        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
-          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
-            false
-          );
-        score2.instruments.push({
-          bracket: BRACKET.BRACE,
-          names: [],
-          connect_barlines: []
-        });
-      } else if (x == "[") {
-        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
-          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
-            false
-          );
-        score2.instruments.push({
-          bracket: BRACKET.BRACKET,
-          names: [],
-          connect_barlines: []
-        });
-      } else if (x == "|") {
-        while (score2.instruments[score2.instruments.length - 1] && score2.instruments[score2.instruments.length - 1].connect_barlines.length < score2.instruments[score2.instruments.length - 1].names.length)
-          score2.instruments[score2.instruments.length - 1].connect_barlines.push(
-            false
-          );
-        score2.instruments.push({
-          bracket: BRACKET.NONE,
-          names: [],
-          connect_barlines: []
-        });
-      } else if (x == "-") {
-        score2.instruments[score2.instruments.length - 1].connect_barlines.push(
-          true
-        );
-      } else {
-        if (!score2.instruments.length) {
-          score2.instruments.push({
-            bracket: BRACKET.NONE,
-            names: [],
-            connect_barlines: []
-          });
-        }
-        let group = score2.instruments[score2.instruments.length - 1];
-        if (group.connect_barlines.length < group.names.length) {
-          group.connect_barlines.push(false);
-        }
-        group.names.push(x.replace(/(^')|('$)/g, ""));
-      }
-    } else if (curr_state("tempo")) {
-      if (!score2.tempo) {
-        score2.tempo = {};
-      }
-      if (x[0] == "d") {
-        let [dur, mod] = parse_dur(x.slice(1));
-        score2.tempo.duration = dur;
-        score2.tempo.modifier = mod;
-      } else if (x[0] == "=") {
-        score2.tempo.bpm = Number(x.slice(1));
-      } else {
-        score2.tempo.text = x.replace(/(^')|('$)/g, "");
-      }
-    }
-    i2++;
-  }
-  pop_short_state();
-  return score2;
-}
-function compile_staff2(staff, force_stem_dir = 0) {
-  for (let i2 = 0; i2 < staff.notes.length; i2++) {
-    staff.voices = Math.max(staff.notes[i2].voice + 1, staff.voices);
-  }
-  for (let i2 = 0; i2 < staff.rests.length; i2++) {
-    staff.voices = Math.max(staff.rests[i2].voice + 1, staff.voices);
-  }
-  function get_beat_length(time_sig) {
-    if (CONFIG.BEAM_POLICY == 0) {
-      return 1;
-    } else if (CONFIG.BEAM_POLICY == 1) {
-      return ~~(NOTE_LENGTH.WHOLE / time_sig[1]);
-    } else {
-      let beat_length2 = ~~(NOTE_LENGTH.WHOLE / time_sig[1]);
-      beat_length2 *= time_sig[0] % 2 || time_sig[0] <= 2 && time_sig[1] > 2 ? time_sig[0] : time_sig[0] / 2;
-      return beat_length2;
-    }
-  }
-  let beat_length = get_beat_length(staff.time_signature);
-  function get_beat_idx(note) {
-    return ~~(note.begin / beat_length);
-  }
-  function get_notes_in_beat(beat_idx) {
-    let notes = [];
-    for (let m of staff.notes) {
-      if (get_beat_idx(m) == beat_idx) {
-        notes.push(m);
-      }
-    }
-    return notes;
-  }
-  function calc_stem_dir(note) {
-    let notes_in_beat;
-    if (note.duration < NOTE_LENGTH.QUARTER) {
-      let beat_idx = get_beat_idx(note);
-      if (note.tuplet) {
-        notes_in_beat = staff.notes.filter(
-          (x) => x.tuplet && x.tuplet.id == note.tuplet.id
-        );
-      } else {
-        notes_in_beat = get_notes_in_beat(beat_idx).filter(
-          (x) => x.duration < NOTE_LENGTH.QUARTER
-        );
-      }
-    } else {
-      notes_in_beat = [];
-      for (let m of staff.notes) {
-        if (m.begin == note.begin) {
-          notes_in_beat.push(m);
-        }
-      }
-    }
-    let avg_line = notes_in_beat.reduce(
-      (acc, x) => acc + x.staff_pos,
-      0
-    ) / notes_in_beat.length;
-    if (avg_line < 4) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-  let [measure_acc, num_acc] = staff.key_signature;
-  let acc_names = ORDER_OF_ACCIDENTALS[measure_acc].slice(0, num_acc).split("");
-  let acc_history = {};
-  for (let i2 = 0; i2 < staff.notes.length; i2++) {
-    let note = staff.notes[i2];
-    let note_bname = note.name;
-    let key = note_bname + "_" + note.octave;
-    if (note.accidental != null) {
-      note.name = note_bname + ["b", "", "s"][note.accidental + 1];
-      acc_history[key] = note.accidental;
-    } else {
-      if (acc_history[key] === void 0) {
-        if (acc_names.includes(note_bname)) {
-          note.name = note_bname + ["b", null, "s"][measure_acc + 1];
-          acc_history[key] = measure_acc;
-        } else {
-          note.name = note_bname;
-        }
-      } else {
-        note.name = note_bname + ["b", "", "s"][acc_history[key] + 1];
-      }
-    }
-    note.name += "_";
-    note.name += note.octave;
-    note.staff_pos = note_name_to_staff_pos(note.name, staff.clef);
-  }
-  for (let i2 = 0; i2 < staff.notes.length; i2++) {
-    let note = staff.notes[i2];
-    let stem_dir;
-    if (staff.voices == 1) {
-      stem_dir = force_stem_dir || calc_stem_dir(note);
-    } else {
-      stem_dir = note.voice % 2 ? 1 : -1;
-    }
-    note.stem_dir = stem_dir;
-  }
-  chord_and_beam_staff(staff, beat_length);
-}
-function export_txt(score2) {
-  let o = "";
-  o += `title '${score2.title.map((x) => x.replace(/'/g, "\\'")).join("' '")}'
-`;
-  if (score2.composer) {
-    o += `composer '${score2.composer}'
-`;
-  }
-  if (score2.tempo) {
-    o += `tempo`;
-    if (score2.tempo.text) {
-      o += ` '` + score2.tempo.text.replace(/'/g, "\\'") + `'`;
-    }
-    if (score2.tempo.duration) {
-      if (score2.tempo.modifier) {
-        o += " d" + (96 / score2.tempo.duration).toString() + ".";
-      } else {
-        o += " d" + (64 / score2.tempo.duration).toString();
-      }
-      if (score2.tempo.bpm) {
-        o += " =" + score2.tempo.bpm;
-      }
-    }
-    o += "\n";
-  }
-  if (score2.instruments.length) {
-    o += "instruments ";
-    for (let i2 = 0; i2 < score2.instruments.length; i2++) {
-      o += ["", "{", "["][score2.instruments[i2].bracket] + " ";
-      for (let j = 0; j < score2.instruments[i2].names.length; j++) {
-        if (j && score2.instruments[i2].connect_barlines[j - 1]) {
-          o += " - ";
-        }
-        o += `'${score2.instruments[i2].names[j].replace(/'/g, "\\'")}' `;
-      }
-    }
-    o += "\n";
-  }
-  for (let i2 = 0; i2 < score2.measures.length; i2++) {
-    let measure = score2.measures[i2];
-    o += `measure`;
-    if (measure.barline == BARLINE.DOUBLE) {
-      o += ` ||`;
-    } else if (measure.barline == BARLINE.REPEAT_BEGIN) {
-      o += ` |:`;
-    } else if (measure.barline == BARLINE.REPEAT_END) {
-      o += ` :|`;
-    } else if (measure.barline == BARLINE.END) {
-      o += ` |||`;
-    } else if (measure.barline == BARLINE.REPEAT_END_BEGIN) {
-      o += ` :|:`;
-    }
-    o += `
-`;
-    for (let j = 0; j < measure.staves.length; j++) {
-      let staff = measure.staves[j];
-      o += `  staff ${staff.clef == CLEF.TREBLE ? "G" : "F"} ${["b", "", "#"][staff.key_signature[0] + 1].repeat(staff.key_signature[1])} ${staff.time_signature[0]}/${staff.time_signature[1]}
-`;
-      for (let k = 0; k < staff.voices; k++) {
-        let do_items = function(items2) {
-          var _a2;
-          for (let l = 0; l < items2.length; l++) {
-            let done = items2[l][2];
-            if (done) {
-              continue;
-            }
-            if (items2[l][1].tuplet) {
-              let count = function() {
-                let begin = -1;
-                let real = 0;
-                let disp = 0;
-                for (let m = l; m < items2.length; m++) {
-                  if (!items2[m][1].tuplet || items2[m][1].tuplet.id != items2[l][1].tuplet.id) {
-                    break;
-                  }
-                  if (items2[m][1].begin != begin) {
-                    begin = items2[m][1].begin;
-                    disp += items2[m][1].tuplet.display_duration;
-                  }
-                  real = items2[m][1].begin - items2[l][1].begin + items2[m][1].duration;
-                }
-                function to_str(n) {
-                  if (64 / n == ~~(64 / n)) {
-                    return (~~(64 / n)).toString();
-                  } else {
-                    return (~~(96 / n)).toString() + ".";
-                  }
-                }
-                let real_str = to_str(real);
-                let disp_str = to_str(disp);
-                return [real_str, disp_str];
-              };
-              let prev_tup_id = null;
-              for (let m = l - 1; m >= 0; m--) {
-                let e = items2[m][1];
-                if (e.tuplet) {
-                  prev_tup_id = items2[m][1].tuplet.id;
-                  break;
-                }
-              }
-              if (!items2[l - 1] || prev_tup_id === null) {
-                o += `   tuplet ${items2[l][1].tuplet.label} d${count().join("/")}
-`;
-              } else if (prev_tup_id !== null && prev_tup_id != items2[l][1].tuplet.id) {
-                o += `   end
-   tuplet ${items2[l][1].tuplet.label} d${count().join("/")}
-`;
-              }
-            } else if (items2[l - 1] && items2[l - 1][1].tuplet) {
-              let next_tup_id = null;
-              for (let m = l + 1; m < items2.length; m++) {
-                let e = items2[m][1];
-                if (e.tuplet) {
-                  next_tup_id = items2[m][1].tuplet.id;
-                  break;
-                }
-              }
-              if (items2[l - 1][1].tuplet.id != next_tup_id) {
-                o += `   end
-`;
-              }
-            }
-            if (items2[l][0] == "note") {
-              let e = items2[l][1];
-              while (e.prev_in_chord !== null) {
-                e = staff.notes[e.prev_in_chord];
-              }
-              let is_chord = e.next_in_chord !== null;
-              if (is_chord) o += "    chord\n";
-              do {
-                items2.find((x) => x[1] == e)[2] = true;
-                let s = ["note"];
-                s.push(e.name[0] + e.octave);
-                if (e.accidental !== null) {
-                  s.push(["b", "~", "#"][e.accidental + 1]);
-                }
-                let dur = e.duration;
-                if (e.tuplet) {
-                  dur = e.tuplet.display_duration;
-                }
-                if (e.modifier) {
-                  s.push("d" + (96 / dur).toString() + ".");
-                } else {
-                  s.push("d" + (64 / dur).toString());
-                }
-                if (e.articulation) {
-                  s.push(
-                    "a" + ((_a2 = ARTICULATION_SYMBOL[e.articulation]) != null ? _a2 : e.articulation)
-                  );
-                }
-                if (e.cue) {
-                  s.push(
-                    `${["[", "|", "]"][e.cue.position + 1]}'${e.cue.data.replace(/'/g, "\\'")}'`
-                  );
-                }
-                if (e.lyric) {
-                  s.push(`l'${e.lyric.replace(/'/g, "\\'")}'`);
-                }
-                let t = "    ";
-                if (is_chord) t += "  ";
-                t += s.join(" ");
-                if (e.id) {
-                  t = t.padEnd(50, " ") + " $" + e.id;
-                }
-                o += t + "\n";
-                e = staff.notes[e.next_in_chord];
-              } while (e);
-              if (is_chord) o += "    end\n";
-            } else if (items2[l][0] == "rest") {
-              let e = items2[l][1];
-              let dur = e.duration;
-              if (e.tuplet) {
-                dur = e.tuplet.display_duration;
-              }
-              o += `    rest d${64 / dur}`;
-              if (e.cue) {
-                o += ` ${["[", "|", "]"][e.cue.position + 1]}'${e.cue.data.replace(/'/g, "\\'")}'`;
-              }
-              o += "\n";
-            } else if (items2[l][0] == "grace") {
-              o += `   grace
-`;
-              do_items(
-                items2[l][1].items
-              );
-              o += `   end
-`;
-            } else {
-            }
-          }
-          if (items2[items2.length - 1] && items2[items2.length - 1][1].tuplet) {
-            o += `   end
-`;
-          }
-        };
-        let items = [];
-        for (let l = 0; l < staff.notes.length; l++) {
-          if (staff.notes[l].voice == k) {
-            items.push(["note", staff.notes[l], false]);
-          }
-        }
-        for (let l = 0; l < staff.rests.length; l++) {
-          if (staff.rests[l].voice == k) {
-            items.push(["rest", staff.rests[l], false]);
-          }
-        }
-        for (let l = 0; l < staff.grace.length; l++) {
-          if (!staff.grace[l]) {
-            continue;
-          }
-          let grace_item = [
-            "grace",
-            { begin: l - 1e-3, duration: staff.grace[l].duration, items: [] },
-            false
-          ];
-          for (let m = 0; m < staff.grace[l].staves[0].notes.length; m++) {
-            let n = staff.grace[l].staves[0].notes[m];
-            if (n.voice == k) {
-              grace_item[1].items.push(["note", n, false]);
-            }
-          }
-          for (let m = 0; m < staff.grace[l].staves[0].rests.length; m++) {
-            let n = staff.grace[l].staves[0].rests[m];
-            if (n.voice == k) {
-              grace_item[1].items.push(["rest", n, false]);
-            }
-          }
-          grace_item[1].items.sort(
-            (a, b) => a[1].begin - b[1].begin
-          );
-          if (grace_item[1].items.length) items.push(grace_item);
-        }
-        items.sort((a, b) => a[1].begin - b[1].begin);
-        if (staff.voices > 1) {
-          o += "   voice\n";
-        }
-        do_items(items);
-        if (staff.voices > 1) {
-          o += "   end\n";
-        }
-      }
-      o += `  end
-`;
-    }
-    o += `end
-`;
-  }
-  for (let i2 = 0; i2 < score2.slurs.length; i2++) {
-    let slur = score2.slurs[i2];
-    if (slur.is_tie) {
-      o += `tie $${slur.left} $${slur.right}
-`;
-    } else {
-      o += `slur $${slur.left} $${slur.right}
-`;
-    }
-  }
-  for (let i2 = 0; i2 < score2.crescs.length; i2++) {
-    let cresc = score2.crescs[i2];
-    o += `cresc ${cresc.val_left} ${cresc.val_right} $${cresc.left} $${cresc.right}
-`;
-  }
-  return o;
 }
 
 // src/main.ts
@@ -7051,7 +7051,7 @@ function render_score(score2, { compute_polylines = true } = {}) {
 // src/cli.ts
 var import_fs = __toESM(require("fs"));
 var import_path = __toESM(require("path"));
-var build_date = "2025-07-02";
+var build_date = "2025-07-03";
 function print_help() {
   console.log(`legumes: render sheet music => polylines`);
   console.log(`(build ${build_date})

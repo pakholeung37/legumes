@@ -34,6 +34,10 @@ console.dir(score, { depth: null, maxArrayLength: 10000000 })
 
 let drawing = render_score(score)
 
+// tmp may not exist
+if (!fs.existsSync('tmp')) {
+  fs.mkdirSync('tmp')
+}
 fs.writeFileSync('tmp/test_mock.svg', export_mock_svg(drawing))
 fs.writeFileSync('tmp/test_hf.svg', export_svg(drawing))
 fs.writeFileSync('tmp/test_sketch.svg', export_sketch_svg(drawing))
