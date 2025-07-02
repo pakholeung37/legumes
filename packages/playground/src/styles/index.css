@@ -1,0 +1,156 @@
+/* CSS Reset and Normalization */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography normalization */
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* List normalization */
+ol, ul {
+  list-style: none;
+}
+
+/* Link normalization */
+a {
+  background-color: transparent;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Form elements normalization */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+button,
+input {
+  overflow: visible;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button;
+}
+
+/* Remove inner border and padding in Firefox */
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+/* Remove the inner border and padding in IE */
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+  outline: 1px dotted ButtonText;
+}
+
+/* Fieldset normalization */
+fieldset {
+  padding: 0.35em 0.75em 0.625em;
+}
+
+legend {
+  box-sizing: border-box;
+  color: inherit;
+  display: table;
+  max-width: 100%;
+  padding: 0;
+  white-space: normal;
+}
+
+/* Progress normalization */
+progress {
+  vertical-align: baseline;
+}
+
+/* Textarea normalization */
+textarea {
+  overflow: auto;
+}
+
+/* Table normalization */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Image normalization */
+img {
+  border-style: none;
+  max-width: 100%;
+  height: auto;
+}
+
+/* CodeMirror specific normalization */
+.CodeMirror {
+  font-family: inherit;
+  height: 100%;
+  border: none;
+  outline: none;
+}
+
+.CodeMirror-scroll {
+  overflow: auto;
+}
+
+/* SVG normalization */
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Focus normalization */
+:focus {
+  outline: none;
+}
+
+/* Selection normalization */
+::selection {
+  background-color: #b3d4fc;
+  color: #000;
+}
+
+::-moz-selection {
+  background-color: #b3d4fc;
+  color: #000;
+}
+

@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 文件命名规范
+
+## 命名规则
+所有文件名应使用 kebab-case 格式：`xxx-xxx-xxx`
+
+## 目录命名
+目录名也应遵循相同的 kebab-case 命名规范

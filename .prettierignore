@@ -1,0 +1,21 @@
+# Build outputs
+dist/
+node_modules/
+_docs/
+
+# Generated files
+legc
+API.md
+
+# Sample outputs
+samples/*.svg
+samples/*.txt
+
+# Screenshots
+screenshots/
+
+# Lock files
+pnpm-lock.yaml
+
+# Temporary files
+tmp/ 
