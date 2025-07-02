@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "lodash-es": "^4.17.21",
+    "legumes": "workspace:*",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "legumes": "workspace:*"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "^3.10.2"

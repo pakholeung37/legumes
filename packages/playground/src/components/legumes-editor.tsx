@@ -41,7 +41,7 @@ export const LegumesEditorComponent: React.FC = () => {
         style={{
           background: 'floralwhite',
           overflow: 'hidden',
-          height: '100vh',
+          height: 'calc(100vh - 32px)',
           position: 'relative',
           display: 'flex',
         }}
@@ -119,6 +119,27 @@ export const LegumesEditorComponent: React.FC = () => {
           title="Play MIDI"
         >
           🔊
+        </button>
+
+        {/* Debug button */}
+        <button
+          onClick={() => editor?.debugCodeMirror()}
+          style={{
+            position: 'absolute',
+            left: 'calc(70% - 60px)',
+            top: '150px',
+            width: '50px',
+            height: '50px',
+            fontSize: '16px',
+            textAlign: 'center',
+            border: 'none',
+            background: '#f0f0f0',
+            cursor: 'pointer',
+            borderRadius: '5px',
+          }}
+          title="Debug CodeMirror"
+        >
+          🐛
         </button>
       </div>
     </>

@@ -137,33 +137,125 @@ const nameMidiKey: Record<number, string> = {
 export const defineLegumesMode = () => {
   if (typeof window !== 'undefined' && (window as any).CodeMirror) {
     const CodeMirror = (window as any).CodeMirror
+
     CodeMirror.defineSimpleMode('leg', {
       meta: {
         blockCommentStart: ';',
         blockCommentEnd: ';',
       },
       start: [
-        { regex: /'(?:[^\\]|\\.)*?(?:'|$)/im, token: 'string' },
-        {
-          regex:
-            /(?:note|rest|cresc|slur|tie|title|composer|instruments|tempo)\b/,
-          token: 'keyword',
-        },
+        // 注释 - 分号包围的内容 (最高优先级)
+        { regex: /;.*?;/g, token: 'comment' },
+
+        // 字符串 - 单引号包围的内容
+        { regex: /'(?:[^'\\]|\\.)*?'/g, token: 'string' },
+
+        // 引用标记 - $开头的标识符
+        { regex: /\$([a-zA-Z0-9_-]+)/, token: 'atom' },
+
+        // 音符定义 - 字母+数字 (如 C4, G5)
         { regex: /(?:(A|B|C|D|E|F|G)\d+)\b/, token: 'def' },
+
+        // 变音记号 - 升号和降号
+        { regex: /(?:(b+)|(#+))/, token: 'variable-2' },
+
+        // 时值 - 如 d4, d8, d16, d4.
+        { regex: /d\d+\.?/, token: 'number' },
+
+        // 拍号 - 如 2/4, 3/4
+        { regex: /\d+\/\d+/, token: 'number' },
+
+        // 数字 - 包括小数、十六进制等
+        {
+          regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+          token: 'number',
+        },
+
+        // 表情符号 - 如 a., a>, |p, |pp
+        { regex: /a\.|a>|\|[a-z]+/, token: 'variable' },
+
+        // 连音符号 - 如 ~
+        { regex: /~/, token: 'variable' },
+
+        // 结构关键字 - 需要缩进
         {
           regex: /(?:measure|staff|tuplet|chord|grace|voice)\b/,
           indent: true,
           token: 'type',
         },
+
+        // 结束关键字 - 需要减少缩进
         { regex: /(?:end)\b/, dedent: true, token: 'type' },
-        { regex: /(?:\$([^ \n\r\t]+))/, token: 'atom' },
+
+        // 关键字 - 主要命令
+        {
+          regex: /(?:title|composer|instruments|tempo)\b/,
+          token: 'keyword',
+        },
+
+        // 音符和休止符
+        { regex: /(?:note|rest)\b/, token: 'keyword' },
+
+        // 音乐符号
+        { regex: /(?:cresc|slur|tie)\b/, token: 'keyword' },
+
+        // 其他标识符 (最低优先级)
+        { regex: /[a-zA-Z_][a-zA-Z0-9_]*/, token: 'variable' },
+      ],
+    })
+    /* Example definition of a simple mode that understands a subset of
+     * JavaScript:
+     */
+
+    CodeMirror.defineSimpleMode('simplemode', {
+      // The start state contains the rules that are initially used
+      start: [
+        // The regex matches the token, the token property contains the type
+        { regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: 'string' },
+        // You can match multiple tokens at once. Note that the captured
+        // groups must span the whole string in this case
+        {
+          regex: /(function)(\s+)([a-z$][\w$]*)/,
+          token: ['keyword', null, 'variable-2'],
+        },
+        // Rules are matched in the order in which they appear, so there is
+        // no ambiguity between this one and the one above
+        {
+          regex: /(?:function|var|return|if|for|while|else|do|this)\b/,
+          token: 'keyword',
+        },
+        { regex: /true|false|null|undefined/, token: 'atom' },
         {
           regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
           token: 'number',
         },
-        { regex: /(?:(b+)|(#+))/, token: 'variable-2' },
-        { regex: /;.*;/, token: 'comment' },
+        { regex: /\/\/.*/, token: 'comment' },
+        { regex: /\/(?:[^\\]|\\.)*?\//, token: 'variable-3' },
+        // A next property will cause the mode to move to a different state
+        { regex: /\/\*/, token: 'comment', next: 'comment' },
+        { regex: /[-+\/*=<>!]+/, token: 'operator' },
+        // indent and dedent properties guide autoindentation
+        { regex: /[\{\[\(]/, indent: true },
+        { regex: /[\}\]\)]/, dedent: true },
+        { regex: /[a-z$][\w$]*/, token: 'variable' },
+        // You can embed other modes with the mode property. This rule
+        // causes all code between << and >> to be highlighted with the XML
+        // mode.
+        { regex: /<</, token: 'meta', mode: { spec: 'xml', end: />>/ } },
       ],
+      // The multi-line comment state.
+      comment: [
+        { regex: /.*?\*\//, token: 'comment', next: 'start' },
+        { regex: /.*/, token: 'comment' },
+      ],
+      // The meta property contains global information about the mode. It
+      // can contain properties like lineComment, which are supported by
+      // all modes, and also directives like dontIndentStates, which are
+      // specific to simple modes.
+      meta: {
+        dontIndentStates: ['comment'],
+        lineComment: '//',
+      },
     })
   }
 }
@@ -176,6 +268,7 @@ export class LegumesEditor {
   private playheadElement: HTMLElement
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private synths: Record<string, any> = {}
+  private isPlaying: boolean = false
 
   constructor(
     legumes: typeof Legumes,
@@ -193,11 +286,11 @@ export class LegumesEditor {
     if (typeof window !== 'undefined' && (window as any).CodeMirror) {
       const CodeMirror = (window as any).CodeMirror
       const codeElement = document.getElementById('code')
+
       if (codeElement) {
         this.codeMirror = CodeMirror(codeElement, {
           lineNumbers: true,
           matchBrackets: true,
-          theme: 'solarized light',
           mode: 'leg',
           indentWithTabs: false,
           indentUnit: 2,
@@ -222,8 +315,21 @@ export class LegumesEditor {
     // MIDI play button
     const midiPlayBtn = document.getElementById('midiplay')
     if (midiPlayBtn) {
-      midiPlayBtn.onclick = () => this.playMidi()
+      midiPlayBtn.onclick = () => this.toggleMidiPlay()
     }
+
+    // 添加 change 事件监听器来确保值更新
+    if (this.codeMirror) {
+      this.codeMirror.on('change', () => {
+        this.abortPlay()
+        this.compile()
+      })
+    }
+
+    // width change listener
+    window.addEventListener('resize', () => {
+      this.compile()
+    })
   }
 
   public setValue(value: string) {
@@ -254,8 +360,20 @@ export class LegumesEditor {
     this.outputElement.innerHTML = svg
   }
 
+  public toggleMidiPlay() {
+    if (this.isPlaying) {
+      this.abortPlay()
+    } else {
+      this.playMidi()
+    }
+  }
+
   public playMidi() {
+    this.abortPlay()
     this.compile()
+
+    this.isPlaying = true
+    this.updatePlayButton()
 
     this.synths = {}
     const offset = 1
@@ -263,7 +381,7 @@ export class LegumesEditor {
       (window as any).Tone?.now() + offset || Date.now() / 1000 + offset
     const spd = globalState.MIDI_SPD
 
-    const score = this.legumes.parse_txt(this.codeMirror.getValue())
+    const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     const midiFile = this.legumes.score_to_midi(score)
 
@@ -309,9 +427,12 @@ export class LegumesEditor {
       const [x0, y0, _, y1] = this.legumes.playhead_coords(score as any, mul64)
       const timeoutId = setTimeout(
         () => {
-          elt.style.left = x0 - cont.scrollLeft + 'px'
-          elt.style.top = y0 + 20 - cont.scrollTop + 'px'
-          elt.style.height = y1 - y0 + 'px'
+          if (this.isPlaying) {
+            // 只有在播放状态才更新 playhead
+            elt.style.left = x0 - cont.scrollLeft + 'px'
+            elt.style.top = y0 + 20 - cont.scrollTop + 'px'
+            elt.style.height = y1 - y0 + 'px'
+          }
         },
         1000 * (offset + i * spd),
       )
@@ -320,9 +441,12 @@ export class LegumesEditor {
 
     const finalTimeoutId = setTimeout(
       () => {
-        elt.style.left = '0px'
-        elt.style.top = '0px'
-        elt.style.height = '0px'
+        if (this.isPlaying) {
+          // 只有在播放状态才重置 playhead
+          this.resetPlayhead()
+          this.isPlaying = false
+          this.updatePlayButton()
+        }
       },
       1000 * (offset + (TT + 1) * spd),
     )
@@ -330,6 +454,10 @@ export class LegumesEditor {
   }
 
   public abortPlay() {
+    this.isPlaying = false
+    this.updatePlayButton()
+    this.resetPlayhead()
+
     if (this.synths) {
       for (const key in this.synths) {
         if (this.synths[key]) {
@@ -345,6 +473,27 @@ export class LegumesEditor {
     this.timeouts = []
   }
 
+  private resetPlayhead() {
+    if (this.playheadElement) {
+      this.playheadElement.style.left = '0px'
+      this.playheadElement.style.top = '0px'
+      this.playheadElement.style.height = '0px'
+    }
+  }
+
+  private updatePlayButton() {
+    const midiPlayBtn = document.getElementById('midiplay')
+    if (midiPlayBtn) {
+      if (this.isPlaying) {
+        midiPlayBtn.textContent = '⏸️'
+        midiPlayBtn.title = 'Pause MIDI'
+      } else {
+        midiPlayBtn.textContent = '🔊'
+        midiPlayBtn.title = 'Play MIDI'
+      }
+    }
+  }
+
   public exportSvg() {
     downloadPlain('score.svg', this.outputElement.innerHTML)
   }
@@ -354,7 +503,7 @@ export class LegumesEditor {
   }
 
   public exportPdf() {
-    const score = this.legumes.parse_txt(this.codeMirror.getValue())
+    const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     const drawing = this.legumes.render_score(score as any)
     const pdf = this.legumes.export_pdf(drawing)
@@ -362,7 +511,7 @@ export class LegumesEditor {
   }
 
   public exportMidi() {
-    const score = this.legumes.parse_txt(this.codeMirror.getValue())
+    const score = this.legumes.parse_txt(this.getValue())
     const midiFile = this.legumes.score_to_midi(score)
     const bytes = this.legumes.export_midi(midiFile)
     downloadBin('score.mid', new Uint8Array(bytes))
@@ -405,6 +554,22 @@ export class LegumesEditor {
   public getMidiSpeed(): number {
     return globalState.MIDI_SPD
   }
+
+  public getIsPlaying(): boolean {
+    return this.isPlaying
+  }
+
+  // 调试方法：检查 CodeMirror 状态
+  public debugCodeMirror() {
+    if (this.codeMirror) {
+      console.log('CodeMirror instance:', this.codeMirror)
+      console.log('Current value:', this.codeMirror.getValue())
+      console.log('Line count:', this.codeMirror.lineCount())
+      console.log('Is focused:', this.codeMirror.hasFocus())
+    } else {
+      console.log('CodeMirror not initialized')
+    }
+  }
 }
 
 // Initialize the editor
@@ -425,8 +590,9 @@ export const initializeEditor = async (
     // Find required elements
     const outputElement = document.getElementById('out')
     const playheadElement = document.getElementById('playhead')
+    const codeElement = document.getElementById('code')
 
-    if (!outputElement || !playheadElement) {
+    if (!outputElement || !playheadElement || !codeElement) {
       console.error('Required DOM elements not found')
       return null
     }
