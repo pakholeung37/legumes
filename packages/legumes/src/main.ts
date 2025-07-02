@@ -21,13 +21,7 @@ import {
 import {
   cue_evade_slur,
   slur_evade_note,
-  round_polylines,
-  export_mock_svg,
   hf_drawing_polylines,
-  export_animated_svg,
-  export_svg,
-  export_pdf,
-  export_gif,
 } from './drawing'
 import { FONT, get_text_width } from './hershey'
 
@@ -142,18 +136,18 @@ interface Measure extends Measure_itf {
   pad: { left: number; right: number; inter: number }
 }
 
-interface Rest extends Rest_itf {
+export interface Rest extends Rest_itf {
   staff_pos: number
 }
 
-interface Score extends Score_itf {
+export interface Score extends Score_itf {
   indent: number
   first_col_measure_indices: number[]
   measures: Measure[]
   slurred_ids: Record<string, boolean>
 }
 
-interface Note_register {
+export interface Note_register {
   note: Note
   staff_idx: number
   measure: Measure

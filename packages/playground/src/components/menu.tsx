@@ -37,7 +37,7 @@ export const Menu = (props: { editor: LegumesEditor }) => {
   // 菜单配置
   const menuGroups: MenuGroup[] = [
     {
-      label: 'L',
+      label: 'Legumes',
       items: [
         {
           label: 'About legumes',
@@ -260,7 +260,6 @@ export const Menu = (props: { editor: LegumesEditor }) => {
                 cursor: 'pointer',
                 fontSize: '14px',
                 color: activeDropdown === group.label ? '#007bff' : '#333',
-                fontWeight: activeDropdown === group.label ? 'bold' : 'normal',
                 borderRadius: '4px',
                 transition: 'all 0.2s',
               }}
