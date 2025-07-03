@@ -3,10 +3,13 @@
   "version": "0.0.1",
   "description": "",
   "main": "src/index.ts",
+  "bin": {
+    "legc": "legc"
+  },
   "scripts": {
     "build:lib": "tsup src/index.ts --format iife,esm --dts --global-name legumes && (cat dist/index.global.js ; echo \";(typeof module == 'object')?(module.exports=legumes):0;\") > dist/legumes.js && rm dist/index.global.js",
     "build:min": "tsup src/index.ts --minify --format iife --global-name legumes && (cat dist/index.global.js ; echo \";(typeof module == 'object')?(module.exports=legumes):0;\") > dist/legumes.min.js && rm dist/index.global.js",
-    "build:cli": "tsup src/cli.ts && sed -i '' \"s/sed-auto-replace-date-yyyy-mm-dd/$(date '+%Y-%m-%d')/g\" dist/cli.js && mv dist/cli.js legc && chmod +x legc",
+    "build:cli": "tsup src/cli.ts && mv dist/cli.js legc",
     "build:ide": "mkdir site; pnpm run build:lib && node tools/make_editor.js",
     "build:doc": "pnpx typedoc --out _docs --entryPoints src/index.ts --hideInPageTOC true --hideBreadcrumbs true; rm _docs/README.md; mv _docs/modules.md _docs/a.md; npx concat-md --decrease-title-levels _docs > API.md; rm -rf _docs; node tools/doc_const.js;",
     "build": "pnpm run build:lib && pnpm run build:cli",
