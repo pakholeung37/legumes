@@ -4,7 +4,8 @@
   "scripts": {
     "legumes": "pnpm --filter legumes",
     "dev": "pnpm --filter playground dev",
-    "test": "pnpm vitest"
+    "build": "pnpm --recursive build",
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",
