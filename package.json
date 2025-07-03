@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "legumes": "pnpm --filter legumes",
-    "dev": "pnpm --filter playground dev"
+    "dev": "pnpm --filter playground dev",
+    "test": "pnpm vitest"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

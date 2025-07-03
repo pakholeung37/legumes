@@ -12,6 +12,7 @@
     "build": "npm run build:lib && npm run build:cli",
     "samples": "npm run build:cli && cd samples && make FMT=svg EXT=svg && make FMT=svg-anim EXT=anim.svg && make FMT=svg-hand EXT=hand.svg; cd ../ && node tools/index_samples.js",
     "syntax": "npm run build:lib; node tools/illustrate_syntax.js",
+    "typecheck": "tsc --noEmit",
     "test:txt": "mkdir tmp; npm run build:lib && time node --max-old-space-size=1844674407370955161 tools/test_txt.js > tmp/dump.txt",
     "test:midi": "mkdir tmp; npm run build:lib && time node --max-old-space-size=1844674407370955161 tools/test_midi.js > tmp/dump.txt",
     "test": "vitest",

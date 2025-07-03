@@ -234,7 +234,7 @@ export const defineLegumesMode = () => {
         // A next property will cause the mode to move to a different state
         { regex: /\/\*/, token: 'comment', next: 'comment' },
         { regex: /[-+\/*=<>!]+/, token: 'operator' },
-        // indent and dedent properties guide autoindentation
+        // indent and dedent properties guide auto indentation
         { regex: /[\{\[\(]/, indent: true },
         { regex: /[\}\]\)]/, dedent: true },
         { regex: /[a-z$][\w$]*/, token: 'variable' },
@@ -250,7 +250,7 @@ export const defineLegumesMode = () => {
       ],
       // The meta property contains global information about the mode. It
       // can contain properties like lineComment, which are supported by
-      // all modes, and also directives like dontIndentStates, which are
+      // all modes, and also directives like dont IndentStates, which are
       // specific to simple modes.
       meta: {
         dontIndentStates: ['comment'],
