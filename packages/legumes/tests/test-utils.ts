@@ -4,11 +4,11 @@ import {
   parse_midi,
   score_from_midi,
   compile_score,
-  render_score,
   export_svg,
   parse_txt,
-} from '../src/main'
+} from '../src/index'
 import { Score } from '../src/type'
+import { render_score } from '../src/render'
 
 export function testMidiFile(file: string) {
   const p = path.join(__dirname, 'midi', file)

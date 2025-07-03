@@ -1,6 +1,8 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "include": ["src"],
   "compilerOptions": {
-    "target": "es6",
+    "target": "esnext",
     "lib": ["ESNext", "DOM"],
     "module": "esnext",
     "moduleResolution": "node",

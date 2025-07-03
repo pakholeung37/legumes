@@ -1,6 +1,7 @@
 // ES Module version of legumes editor for Vite playground
 import * as Legumes from 'legumes'
 import { samples } from './sample-loader'
+import { render_score } from 'legumes/src/render.ts'
 
 // Configuration
 const CONFIG = {
@@ -351,7 +352,7 @@ export class LegumesEditor {
     const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     ;(window as any).score = score
-    const drawing = this.legumes.render_score(score as any)
+    const drawing = render_score(score as any)
 
     this.legumes.round_polylines(drawing.polylines, 2)
 
@@ -505,7 +506,7 @@ export class LegumesEditor {
   public exportPdf() {
     const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
-    const drawing = this.legumes.render_score(score as any)
+    const drawing = render_score(score as any)
     const pdf = this.legumes.export_pdf(drawing)
     downloadPlain('score.pdf', pdf)
   }

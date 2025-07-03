@@ -1,10 +1,5 @@
-export interface Hershey_entry {
-  xmin: number
-  xmax: number
-  ymin: number
-  ymax: number
-  polylines: Array<Array<[number, number]>>
-}
+import { Hershey_entry } from './type'
+
 let ordR = 'R'.charCodeAt(0)
 
 let custom_map: Record<string, number> = {}

@@ -10,7 +10,6 @@ import {
   BARLINE,
   BRACKET,
 } from './common'
-import { CONFIG } from './main'
 import {
   Score_itf,
   Staff_itf,
@@ -22,6 +21,7 @@ import {
   Time_signature,
   Tuplet_itf,
 } from './type'
+import { CONFIG } from './config'
 
 const ARTICULATION_SYMBOL_LOOKUP: Record<string, number> = {
   '>': ARTICULATION.ACCENT,

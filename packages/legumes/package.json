@@ -2,7 +2,7 @@
   "name": "legumes",
   "version": "0.0.1",
   "description": "",
-  "main": "src/main.ts",
+  "main": "src/index.ts",
   "scripts": {
     "build:lib": "tsup src/main.ts --format iife,esm --dts --global-name legumes && (cat dist/main.global.js ; echo \";(typeof module == 'object')?(module.exports=legumes):0;\") > dist/legumes.js && rm dist/main.global.js",
     "build:min": "tsup src/main.ts --minify --format iife --global-name legumes && (cat dist/main.global.js ; echo \";(typeof module == 'object')?(module.exports=legumes):0;\") > dist/legumes.min.js && rm dist/main.global.js",

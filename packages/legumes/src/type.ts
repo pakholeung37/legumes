@@ -183,3 +183,27 @@ export interface Score_itf {
   measures: Measure_itf[]
   crescs: Cresc_itf[]
 }
+
+export interface Element {
+  tag: string
+  x: number
+  y: number
+  w: number
+  h: number
+  [other_options: string]: any
+}
+
+export interface Drawing {
+  w: number
+  h: number
+  elements: Element[]
+  polylines: [number, number][][]
+}
+
+export interface Hershey_entry {
+  xmin: number
+  xmax: number
+  ymin: number
+  ymax: number
+  polylines: Array<Array<[number, number]>>
+}

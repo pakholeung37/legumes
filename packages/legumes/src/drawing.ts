@@ -6,29 +6,8 @@ import {
   CUE,
   BRACKET,
 } from './common'
-import {
-  HERSHEY,
-  Hershey_entry,
-  ascii_map,
-  get_text_width,
-  FONT,
-} from './hershey'
-
-export interface Element {
-  tag: string
-  x: number
-  y: number
-  w: number
-  h: number
-  [other_options: string]: any
-}
-
-export interface Drawing {
-  w: number
-  h: number
-  elements: Element[]
-  polylines: [number, number][][]
-}
+import { HERSHEY, ascii_map, get_text_width, FONT } from './hershey'
+import { Drawing, Element } from './type'
 
 export function export_mock_svg(dr: Drawing): string {
   let width = dr.w
@@ -1156,10 +1135,10 @@ export function export_animated_svg(
   for (let i = 0; i < polylines.length; i++) {
     let l = lengths[i]
     o += `
-    <path 
-      stroke="black" 
-      stroke-width="1.5" 
-      fill="none" 
+    <path
+      stroke="black"
+      stroke-width="1.5"
+      fill="none"
       stroke-dasharray="${l}"
       stroke-dashoffset="${l}"
       d="M`
@@ -1169,15 +1148,15 @@ export function export_animated_svg(
     let t = speed * l
     o += `">
     <animate id="a${i}"
-      attributeName="stroke-dashoffset" 
+      attributeName="stroke-dashoffset"
       fill="freeze"
-      from="${l}" to="${0}" dur="${t}s" 
+      from="${l}" to="${0}" dur="${t}s"
       begin="${acc_lengths[i] * speed}s;a${i}.end+${1 + speed * total_l}s"/>
     />
     <animate id="b${i}"
-      attributeName="stroke-dashoffset" 
+      attributeName="stroke-dashoffset"
       fill="freeze"
-      from="${0}" to="${l}" dur="${1}s" 
+      from="${0}" to="${l}" dur="${1}s"
       begin="${speed * total_l}s;b${i}.end+${speed * total_l}s"/>
     />
     </path>`

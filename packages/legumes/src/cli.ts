@@ -1,35 +1,24 @@
 #!/usr/bin/env node
 
-import {
-  NOTE_LENGTH,
-  ACCIDENTAL,
-  CLEF,
-  ARTICULATION,
-  CUE,
-  BARLINE,
-  BRACKET,
-  CONFIG,
-  parse_midi,
-  score_from_midi,
-  score_to_midi,
-  compile_score,
-  export_animated_svg,
-  export_svg,
-  export_mock_svg,
-  export_sketch_svg,
-  parse_txt,
-  export_txt,
-  export_pdf,
-  render_score,
-  export_midi,
-  export_gif,
-  register_font,
-} from './main'
-
 import fs from 'fs'
 import path from 'path'
-import { Drawing, round_polylines } from './drawing'
-import { Score_itf } from './type'
+import {
+  export_animated_svg,
+  export_gif,
+  export_mock_svg,
+  export_pdf,
+  export_svg,
+  round_polylines,
+} from './drawing'
+import { Drawing, Score_itf } from './type'
+import { CONFIG } from './config'
+import { render_score } from './render'
+import { compile_score } from './compile'
+import { export_sketch_svg } from './fx'
+import { register_font } from './hershey'
+import { score_from_midi, score_to_midi } from './midicompile'
+import { parse_midi, export_midi } from './midifmt'
+import { parse_txt, export_txt } from './txtfmt'
 
 let build_date = 'sed-auto-replace-date-yyyy-mm-dd'
 
