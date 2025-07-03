@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { LegumesEditor } from '../legumes-editor'
 import { samples } from '../sample-loader'
 import packageJson from '../../package.json'
+import styles from './menu.module.scss'
 
 interface MenuItem {
   label: string
@@ -17,6 +18,7 @@ interface MenuGroup {
 export const Menu = (props: { editor: LegumesEditor }) => {
   const { editor } = props
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // 关闭下拉菜单的函数
@@ -226,97 +228,29 @@ export const Menu = (props: { editor: LegumesEditor }) => {
   }
 
   return (
-    <div
-      style={{
-        width: '100%',
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          height: '32px',
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 8px',
-          pointerEvents: 'auto',
-        }}
-      >
+    <div className={styles.menuContainer}>
+      <div className={styles.menuBar}>
         {menuGroups.map((group) => (
-          <div
-            key={group.label}
-            style={{
-              position: 'relative',
-              display: 'inline-block',
-            }}
-          >
+          <div key={group.label} className={styles.menuGroup}>
             <button
               onClick={() => handleMenuClick(group.label)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '6px 12px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: activeDropdown === group.label ? '#007bff' : '#333',
-                borderRadius: '4px',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#e9ecef'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }}
+              className={`${styles.menuButton} ${
+                activeDropdown === group.label ? styles.active : ''
+              }`}
             >
               {group.label}
             </button>
 
             {activeDropdown === group.label && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  minWidth: '160px',
-                  zIndex: 1001,
-                }}
-              >
+              <div className={styles.dropdown}>
                 {group.items.map((item, index) => (
                   <div key={index}>
                     {item.isSeparator ? (
-                      <div
-                        style={{
-                          height: '1px',
-                          backgroundColor: '#dee2e6',
-                          margin: '4px 0',
-                        }}
-                      />
+                      <div className={styles.separator} />
                     ) : (
                       <button
                         onClick={() => handleItemClick(item.action)}
-                        style={{
-                          width: '100%',
-                          background: 'none',
-                          border: 'none',
-                          padding: '8px 12px',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          textAlign: 'left',
-                          color: '#333',
-                          transition: 'background-color 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f8f9fa'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent'
-                        }}
+                        className={styles.dropdownItem}
                       >
                         {item.label}
                       </button>
@@ -327,6 +261,39 @@ export const Menu = (props: { editor: LegumesEditor }) => {
             )}
           </div>
         ))}
+        
+        {/* 右侧按钮区域 */}
+        <div className={styles.buttonGroup}>
+          {/* 编译按钮 */}
+          <button
+            onClick={() => editor.compile()}
+            className={styles.actionButton}
+            title="Compile"
+          >
+            🔨
+          </button>
+
+          {/* MIDI播放按钮 */}
+          <button
+            onClick={() => {
+              editor.toggleMidiPlay()
+              setIsPlaying(editor.getIsPlaying())
+            }}
+            className={styles.actionButton}
+            title={isPlaying ? "Pause MIDI" : "Play MIDI"}
+          >
+            {isPlaying ? '⏸️' : '🔊'}
+          </button>
+
+          {/* 调试按钮 */}
+          <button
+            onClick={() => editor.debugCodeMirror()}
+            className={`${styles.actionButton} ${styles.debugButton}`}
+            title="Debug CodeMirror"
+          >
+            🐛
+          </button>
+        </div>
       </div>
     </div>
   )

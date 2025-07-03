@@ -78,69 +78,6 @@ export const LegumesEditorComponent: React.FC = () => {
             height: '100%',
           }}
         />
-
-        {/* Compile button */}
-        <button
-          id="compile"
-          style={{
-            position: 'absolute',
-            left: 'calc(70% - 60px)',
-            top: '30px',
-            width: '50px',
-            height: '50px',
-            fontSize: '32px',
-            textAlign: 'center',
-            border: 'none',
-            background: '#f0f0f0',
-            cursor: 'pointer',
-            borderRadius: '5px',
-          }}
-          title="Compile"
-        >
-          🔨
-        </button>
-
-        {/* MIDI play button */}
-        <button
-          id="midiplay"
-          style={{
-            position: 'absolute',
-            left: 'calc(70% - 60px)',
-            top: '90px',
-            width: '50px',
-            height: '50px',
-            fontSize: '32px',
-            textAlign: 'center',
-            border: 'none',
-            background: '#f0f0f0',
-            cursor: 'pointer',
-            borderRadius: '5px',
-          }}
-          title="Play MIDI"
-        >
-          🔊
-        </button>
-
-        {/* Debug button */}
-        <button
-          onClick={() => editor?.debugCodeMirror()}
-          style={{
-            position: 'absolute',
-            left: 'calc(70% - 60px)',
-            top: '150px',
-            width: '50px',
-            height: '50px',
-            fontSize: '16px',
-            textAlign: 'center',
-            border: 'none',
-            background: '#f0f0f0',
-            cursor: 'pointer',
-            borderRadius: '5px',
-          }}
-          title="Debug CodeMirror"
-        >
-          🐛
-        </button>
       </div>
     </>
   )
