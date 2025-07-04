@@ -4,7 +4,7 @@ import { samples } from '../sample-loader'
 import * as Legumes from 'legumes'
 import { Menu } from './menu'
 
-const SAMPLE_FILE = 'mozart_turkish_march.txt'
+const SAMPLE_FILE = Object.keys(samples)[0]
 export const LegumesEditorComponent: React.FC = () => {
   const [editor, setEditor] = useState<LegumesEditor | null>(null)
 

@@ -135,7 +135,7 @@ const nameMidiKey: Record<number, string> = {
 // Utility functions
 
 // CodeMirror mode definition
-export const defineLegumesMode = () => {
+const defineLegumesMode = () => {
   if (typeof window !== 'undefined' && (window as any).CodeMirror) {
     const CodeMirror = (window as any).CodeMirror
 
@@ -532,10 +532,8 @@ export const initializeEditor = async (
   }
 }
 
-// Export configuration
-export { CONFIG, globalState, nameMidiKey }
 
-export const uploadFile = (
+const uploadFile = (
   type: 'Text' | 'ArrayBuffer',
   callback: (result: string | ArrayBuffer) => void,
 ) => {
@@ -559,7 +557,7 @@ export const uploadFile = (
 }
 
 // Download utilities
-export const downloadPlain = (filename: string, content: string) => {
+const downloadPlain = (filename: string, content: string) => {
   const blob = new Blob([content], { type: 'text/plain' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
@@ -570,7 +568,7 @@ export const downloadPlain = (filename: string, content: string) => {
   document.body.removeChild(a)
 }
 
-export const downloadBin = (filename: string, content: Uint8Array) => {
+const downloadBin = (filename: string, content: Uint8Array) => {
   const blob = new Blob([content], { type: 'application/octet-stream' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
@@ -582,7 +580,7 @@ export const downloadBin = (filename: string, content: Uint8Array) => {
 }
 
 // Better tab function for CodeMirror
-export const betterTab = (cm: any) => {
+const betterTab = (cm: any) => {
   if (cm.somethingSelected()) {
     cm.indentSelection('add')
   } else {

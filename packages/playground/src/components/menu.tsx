@@ -113,6 +113,13 @@ export const Menu = (props: { editor: LegumesEditor }) => {
           },
         },
         {
+          label: 'Mock',
+          action: () => {
+            editor.setOutputFunction(editor.legumes.export_mock_svg)
+            editor.compile()
+          },
+        },
+        {
           label: 'Hand-drawn',
           action: () => {
             editor.setOutputFunction(editor.legumes.export_sketch_svg)
@@ -261,7 +268,7 @@ export const Menu = (props: { editor: LegumesEditor }) => {
             )}
           </div>
         ))}
-        
+
         {/* 右侧按钮区域 */}
         <div className={styles.buttonGroup}>
           {/* 编译按钮 */}
@@ -280,7 +287,7 @@ export const Menu = (props: { editor: LegumesEditor }) => {
               setIsPlaying(editor.getIsPlaying())
             }}
             className={styles.actionButton}
-            title={isPlaying ? "Pause MIDI" : "Play MIDI"}
+            title={isPlaying ? 'Pause MIDI' : 'Play MIDI'}
           >
             {isPlaying ? '⏸️' : '🔊'}
           </button>
