@@ -3,13 +3,15 @@
 import fs from 'fs'
 import path from 'path'
 import {
-  export_animated_svg,
-  export_gif,
-  export_mock_svg,
-  export_pdf,
-  export_svg,
   round_polylines,
 } from './drawing'
+import {
+  create_animated_svg,
+  create_gif,
+  create_mock_svg,
+  create_pdf,
+  create_svg
+} from './create'
 import { Drawing, Score_itf } from './type'
 import { CONFIG } from './config'
 import { render_score } from './render'
@@ -144,13 +146,13 @@ if (out_format == 'txt') {
 if (out_format == 'json') {
   console.dir({ score, drawing }, { depth: null, maxArrayLength: Infinity })
 } else if (out_format == 'svg') {
-  console.log(export_svg(drawing))
+  console.log(create_svg(drawing))
 } else if (out_format == 'pdf') {
-  console.log(export_pdf(drawing))
+  console.log(create_pdf(drawing))
 } else if (out_format == 'svg-mock') {
-  console.log(export_mock_svg(drawing))
+  console.log(create_mock_svg(drawing))
 } else if (out_format == 'svg-anim') {
-  console.log(export_animated_svg(drawing))
+  console.log(create_animated_svg(drawing))
 } else if (out_format == 'svg-hand') {
   console.log(export_sketch_svg(drawing))
 } else if (out_format == 'mid') {
@@ -159,7 +161,7 @@ if (out_format == 'json') {
   process.stdout.write(Buffer.from(bytes))
   // fs.writeFileSync('test.mid',Buffer.from(bytes));
 } else if (out_format == 'gif') {
-  let bytes = export_gif(drawing)
+  let bytes = create_gif(drawing)
   process.stdout.write(Buffer.from(bytes))
 } else {
   console.error('unrecognized output format: ' + out_format)

@@ -4,7 +4,7 @@ import {
   parse_midi,
   score_from_midi,
   compile_score,
-  export_svg,
+  create_svg,
   parse_txt,
 } from '../src/index'
 import { Score } from '../src/type'
@@ -17,7 +17,7 @@ export function testMidiFile(file: string) {
   const score = score_from_midi(midi_file)
   compile_score(score)
   const drawing = render_score(score as Score)
-  return export_svg(drawing)
+  return create_svg(drawing)
 }
 
 export function testTxtFile(file: string) {
@@ -26,5 +26,5 @@ export function testTxtFile(file: string) {
   const score = parse_txt(txt)
   compile_score(score)
   const drawing = render_score(score as Score)
-  return export_svg(drawing)
+  return create_svg(drawing)
 }

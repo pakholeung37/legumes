@@ -293,7 +293,7 @@ export class LegumesEditor {
 
     this.legumes.round_polylines(drawing.polylines, 2)
 
-    const outFunc = globalState.OUT_FUNC || this.legumes.export_svg
+    const outFunc = globalState.OUT_FUNC || this.legumes.create_svg
     const svg = outFunc(drawing, { background: null })
     this.outputElement.innerHTML = svg
   }
@@ -428,7 +428,7 @@ export class LegumesEditor {
     const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     const drawing = render_score(score as any)
-    const pdf = this.legumes.export_pdf(drawing)
+    const pdf = this.legumes.create_pdf(drawing)
     downloadPlain('score.pdf', pdf)
   }
 
@@ -523,7 +523,7 @@ export const initializeEditor = async (
     const editor = new LegumesEditor(legumes, outputElement, playheadElement)
 
     // Set default output function
-    editor.setOutputFunction(legumes.export_svg)
+    editor.setOutputFunction(legumes.create_svg)
 
     return editor
   } catch (error) {

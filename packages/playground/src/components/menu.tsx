@@ -101,21 +101,21 @@ export const Menu = (props: { editor: LegumesEditor }) => {
         {
           label: 'Plain',
           action: () => {
-            editor.setOutputFunction(editor.legumes.export_svg)
+            editor.setOutputFunction(editor.legumes.create_svg)
             editor.compile()
           },
         },
         {
           label: 'Animated',
           action: () => {
-            editor.setOutputFunction(editor.legumes.export_animated_svg)
+            editor.setOutputFunction(editor.legumes.create_animated_svg)
             editor.compile()
           },
         },
         {
           label: 'Mock',
           action: () => {
-            editor.setOutputFunction(editor.legumes.export_mock_svg)
+            editor.setOutputFunction(editor.legumes.create_mock_svg)
             editor.compile()
           },
         },
