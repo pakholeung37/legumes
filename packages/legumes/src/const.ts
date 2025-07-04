@@ -1,0 +1,74 @@
+export const NOTE_LENGTH = {
+  WHOLE: 64,
+  HALF: 32,
+  QUARTER: 16,
+  EIGHTH: 8,
+  SIXTEENTH: 4,
+  THIRTYSECOND: 2,
+  SIXTYFOURTH: 1,
+}
+
+export const ACCIDENTAL = {
+  SHARP: 1,
+  NATURAL: 0,
+  FLAT: -1,
+}
+export const CLEF = {
+  TREBLE: 0,
+  BASS: 1,
+  ALTO: 2,
+  TENOR: 3,
+  MEZZO_SOPRANO: 4,
+  SOPRANO: 5,
+  BARITONE: 6,
+}
+export const ORDER_OF_ACCIDENTALS = {
+  [ACCIDENTAL.SHARP]: 'FCGDAEB',
+  [ACCIDENTAL.FLAT]: 'BEADGCF',
+  [ACCIDENTAL.NATURAL]: '',
+}
+export const ARTICULATION = {
+  STACCATO: 11,
+  SPICCATO: 12,
+  TENUTO: 13,
+  FERMATA: 14,
+  ACCENT: 15,
+  MARCATO: 16,
+  TREMBLEMENT: 17,
+  TRILL: 18,
+  MORDENT: 19,
+  TURN: 20,
+  UP_BOW: 21,
+  FLAGEOLET: 22,
+  ARPEGGIATED: 23,
+  MORDENT_INV: -19,
+  TURN_INV: -20,
+}
+export const CUE = {
+  PEDAL_ON: 'ped',
+  PEDAL_OFF: '*',
+  PIANISSISSIMO: 'ppp',
+  PIANISSIMO: 'pp',
+  PIANO: 'p',
+  MEZZO_PIANO: 'mp',
+  MEZZO_FORTE: 'mf',
+  FORTE: 'f',
+  FORTISSIMO: 'ff',
+  FORTISSISSIMO: 'fff',
+  SFORZANDO: 'sfz',
+}
+export const BARLINE = {
+  NONE: 0,
+  SINGLE: 1,
+  DOUBLE: 2,
+  END: 3,
+  REPEAT_BEGIN: 4,
+  REPEAT_END: 5,
+  REPEAT_END_BEGIN: 6,
+}
+
+export const BRACKET = {
+  NONE: 0,
+  BRACE: 1,
+  BRACKET: 2,
+}

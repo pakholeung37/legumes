@@ -4,8 +4,8 @@ import {
   CLEF,
   ARTICULATION,
   CUE,
-  BRACKET,
-} from './common'
+  BRACKET
+} from './const'
 import { HERSHEY, ascii_map, get_text_width, FONT } from './hershey'
 import { Drawing, Element } from './type'
 
@@ -960,7 +960,7 @@ export function hf_drawing_polylines(
         ])
       }
     } else if (tag == 'articulation') {
-      let a = Math.abs(elt.type)
+      let a = Math.abs(elt.type as number)
       if (a == ARTICULATION.STACCATO) {
         let p = symbols['dot']
         push_all(xform(p, (u, v) => [x + u, y + v]))
@@ -1030,7 +1030,7 @@ export function hf_drawing_polylines(
         let p = HERSHEY(ascii_map(elt.type.toString(), FONT.TRIPLEX)).polylines
         push_all(xform(p, (u, v) => [x + u / 2, y + v / 2]))
       }
-      if (elt.type < 0) {
+      if ((elt.type as number) < 0) {
         let p: [number, number][] = [
           [x, y - 5],
           [x, y + 5],

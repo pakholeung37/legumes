@@ -1,15 +1,16 @@
 import {
+  note_name_to_staff_pos,
+  chord_and_beam_staff,
+  short_id
+} from './utils'
+import {
   CLEF,
   ACCIDENTAL,
   ORDER_OF_ACCIDENTALS,
-  NOTE_LENGTH,
-  note_name_to_staff_pos,
-  chord_and_beam_staff,
-  short_id,
-  ARTICULATION,
+  NOTE_LENGTH, ARTICULATION,
   BARLINE,
-  BRACKET,
-} from './common'
+  BRACKET
+} from './const'
 import {
   Score_itf,
   Staff_itf,

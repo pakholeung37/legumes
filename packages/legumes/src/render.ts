@@ -10,16 +10,15 @@ import {
   Slot,
   Tempo_itf,
 } from './type'
+import { note_name_to_staff_pos } from './utils'
 import {
   ACCIDENTAL,
   ARTICULATION,
   BARLINE,
   BRACKET,
   CLEF,
-  NOTE_LENGTH,
-  note_name_to_staff_pos,
-  ORDER_OF_ACCIDENTALS,
-} from './common'
+  NOTE_LENGTH, ORDER_OF_ACCIDENTALS
+} from './const'
 import { CONFIG, CONTENT_WIDTH, FONT_INHERENT_HEIGHT } from './config'
 import { FONT, get_text_width } from './hershey'
 import {
@@ -907,13 +906,6 @@ function draw_staff(
   return result
 }
 
-/**
- * recalculate the x and y of the elements
- * TODO: opt
- * @param elts
- * @param x
- * @param y
- */
 function translate_elements(elts: Element[], x: number, y: number) {
   for (let i = 0; i < elts.length; i++) {
     elts[i].x += x

@@ -8,19 +8,20 @@ import {
   Measure_itf,
 } from './type'
 import {
-  ACCIDENTAL,
-  ORDER_OF_ACCIDENTALS,
-  CLEF,
   get_median_staff_pos,
   note_name_to_staff_pos,
   get_note_name_accidental,
   get_existing_voices,
   short_id,
-  chord_and_beam_staff,
-  BARLINE,
+  chord_and_beam_staff
+} from './utils'
+import {
+  ACCIDENTAL,
+  ORDER_OF_ACCIDENTALS,
+  CLEF, BARLINE,
   BRACKET,
-  ARTICULATION,
-} from './common'
+  ARTICULATION
+} from './const'
 
 const MAX_VOICES = 2
 

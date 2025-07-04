@@ -185,14 +185,53 @@ export interface Score_itf {
 }
 
 export interface Element {
-  /**
-   * TODO: optimize to token
-   */
-  tag: string
+  tag:
+    | 'note_head'
+    | 'rest'
+    | 'accidental'
+    | 'clef'
+    | 'timesig_digit'
+    | 'beam'
+    | 'line'
+    | 'dbg'
+    | 'slur'
+    | 'cresc'
+    | 'dot'
+    | 'flag'
+    | 'timesig_c'
+    | 'tuplet_label'
+    | 'lyric'
+    | 'bold_text'
+    | 'regular_text'
+    | 'bracket'
+    | 'articulation'
+    | 'squiggle'
+    | 'cue'
+
   x: number
   y: number
   w: number
   h: number
+
+  type?:
+    | number
+    | 'measure_number'
+    | 'instrument'
+    | 'barline'
+    | 'barline_repeat'
+    | 'staff_line'
+    | 'modifier'
+    | 'note_stem'
+    | 'ledger'
+    | 'arpeggiated_chord'
+    | 'cut'
+    | 'common'
+    | 'composer'
+    | 'tempo'
+    | 'title'
+    | 'subtitle'
+    | 'cresc_top'
+    | 'cresc_bottom'
   [other_options: string]: any
 }
 

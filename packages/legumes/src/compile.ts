@@ -10,12 +10,11 @@ import {
   Slot,
   Staff,
 } from './type'
+import { get_median_staff_pos } from './utils'
 import {
   ARTICULATION,
-  BARLINE,
-  get_median_staff_pos,
-  NOTE_LENGTH,
-} from './common'
+  BARLINE, NOTE_LENGTH
+} from './const'
 import { FONT, get_text_width } from './hershey'
 import { CONFIG, CONTENT_WIDTH, FONT_INHERENT_HEIGHT } from './config'
 import { calc_num_flags, interval_overlap, on_staff, slot_pos } from './utils'
