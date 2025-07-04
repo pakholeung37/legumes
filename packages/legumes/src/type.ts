@@ -185,6 +185,9 @@ export interface Score_itf {
 }
 
 export interface Element {
+  /**
+   * TODO: optimize to token
+   */
   tag: string
   x: number
   y: number

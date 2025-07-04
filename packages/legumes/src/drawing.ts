@@ -83,7 +83,7 @@ function cubic_bezier(
 }
 
 let symbols: Record<string, [number, number][][]> = {}
-;(function make_symbols() {
+function make_symbols() {
   function note_var(
     p: [number, number][][],
     stem_dir: number,
@@ -346,7 +346,8 @@ let symbols: Record<string, [number, number][][]> = {}
     })
     symbols['brace'] = p
   }
-})()
+}
+make_symbols()
 
 function scale_axis(
   x: number,

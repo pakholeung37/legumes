@@ -907,6 +907,13 @@ function draw_staff(
   return result
 }
 
+/**
+ * recalculate the x and y of the elements
+ * TODO: opt
+ * @param elts
+ * @param x
+ * @param y
+ */
 function translate_elements(elts: Element[], x: number, y: number) {
   for (let i = 0; i < elts.length; i++) {
     elts[i].x += x

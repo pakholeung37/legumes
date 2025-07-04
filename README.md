@@ -10,7 +10,7 @@ This is a fork of the original [legumes](https://github.com/LingDong-/legumes) p
 
 Legumes is a sheet music to polylines renderer that takes MIDI files or simple markup format as input and outputs polylines for animation, plotting, and various procedural drawing applications.
 
-> 🚧 This project is a work in progress and currently supports a subset of sheet music notation. Errors and ugliness might occur from time to time. For professional quality scorewriting, check out [List of scorewriters](https://en.wikipedia.org/wiki/List_of_scorewriters) instead. 🚧
+> 🚧 This project is a work in progress and currently supports a subset of sheet music notation. Errors and ugliness might occur from time to time. For professional quality scorewriting, check out [List of score writers](https://en.wikipedia.org/wiki/List_of_scorewriters) instead. 🚧
 
 ## Features
 
@@ -68,7 +68,7 @@ let svg = legumes.export_svg(drawing);
 
 ### Web Editor
 
-Try the online editor at [legumes.netlify.app](https://legumes.netlify.app/) for interactive editing with syntax highlighting and MIDI playback.
+Try the online editor at [legumes.vercel.app](https://legumes.vercel.app/) for interactive editing with syntax highlighting and MIDI playback.
 
 ## Development
 
