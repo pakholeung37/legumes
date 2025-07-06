@@ -2,6 +2,7 @@
 import * as Legumes from 'legumes'
 import { samples } from './sample-loader'
 import { render_score } from 'legumes/src/render.ts'
+import type { Score_itf } from 'legumes'
 
 // Configuration
 const CONFIG = {
@@ -210,6 +211,20 @@ const defineLegumesMode = () => {
   }
 }
 
+const defineMusicXmlMode = () => {
+  if (typeof window !== 'undefined' && (window as any).CodeMirror) {
+    const CodeMirror = (window as any).CodeMirror
+
+    CodeMirror.defineSimpleMode('xml', {
+      start: [
+        { regex: /<[^>]*>/g, token: 'tag' },
+        { regex: /<![^>]*>/g, token: 'tag' },
+        { regex: /<\?[^>]*>/g, token: 'tag' },
+      ],
+    })
+  }
+}
+
 // Main editor class
 export class LegumesEditor {
   public legumes: typeof Legumes
@@ -219,6 +234,8 @@ export class LegumesEditor {
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private synths: Record<string, any> = {}
   private isPlaying: boolean = false
+
+  private extName: string = 'leg'
 
   constructor(
     legumes: typeof Legumes,
@@ -260,7 +277,6 @@ export class LegumesEditor {
     if (this.codeMirror) {
       this.codeMirror.on('change', () => {
         this.abortPlay()
-        this.compile()
       })
     }
 
@@ -286,16 +302,31 @@ export class LegumesEditor {
     // Set configuration
     this.legumes.CONFIG.PAGE_WIDTH = window.innerWidth * 0.7 - 20
     this.legumes.CONFIG.INTER_NOTE_WIDTH = 0
-    const score = this.legumes.parse_txt(this.getValue())
-    this.legumes.compile_score(score)
-    ;(window as any).score = score
-    const drawing = render_score(score as any)
 
-    this.legumes.round_polylines(drawing.polylines, 2)
+    try {
+      let score: Score_itf
+      if (this.extName === 'leg') {
+        score = this.legumes.parse_txt(this.getValue())
+        this.codeMirror.setOption('mode', 'leg')
+      } else if (this.extName === 'musicxml') {
+        score = this.legumes.parse_musicxml(this.getValue())
+        this.codeMirror.setOption('mode', 'xml')
+      } else {
+        throw new Error(`Unsupported file type: ${this.extName}`)
+      }
 
-    const outFunc = globalState.OUT_FUNC || this.legumes.create_svg
-    const svg = outFunc(drawing, { background: null })
-    this.outputElement.innerHTML = svg
+      this.legumes.compile_score(score)
+      ;(window as any).score = score
+      const drawing = render_score(score as any)
+
+      this.legumes.round_polylines(drawing.polylines, 2)
+
+      const outFunc = globalState.OUT_FUNC || this.legumes.create_svg
+      const svg = outFunc(drawing, { background: null })
+      this.outputElement.innerHTML = svg
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   public toggleMidiPlay() {
@@ -459,8 +490,10 @@ export class LegumesEditor {
   }
 
   public loadSample(sampleName: string) {
-    if (samples[sampleName]) {
-      this.setValue(samples[sampleName])
+    const sample = samples[sampleName]
+    if (sample) {
+      this.setValue(sample)
+      this.extName = sampleName.split('.').pop() || 'leg'
       this.compile()
     }
   }
@@ -508,7 +541,7 @@ export const initializeEditor = async (
 
     // Define CodeMirror mode
     defineLegumesMode()
-
+    defineMusicXmlMode()
     // Find required elements
     const outputElement = document.getElementById('out')
     const playheadElement = document.getElementById('playhead')
@@ -531,7 +564,6 @@ export const initializeEditor = async (
     return null
   }
 }
-
 
 const uploadFile = (
   type: 'Text' | 'ArrayBuffer',

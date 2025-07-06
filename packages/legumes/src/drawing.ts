@@ -652,311 +652,387 @@ export function slur_evade_note(elements: Element[]) {
   }
 }
 
-export function hf_drawing_polylines(
-  elements: Element[],
-  width: number,
-  height: number,
-): number[][][] {
-  let polylines: [number, number][][] = []
-  function push_all(p: [number, number][][]) {
-    for (let i = 0; i < p.length; i++) {
-      if (p[i].length <= 1) continue
-      polylines.push(p[i])
+// 元素渲染策略接口
+type DrawingHandler = {
+  [key in Element['tag']]: (
+    elt: Element,
+    polylines: [number, number][][],
+  ) => void
+}
+
+// 元素渲染器映射表
+const drawing_handler: DrawingHandler = {
+  note_head: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let key =
+      (elt.stem_dir < 0 ? '_up' : '_down') + (elt.twisted ? '_twist' : '')
+
+    if (elt.duration >= NOTE_LENGTH.WHOLE) {
+      key = 'note_whole' + key
+    } else if (elt.duration >= NOTE_LENGTH.HALF) {
+      key = 'note_half' + key
+    } else {
+      key = 'note_fill' + key
     }
-  }
 
-  for (let i = 0; i < elements.length; i++) {
-    let elt = elements[i]
-    let { tag, x, y, w, h } = elt
-    if (tag == 'note_head') {
-      let p: [number, number][][]
+    let p = symbols[key]
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
 
-      let key =
-        (elt.stem_dir < 0 ? '_up' : '_down') + (elt.twisted ? '_twist' : '')
+  dot: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let p = symbols['dot']
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
 
-      if (elt.duration >= NOTE_LENGTH.WHOLE) {
-        key = 'note_whole' + key
-      } else if (elt.duration >= NOTE_LENGTH.HALF) {
-        key = 'note_half' + key
-      } else {
-        key = 'note_fill' + key
-      }
-      p = symbols[key]
+  accidental: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let p: [number, number][][]
 
-      if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    if (elt.type == ACCIDENTAL.FLAT) {
+      p = symbols['acc_flat']
+    } else if (elt.type == ACCIDENTAL.NATURAL) {
+      p = symbols['acc_nat']
+    } else if (elt.type == ACCIDENTAL.SHARP) {
+      p = symbols['acc_sharp']
+    } else {
+      return
+    }
 
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-    } else if (tag == 'dot') {
-      let p = symbols['dot']
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
 
-      if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+  clef: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let p: [number, number][][]
 
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-    } else if (tag == 'accidental') {
-      let p: [number, number][][]
-      if (elt.type == ACCIDENTAL.FLAT) {
-        p = symbols['acc_flat']
-      } else if (elt.type == ACCIDENTAL.NATURAL) {
-        p = symbols['acc_nat']
-      } else if (elt.type == ACCIDENTAL.SHARP) {
-        p = symbols['acc_sharp']
-      }
-      if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    if (elt.type == CLEF.TREBLE) {
+      p = symbols['clef_g']
+    } else if (elt.type == CLEF.BASS) {
+      p = symbols['clef_f']
+    } else {
+      p = symbols['clef_c']
+    }
 
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-    } else if (tag == 'clef') {
-      let p: [number, number][][]
-      if (elt.type == CLEF.TREBLE) {
-        p = symbols['clef_g']
-      } else if (elt.type == CLEF.BASS) {
-        p = symbols['clef_f']
-      } else {
-        p = symbols['clef_c']
-      }
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-    } else if (tag == 'rest') {
-      if (elt.duration == NOTE_LENGTH.WHOLE) {
-        let p = symbols['rest_whole']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.HALF) {
-        let p = symbols['rest_half']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.QUARTER) {
-        let p = symbols['rest_quarter']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.EIGHTH) {
-        let p = symbols['rest_8']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.SIXTEENTH) {
-        let p = symbols['rest_16']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.THIRTYSECOND) {
-        let p = symbols['rest_32']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (elt.duration == NOTE_LENGTH.SIXTYFOURTH) {
-        let p = symbols['rest_64']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      }
-    } else if (tag == 'flag') {
-      if (elt.stem_dir < 0) {
-        let p = elt.is_last ? symbols['flag_up'] : symbols['flag_mid_up']
-        if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else {
-        let p = elt.is_last ? symbols['flag_down'] : symbols['flag_mid_down']
-        if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      }
-    } else if (tag == 'beam') {
-      for (let j = 0.3; j < 4.66; j += 1.09) {
-        polylines.push([
-          [x, y - j * elt.stem_dir],
-          [x + w, y + h - j * elt.stem_dir],
-        ])
-      }
-    } else if (tag == 'line') {
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  rest: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.duration == NOTE_LENGTH.WHOLE) {
+      p = symbols['rest_whole']
+    } else if (elt.duration == NOTE_LENGTH.HALF) {
+      p = symbols['rest_half']
+    } else if (elt.duration == NOTE_LENGTH.QUARTER) {
+      p = symbols['rest_quarter']
+    } else if (elt.duration == NOTE_LENGTH.EIGHTH) {
+      p = symbols['rest_8']
+    } else if (elt.duration == NOTE_LENGTH.SIXTEENTH) {
+      p = symbols['rest_16']
+    } else if (elt.duration == NOTE_LENGTH.THIRTYSECOND) {
+      p = symbols['rest_32']
+    } else if (elt.duration == NOTE_LENGTH.SIXTYFOURTH) {
+      p = symbols['rest_64']
+    } else {
+      return
+    }
+
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  flag: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.stem_dir < 0) {
+      p = elt.is_last ? symbols['flag_up'] : symbols['flag_mid_up']
+    } else {
+      p = elt.is_last ? symbols['flag_down'] : symbols['flag_mid_down']
+    }
+
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  beam: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w, h } = elt
+    for (let j = 0.3; j < 4.66; j += 1.09) {
       polylines.push([
+        [x, y - j * elt.stem_dir],
+        [x + w, y + h - j * elt.stem_dir],
+      ])
+    }
+  },
+
+  line: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w, h } = elt
+    polylines.push([
+      [x, y],
+      [x + w, y + h],
+    ])
+  },
+
+  cresc: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w, h } = elt
+    const p: [number, number][][] = [
+      [
         [x, y],
         [x + w, y + h],
+      ],
+      [
+        [elt.x1, elt.y1],
+        [elt.x1 + elt.w1, elt.y1 + elt.h1],
+      ],
+    ]
+    push_all(p, polylines)
+  },
+
+  slur: (elt: Element, polylines: [number, number][][]) => {
+    if (!elt.pts) {
+      build_slur_bezier(elt)
+    }
+    polylines.push(elt.pts)
+    polylines.push(elt.pts1)
+  },
+
+  timesig_digit: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    const p = symbols['timesig_digit_' + elt.value]
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  timesig_c: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    const p = symbols['timesig_c']
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+
+    if (elt.type === 'cut') {
+      polylines.push([
+        [x, y - 14],
+        [x, y + 14],
       ])
-    } else if (tag == 'cresc') {
-      // {let p = [[elt.bbox.x,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y+elt.bbox.h],[elt.bbox.x,elt.bbox.y+elt.bbox.h]]; polylines.push(p as any);}
+    }
+  },
 
-      let p: [number, number][][] = [
+  tuplet_label: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w, h } = elt
+    const digits: string[] = elt.label.toString().split('')
+    const mid = x + w / 2
+    const mw = digits.length
+    const dw = 8
+    const dp = 4
+    const ml = mid - (mw / 2) * dw - dp
+    const mr = mid + (mw / 2) * dw + dp
+
+    if (ml >= x && mr <= x + w) {
+      polylines.push([
+        [x, y],
+        [x, y + h],
+        [ml, y + h],
+      ])
+      polylines.push([
+        [mr, y + h],
+        [x + w, y + h],
+        [x + w, y],
+      ])
+    }
+
+    for (let i = 0; i < digits.length; i++) {
+      const p = symbols['tuplet_digit_' + digits[i]]
+      push_all(
+        xform(p, (u, v) => [ml + dp + dw * i + u + 4, y + h + v]),
+        polylines,
+      )
+    }
+  },
+
+  lyric: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text)
+    let dx = -4 * scl
+
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+
+      const a = ascii_map(elt.text[i])
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin) * scl
+    }
+  },
+
+  bold_text: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text, FONT.TRIPLEX, -2)
+    if (isNaN(scl)) return
+
+    let dx = 0
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+
+      const a = ascii_map(elt.text[i], FONT.TRIPLEX)
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin - 2) * scl
+    }
+  },
+
+  regular_text: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text, FONT.DUPLEX, -2)
+    if (isNaN(scl)) return
+
+    let dx = 0
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+
+      const a = ascii_map(elt.text[i], FONT.DUPLEX)
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin - 2) * scl
+    }
+  },
+
+  bracket: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, h } = elt
+
+    if (elt.type == BRACKET.BRACE) {
+      const p = symbols['brace']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v * h]),
+        polylines,
+      )
+    } else if (elt.type == BRACKET.BRACKET) {
+      polylines.push([
+        [x + 5, y - 12],
+        [x - 2, y - 8],
+        [x - 8, y - 7],
+        [x - 8, y + h + 7],
+        [x - 2, y + h + 8],
+        [x + 5, y + h + 12],
+      ])
+      polylines.push([
+        [x + 5, y - 12],
+        [x - 1, y - 8],
+        [x - 7, y - 6],
+        [x - 7, y + h + 6],
+        [x - 1, y + h + 8],
+        [x + 5, y + h + 12],
+      ])
+      polylines.push([
+        [x - 6, y - 5],
+        [x - 6, y + h + 5],
+      ])
+    }
+  },
+
+  articulation: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y } = elt
+    if (typeof elt.type !== 'number') return
+
+    const a = Math.abs(elt.type)
+
+    if (a == ARTICULATION.STACCATO) {
+      const p = symbols['dot']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.ACCENT) {
+      polylines.push([
+        [x - 5, y - 3],
+        [x + 5, y],
+        [x - 5, y + 3],
+      ])
+    } else if (a == ARTICULATION.SPICCATO) {
+      polylines.push([
+        [x - 1, y - 3],
+        [x, y + 3],
+        [x + 1, y - 3],
+        [x - 1, y - 3],
+      ])
+    } else if (a == ARTICULATION.TENUTO) {
+      polylines.push([
+        [x - 4, y],
+        [x + 4, y],
+      ])
+    } else if (a == ARTICULATION.MARCATO) {
+      polylines.push([
+        [x - 3, y + 3],
+        [x, y - 3],
+        [x + 3, y + 3],
+      ])
+    } else if (a == ARTICULATION.UP_BOW) {
+      polylines.push([
+        [x - 3, y - 3],
+        [x, y + 3],
+        [x + 3, y - 3],
+      ])
+    } else if (a == ARTICULATION.TREMBLEMENT) {
+      push_all(
         [
-          [x, y],
-          [x + w, y + h],
-        ],
-        [
-          [elt.x1, elt.y1],
-          [elt.x1 + elt.w1, elt.y1 + elt.h1],
-        ],
-      ]
-      push_all(p)
-    } else if (tag == 'slur') {
-      // let p = [[elt.bbox.x,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y+elt.bbox.h],[elt.bbox.x,elt.bbox.y+elt.bbox.h]]; polylines.push(p as any);
-
-      if (!elt.pts) {
-        build_slur_bezier(elt)
-      }
-      polylines.push(elt.pts)
-      polylines.push(elt.pts1)
-      // polylines.push(elt.control);
-    } else if (tag == 'timesig_digit') {
-      let p = symbols['timesig_digit_' + elt.value]
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-    } else if (tag == 'timesig_c') {
-      // polylines.push([[x-w/2,y-h/2],[x+w/2,y-h/2],[x+w/2,y+h/2],[x-w/2,y+h/2]]);
-      let p = symbols['timesig_c']
-      push_all(xform(p, (u, v) => [x + u, y + v]))
-      if (elt.type == 'cut') {
-        polylines.push([
-          [x, y - 14],
-          [x, y + 14],
-        ])
-      }
-    } else if (tag == 'tuplet_label') {
-      let digits: string[] = elt.label.toString().split('')
-      let mid = x + w / 2
-      let mw = digits.length
-      let dw = 8
-      let dp = 4
-      let ml = mid - (mw / 2) * dw - dp
-      let mr = mid + (mw / 2) * dw + dp
-      if (ml >= x && mr <= x + w) {
-        // polylines.push([[x,y],[x,y+h],[x+w,y+h],[x+w,y]]);
-        polylines.push([
-          [x, y],
-          [x, y + h],
-          [ml, y + h],
-        ])
-        polylines.push([
-          [mr, y + h],
-          [x + w, y + h],
-          [x + w, y],
-        ])
-      }
-      for (let i = 0; i < digits.length; i++) {
-        // polylines.push([[ml+dp+dw*i,y+h-i*10],[ml+dp+dw*i+dw,y+h-i*10]]);
-        let p = symbols['tuplet_digit_' + digits[i]]
-        push_all(xform(p, (u, v) => [ml + dp + dw * i + u + 4, y + h + v]))
-      }
-    } else if (tag == 'lyric') {
-      let scl = w / get_text_width(elt.text)
-      let dx = -4 * scl
-      for (let i = 0; i < elt.text.length; i++) {
-        if (elt.text[i] == ' ') {
-          dx += 10 * scl
-          continue
-        }
-        let a = ascii_map(elt.text[i])
-        if (a === undefined) {
-          continue
-        }
-
-        let e = HERSHEY(a)
-        // console.log(e.ymin,e.ymax);
-
-        push_all(
-          xform(e.polylines, (u, v) => [
-            x + dx + (u - e.xmin) * scl,
-            y + (v + 12) * scl,
-          ]),
-        )
-        dx += (e.xmax - e.xmin) * scl
-      }
-    } else if (tag == 'bold_text') {
-      let scl = w / get_text_width(elt.text, FONT.TRIPLEX, -2)
-      if (isNaN(scl)) scl = 1
-      let dx = 0
-      for (let i = 0; i < elt.text.length; i++) {
-        if (elt.text[i] == ' ') {
-          dx += 10 * scl
-          continue
-        }
-        let a = ascii_map(elt.text[i], FONT.TRIPLEX)
-        if (a === undefined) {
-          continue
-        }
-        let e = HERSHEY(a)
-        push_all(
-          xform(e.polylines, (u, v) => [
-            x + dx + (u - e.xmin) * scl,
-            y + (v + 12) * scl,
-          ]),
-        )
-        dx += (e.xmax - e.xmin - 2) * scl
-      }
-    } else if (tag == 'regular_text') {
-      let scl = w / get_text_width(elt.text, FONT.DUPLEX, -2)
-      if (isNaN(scl)) scl = 1
-      let dx = 0
-      for (let i = 0; i < elt.text.length; i++) {
-        if (elt.text[i] == ' ') {
-          dx += 10 * scl
-          continue
-        }
-        let a = ascii_map(elt.text[i], FONT.DUPLEX)
-        if (a === undefined) {
-          continue
-        }
-        let e = HERSHEY(a)
-        push_all(
-          xform(e.polylines, (u, v) => [
-            x + dx + (u - e.xmin) * scl,
-            y + (v + 12) * scl,
-          ]),
-        )
-        dx += (e.xmax - e.xmin - 2) * scl
-      }
-    } else if (tag == 'bracket') {
-      if (elt.type == BRACKET.BRACE) {
-        let p = symbols['brace']
-        push_all(xform(p, (u, v) => [x + u, y + v * h]))
-      } else if (elt.type == BRACKET.BRACKET) {
-        polylines.push([
-          [x + 5, y - 12],
-          [x - 2, y - 8],
-          [x - 8, y - 7],
-          [x - 8, y + h + 7],
-          [x - 2, y + h + 8],
-          [x + 5, y + h + 12],
-        ])
-        polylines.push([
-          [x + 5, y - 12],
-          [x - 1, y - 8],
-          [x - 7, y - 6],
-          [x - 7, y + h + 6],
-          [x - 1, y + h + 8],
-          [x + 5, y + h + 12],
-        ])
-        polylines.push([
-          [x - 6, y - 5],
-          [x - 6, y + h + 5],
-        ])
-      }
-    } else if (tag == 'articulation') {
-      let a = Math.abs(elt.type as number)
-      if (a == ARTICULATION.STACCATO) {
-        let p = symbols['dot']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (a == ARTICULATION.ACCENT) {
-        let p: [number, number][] = [
-          [x - 5, y - 3],
-          [x + 5, y],
-          [x - 5, y + 3],
-        ]
-        polylines.push(p)
-      } else if (a == ARTICULATION.SPICCATO) {
-        let p: [number, number][] = [
-          [x - 1, y - 3],
-          [x, y + 3],
-          [x + 1, y - 3],
-          [x - 1, y - 3],
-        ]
-        polylines.push(p)
-      } else if (a == ARTICULATION.TENUTO) {
-        let p: [number, number][] = [
-          [x - 4, y],
-          [x + 4, y],
-        ]
-        polylines.push(p)
-      } else if (a == ARTICULATION.MARCATO) {
-        let p: [number, number][] = [
-          [x - 3, y + 3],
-          [x, y - 3],
-          [x + 3, y + 3],
-        ]
-        polylines.push(p)
-      } else if (a == ARTICULATION.UP_BOW) {
-        let p: [number, number][] = [
-          [x - 3, y - 3],
-          [x, y + 3],
-          [x + 3, y - 3],
-        ]
-        polylines.push(p)
-      } else if (a == ARTICULATION.TREMBLEMENT) {
-        let p: [number, number][][] = [
           [
             [x - 4, y],
             [x + 4, y],
@@ -965,75 +1041,128 @@ export function hf_drawing_polylines(
             [x, y - 4],
             [x, y + 4],
           ],
-        ]
-        push_all(p)
-      } else if (a == ARTICULATION.FERMATA) {
-        let p = symbols['fermata']
-        push_all(xform(p, (u, v) => [x + u, y + v * elt.dir]))
-      } else if (a == ARTICULATION.MORDENT) {
-        let p = symbols['mordent']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (a == ARTICULATION.TURN) {
-        let p = symbols['turn']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (a == ARTICULATION.TRILL) {
-        let p = symbols['trill']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else if (a == ARTICULATION.FLAGEOLET) {
-        let p = symbols['flageolet']
-        push_all(xform(p, (u, v) => [x + u, y + v]))
-      } else {
-        let p = HERSHEY(ascii_map(elt.type.toString(), FONT.TRIPLEX)).polylines
-        push_all(xform(p, (u, v) => [x + u / 2, y + v / 2]))
-      }
-      if ((elt.type as number) < 0) {
-        let p: [number, number][] = [
-          [x, y - 5],
-          [x, y + 5],
-        ]
-        polylines.push(p)
-      }
-    } else if (tag == 'squiggle') {
-      let p: [number, number][] = []
-      let q: [number, number][][] = []
-      let f = false
-      let h2 = Math.ceil(h / 8) * 8
-      let y2 = y - (h2 - h) / 2
-      for (let i = 0; i < h2; i += 4) {
-        p.push([f ? x + 2 : x - 2, y2 + i])
-        if (f && i + 4 < h2) {
-          q.push([
-            [x + 2.8, i + y2 + 0.8],
-            [x - 1.2, i + y2 + 4.8],
-          ])
-        }
-        f = !f
-      }
-      polylines.push(p)
-      push_all(q)
-    } else if (tag == 'cue') {
-      // let p = [[elt.bbox.x,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y],[elt.bbox.x+elt.bbox.w,elt.bbox.y+elt.bbox.h],[elt.bbox.x,elt.bbox.y+elt.bbox.h]]; polylines.push(p as any);
+        ],
+        polylines,
+      )
+    } else if (a == ARTICULATION.FERMATA) {
+      const p = symbols['fermata']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v * elt.dir]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.MORDENT) {
+      const p = symbols['mordent']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.TURN) {
+      const p = symbols['turn']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.TRILL) {
+      const p = symbols['trill']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.FLAGEOLET) {
+      const p = symbols['flageolet']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else {
+      const p = HERSHEY(ascii_map(elt.type.toString(), FONT.TRIPLEX)).polylines
+      push_all(
+        xform(p, (u, v) => [x + u / 2, y + v / 2]),
+        polylines,
+      )
+    }
 
-      // let p = [[x-10,y],[x+10,y],[x+10,y+h],[x-10,y+h]]; polylines.push(p as any);
-      // let p = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]]; polylines.push(p as any);
-      if (!elt.pts) {
-        build_cue(elt)
+    if (elt.type < 0) {
+      polylines.push([
+        [x, y - 5],
+        [x, y + 5],
+      ])
+    }
+  },
+
+  squiggle: (elt: Element, polylines: [number, number][][]) => {
+    const { x, y, h } = elt
+    const p: [number, number][] = []
+    const q: [number, number][][] = []
+    let f = false
+    const h2 = Math.ceil(h / 8) * 8
+    const y2 = y - (h2 - h) / 2
+
+    for (let i = 0; i < h2; i += 4) {
+      p.push([f ? x + 2 : x - 2, y2 + i])
+      if (f && i + 4 < h2) {
+        q.push([
+          [x + 2.8, i + y2 + 0.8],
+          [x - 1.2, i + y2 + 4.8],
+        ])
       }
-      push_all(elt.pts)
+      f = !f
+    }
+
+    polylines.push(p)
+    push_all(q, polylines)
+  },
+
+  cue: (elt: Element, polylines: [number, number][][]) => {
+    if (!elt.pts) {
+      build_cue(elt)
+    }
+    push_all(elt.pts, polylines)
+  },
+
+  dbg: (elt: Element, polylines: [number, number][][]) => {
+    // do nothing
+  },
+}
+
+// 辅助函数：将 polylines 添加到结果中
+function push_all(p: [number, number][][], polylines: [number, number][][]) {
+  for (let i = 0; i < p.length; i++) {
+    if (p[i].length <= 1) continue
+    polylines.push(p[i])
+  }
+}
+
+export function hf_drawing_polylines(
+  elements: Element[],
+  width: number,
+  height: number,
+): number[][][] {
+  const polylines: [number, number][][] = []
+
+  for (let i = 0; i < elements.length; i++) {
+    const elt = elements[i]
+    const handler = drawing_handler[elt.tag]
+
+    if (handler) {
+      handler(elt, polylines)
+    } else {
+      console.warn(`Unknown element tag: ${elt.tag}`)
     }
   }
+
   return polylines
 }
 
 export function round_polylines(polylines: number[][][], accuracy: number = 2) {
-  let n = Math.pow(10, accuracy)
   for (let i = 0; i < polylines.length; i++) {
     for (let j = 0; j < polylines[i].length; j++) {
-      let [x, y] = polylines[i][j]
-      x = Math.round(x * n) / n
-      y = Math.round(y * n) / n
-      polylines[i][j][0] = x
-      polylines[i][j][1] = y
+      polylines[i][j][0] =
+        Math.round(polylines[i][j][0] * Math.pow(10, accuracy)) /
+        Math.pow(10, accuracy)
+      polylines[i][j][1] =
+        Math.round(polylines[i][j][1] * Math.pow(10, accuracy)) /
+        Math.pow(10, accuracy)
     }
   }
 }
