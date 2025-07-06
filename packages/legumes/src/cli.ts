@@ -18,7 +18,7 @@ import { export_sketch_svg } from './fx'
 import { register_font } from './hershey'
 import { score_from_midi, score_to_midi } from './midicompile'
 import { parse_midi, export_midi } from './midifmt'
-import { parse_txt, export_txt } from './txtfmt'
+import { parse_leg, export_txt } from './legfmt'
 
 let build_date = 'sed-auto-replace-date-yyyy-mm-dd'
 
@@ -125,7 +125,7 @@ if (inp_format == 'mid') {
   score = score_from_midi(midi_file)
 } else if (inp_format == 'txt') {
   const txt = fs.readFileSync(input_path).toString()
-  score = parse_txt(txt)
+  score = parse_leg(txt)
 }
 
 score = compile_score(score)

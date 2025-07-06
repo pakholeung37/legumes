@@ -43,24 +43,24 @@ let ARTICULATION_SYMBOL = Object.fromEntries(
   Object.entries(ARTICULATION_SYMBOL_LOOKUP).map((x) => [x[1], x[0]]),
 )
 
-export function parse_txt(txt: string): ScoreItf {
-  txt = txt.replace(/[\n\r\t]/g, ' ')
+export function parse_leg(leg: string): ScoreItf {
+  leg = leg.replace(/[\n\r\t]/g, ' ')
   let swap_sp = '￿' /*FFFF*/
   let swap_sp_re = new RegExp(swap_sp, 'g')
   let swap_qt = '￾' /*FFFE*/
   let swap_qt_re = new RegExp(swap_qt, 'g')
 
-  txt = txt.replace(/\\'/g, swap_qt)
-  txt = txt
+  leg = leg.replace(/\\'/g, swap_qt)
+  leg = leg
     .split("'")
     .map((x, i) => (i % 2 ? x.replace(/ /g, swap_sp) : x))
     .join("'")
   // console.log(txt);
-  txt = txt
+  leg = leg
     .split(';')
     .filter((_, i) => !(i % 2))
     .join(' ')
-  let words = txt
+  let words = leg
     .split(' ')
     .filter((x) => x.length)
     .map((x) => x.replace(swap_sp_re, ' ').replace(swap_qt_re, "'"))

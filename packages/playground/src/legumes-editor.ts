@@ -306,7 +306,7 @@ export class LegumesEditor {
     try {
       let score: ScoreItf
       if (this.extName === 'leg') {
-        score = this.legumes.parse_txt(this.getValue())
+        score = this.legumes.parse_leg(this.getValue())
         this.codeMirror.setOption('mode', 'leg')
       } else if (this.extName === 'musicxml') {
         score = this.legumes.parse_musicxml(this.getValue())
@@ -350,7 +350,7 @@ export class LegumesEditor {
       (window as any).Tone?.now() + offset || Date.now() / 1000 + offset
     const spd = globalState.MIDI_SPD
 
-    const score = this.legumes.parse_txt(this.getValue())
+    const score = this.legumes.parse_leg(this.getValue())
     this.legumes.compile_score(score)
     const midiFile = this.legumes.score_to_midi(score)
 
@@ -457,7 +457,7 @@ export class LegumesEditor {
   }
 
   public exportPdf() {
-    const score = this.legumes.parse_txt(this.getValue())
+    const score = this.legumes.parse_leg(this.getValue())
     this.legumes.compile_score(score)
     const drawing = render_score(score as any)
     const pdf = this.legumes.export_pdf(drawing)
@@ -465,7 +465,7 @@ export class LegumesEditor {
   }
 
   public exportMidi() {
-    const score = this.legumes.parse_txt(this.getValue())
+    const score = this.legumes.parse_leg(this.getValue())
     const midiFile = this.legumes.score_to_midi(score)
     const bytes = this.legumes.export_midi(midiFile)
     downloadBin('score.mid', new Uint8Array(bytes))

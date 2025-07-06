@@ -1,6 +1,6 @@
 export * from './render'
 export * from './midifmt'
-export * from './txtfmt'
+export * from './legfmt'
 export * from './fx'
 export * from './midicompile'
 export * from './type'

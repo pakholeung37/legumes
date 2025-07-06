@@ -10,7 +10,9 @@ describe('MIDI snapshots', () => {
   for (const file of midiFiles) {
     it(`should match snapshot for ${file}`, () => {
       const svg = testMidiFile(file)
-      expect(svg).toMatchSnapshot()
+      expect(svg).toMatchFileSnapshot(
+        path.join(__dirname, './__snapshots__/midi/', file.replace('.mid', '.svg')),
+      )
     })
   }
 })
