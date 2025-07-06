@@ -18,7 +18,8 @@ export function testMidiFile(file: string) {
   const score = score_from_midi(midi_file)
   compile_score(score)
   const drawing = render_score(score as Score)
-  return export_svg(drawing)
+  const svg = export_svg(drawing)
+  return [score, drawing, svg]
 }
 
 export function testLegFile(file: string) {
@@ -27,7 +28,8 @@ export function testLegFile(file: string) {
   const score = parse_leg(txt)
   compile_score(score)
   const drawing = render_score(score as Score)
-  return export_svg(drawing)
+  const svg = export_svg(drawing)
+  return [score, drawing, svg]
 }
 
 export function testMusicXmlFile(file: string) {
@@ -36,5 +38,6 @@ export function testMusicXmlFile(file: string) {
   const score = parse_musicxml(xml)
   compile_score(score)
   const drawing = render_score(score as Score)
-  return export_svg(drawing)
+  const svg = export_svg(drawing)
+  return [score, drawing, svg]
 }

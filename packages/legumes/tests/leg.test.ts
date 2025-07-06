@@ -9,9 +9,27 @@ const legFiles = fs.readdirSync(legDir).filter((f) => f.endsWith('.leg'))
 describe('leg snapshots', () => {
   for (const file of legFiles) {
     it(`should match snapshot for ${file}`, () => {
-      const svg = testLegFile(file)
+      const [score, drawing, svg] = testLegFile(file)
+      expect(score).toMatchFileSnapshot(
+        path.join(
+          __dirname,
+          './__snapshots__/leg/',
+          file.replace('.leg', '_score.json'),
+        ),
+      )
+      expect(drawing).toMatchFileSnapshot(
+        path.join(
+          __dirname,
+          './__snapshots__/leg/',
+          file.replace('.leg', '_drawing.json'),
+        ),
+      )
       expect(svg).toMatchFileSnapshot(
-        path.join(__dirname,'./__snapshots__/leg/', file.replace('.leg', '.svg')),
+        path.join(
+          __dirname,
+          './__snapshots__/leg/',
+          file.replace('.leg', '.svg'),
+        ),
       )
     })
   }

@@ -11,7 +11,7 @@ const musicXmlFiles = fs
 describe('leg snapshots', () => {
   for (const file of musicXmlFiles) {
     it(`should match snapshot for ${file}`, () => {
-      const svg = testMusicXmlFile(file)
+      const [, , svg] = testMusicXmlFile(file)
       expect(svg).toMatchSnapshot()
     })
   }

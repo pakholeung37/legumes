@@ -1,0 +1,5 @@
+measure
+  staff G 4/4
+    note C5 d1
+  end
+end

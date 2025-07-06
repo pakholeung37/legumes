@@ -1,0 +1,1370 @@
+{
+  "composer": [],
+  "crescs": [],
+  "first_col_measure_indices": [
+    0,
+  ],
+  "indent": 0,
+  "instruments": [],
+  "measures": [
+    {
+      "barline": 1,
+      "duration": 64,
+      "is_first_col": true,
+      "pad": {
+        "inter": 4,
+        "left": 12,
+        "right": 12,
+      },
+      "slots": [
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 1,
+          "mid_pack": {
+            "intervals": [
+              [
+                {
+                  "bottom": 11,
+                  "idx": 0,
+                  "top": 9,
+                  "x": 0,
+                },
+              ],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+        {
+          "acc_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "left_deco": 0,
+          "left_grace": 0,
+          "left_note": 0,
+          "left_squiggle": 0,
+          "mid_note": 0,
+          "mid_pack": {
+            "intervals": [
+              [],
+            ],
+          },
+          "right_deco": 0,
+          "right_note": 0,
+          "right_spacing": 0,
+        },
+      ],
+      "staves": [
+        {
+          "beams": [],
+          "clef": 0,
+          "coords": {
+            "col": 0,
+            "local_y_max": 49.5,
+            "local_y_min": 0,
+            "row": 0,
+            "w": 96,
+            "x": 0,
+            "y": 0,
+          },
+          "flags": {
+            "need_clef": true,
+            "need_cue": false,
+            "need_keysig": {
+              "accidental": 0,
+              "count": 0,
+            },
+            "need_lyric": false,
+            "need_timesig": true,
+          },
+          "grace": [],
+          "key_signature": [
+            0,
+            0,
+          ],
+          "notes": [
+            {
+              "accidental": null,
+              "begin": 0,
+              "duration": 64,
+              "flag_count": 0,
+              "modifier": false,
+              "modifier_shift": 0,
+              "name": "C_5",
+              "next_in_chord": null,
+              "octave": 5,
+              "prev_in_chord": null,
+              "slot_shift": 0,
+              "staff_pos": 10,
+              "stem_dir": -1,
+              "stem_len": 2.5,
+              "tuplet": null,
+              "twisted": false,
+              "voice": 0,
+            },
+          ],
+          "rests": [],
+          "time_signature": [
+            4,
+            4,
+          ],
+          "voices": 1,
+        },
+      ],
+    },
+  ],
+  "slurred_ids": {},
+  "slurs": [],
+  "title": [],
+}

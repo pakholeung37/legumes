@@ -1,4 +1,4 @@
-import { MidiFile, MidiTrack, MidiEvent, parse_midi } from './midifmt'
+import { MidiFile, MidiTrack, MidiEvent } from './midifmt'
 import {
   ScoreItf,
   TimeSignature,
@@ -19,7 +19,6 @@ import {
   ACCIDENTAL,
   ORDER_OF_ACCIDENTALS,
   CLEF, BARLINE,
-  BRACKET,
   ARTICULATION
 } from './const'
 
@@ -856,7 +855,7 @@ function compile_staff(measure: MeasureItf, staff_idx: number) {
     let note_name = note.name
     let note_oct = Number(note_name.split('_')[1])
     let note_staff = note_name_to_staff_pos(note_name, staff.clef)
-
+    debugger
     note.octave = note_oct
     note.staff_pos = note_staff
 
