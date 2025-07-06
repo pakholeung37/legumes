@@ -1,11 +1,11 @@
-import { Midi_file, Midi_track, Midi_event, parse_midi } from './midifmt'
+import { MidiFile, MidiTrack, MidiEvent, parse_midi } from './midifmt'
 import {
-  Score_itf,
-  Time_signature,
-  Key_signature,
-  Note_itf,
-  Rest_itf,
-  Measure_itf,
+  ScoreItf,
+  TimeSignature,
+  KeySignature,
+  NoteItf,
+  RestItf,
+  MeasureItf,
 } from './type'
 import {
   get_median_staff_pos,
@@ -220,7 +220,7 @@ for (let i = 0; i <= 10; i++) {
   NAME2PITCH['Cb_' + i] = NAME2PITCH['B_' + (i - 1)]
 }
 
-interface _Note_impl {
+interface NoteImpl {
   id?: string
   begin: number
   duration: number
@@ -228,28 +228,28 @@ interface _Note_impl {
   channel: number
 }
 
-interface _Measure_impl {
+interface MeasureImpl {
   duration: number
-  time_signature: Time_signature
-  key_signature: Key_signature
-  notes: _Note_impl[]
-  cross_ties: Cross_tie[]
+  time_signature: TimeSignature
+  key_signature: KeySignature
+  notes: NoteImpl[]
+  cross_ties: CrossTie[]
 }
 
-interface Cross_tie {
-  left: _Note_impl
-  right: _Note_impl
+interface CrossTie {
+  left: NoteImpl
+  right: NoteImpl
 }
 
-interface Tick_table {
-  time_signature: Time_signature
-  key_signature: Key_signature
+interface TickTable {
+  time_signature: TimeSignature
+  key_signature: KeySignature
   resolution: number
   duration: number
-  notes: _Note_impl[]
+  notes: NoteImpl[]
 }
 
-function classify_key_signature(key_sig: number[]): Key_signature {
+function classify_key_signature(key_sig: number[]): KeySignature {
   let [num_acc, is_minor] = key_sig
   let acc = ACCIDENTAL.NATURAL
   if (num_acc < 0) {
@@ -261,7 +261,7 @@ function classify_key_signature(key_sig: number[]): Key_signature {
   return [acc, num_acc]
 }
 
-function note_duration_overlap(a: _Note_impl, b: _Note_impl): boolean {
+function note_duration_overlap(a: NoteImpl, b: NoteImpl): boolean {
   let x1 = a.begin
   let x2 = a.begin + a.duration
   let y1 = b.begin
@@ -270,7 +270,7 @@ function note_duration_overlap(a: _Note_impl, b: _Note_impl): boolean {
 }
 
 let _pitch2name_cache: Record<string, string> = {}
-function infer_name_from_pitch(pitch: number, key_signature: Key_signature) {
+function infer_name_from_pitch(pitch: number, key_signature: KeySignature) {
   let candidates: string[] = []
   let key = pitch | (key_signature[0] << 24) | (key_signature[1] << 16)
   let val = _pitch2name_cache[key]
@@ -313,7 +313,7 @@ function infer_name_from_pitch(pitch: number, key_signature: Key_signature) {
 function pitch_to_staff(
   pitch: number,
   clef: number,
-  key_signature: Key_signature,
+  key_signature: KeySignature,
 ) {
   pitch = ~~pitch
   let name: string = infer_name_from_pitch(
@@ -347,10 +347,10 @@ function factor_rest_duration(
   begin: number,
   dur: number,
   channel: number,
-): Rest_itf[] {
+): RestItf[] {
   let l = dur
   let b = begin
-  let rests: Rest_itf[] = []
+  let rests: RestItf[] = []
   while (l > 0) {
     let ll = 0
 
@@ -387,15 +387,15 @@ function factor_rest_duration(
 }
 
 function find_rests(
-  measure: Measure_itf,
+  measure: MeasureItf,
   staff_idx: number,
   channels: number[],
-): Rest_itf[] {
+): RestItf[] {
   // find & merge rests
   let measure_length = measure.duration
 
   let staff = measure.staves[staff_idx]
-  let rests: Rest_itf[] = []
+  let rests: RestItf[] = []
 
   // console.log(staff,channels);
 
@@ -435,7 +435,7 @@ function find_rests(
   return rests
 }
 
-function get_piece_title(pattern: Midi_file): string[] {
+function get_piece_title(pattern: MidiFile): string[] {
   let title: string[] = []
   // let found : boolean = false;
   for (let track of pattern.tracks) {
@@ -454,7 +454,7 @@ function get_piece_title(pattern: Midi_file): string[] {
   return title
 }
 
-function get_piece_instruments(pattern: Midi_file): string[] {
+function get_piece_instruments(pattern: MidiFile): string[] {
   let instruments = []
   for (let track of pattern.tracks) {
     for (let event of track.events) {
@@ -466,23 +466,23 @@ function get_piece_instruments(pattern: Midi_file): string[] {
   return instruments
 }
 
-function is_note_on_event(evt: Midi_event): boolean {
+function is_note_on_event(evt: MidiEvent): boolean {
   return evt.type == 'NOTE_ON' && evt.data['velocity'] != 0
 }
-function is_note_off_event(evt: Midi_event): boolean {
+function is_note_off_event(evt: MidiEvent): boolean {
   return (
     evt.type == 'NOTE_OFF' ||
     (evt.type == 'NOTE_ON' && evt.data['velocity'] == 0)
   )
 }
 
-function pattern_to_tick_tables(pattern: Midi_file): Tick_table[] {
+function pattern_to_tick_tables(pattern: MidiFile): TickTable[] {
   // change relative tick into absolute tick
   // duration in ticks, pitch 0-127, channel: 16*track + origin channel
   let res = pattern.ticks_per_quarter_note
 
   let sections: Array<
-    [number, [Time_signature, Key_signature], Array<Record<string, any>>]
+    [number, [TimeSignature, KeySignature], Array<Record<string, any>>]
   > = []
 
   // console.dir(pattern,{depth:null,maxArrayLength:null});
@@ -498,7 +498,7 @@ function pattern_to_tick_tables(pattern: Midi_file): Tick_table[] {
     for (let event of track.events) {
       t += event.delta_time
       if (event.type == 'TIME_SIGNATURE' && track_id == 0) {
-        let ts: Time_signature = [
+        let ts: TimeSignature = [
           event.data['numerator'],
           2 ** event.data['denominator_exp'],
         ]
@@ -512,7 +512,7 @@ function pattern_to_tick_tables(pattern: Midi_file): Tick_table[] {
         }
         last_time_sig = ts
       } else if (event.type == 'KEY_SIGNATURE' && track_id == 0) {
-        let ks: Key_signature = classify_key_signature([
+        let ks: KeySignature = classify_key_signature([
           event.data['num_sharps_or_flats'],
           event.data['is_minor'],
         ])
@@ -575,7 +575,7 @@ function pattern_to_tick_tables(pattern: Midi_file): Tick_table[] {
       }
     }
   }
-  let tick_tables: Tick_table[] = []
+  let tick_tables: TickTable[] = []
   for (let i = 0; i < sections.length; i++) {
     let end_tick: number =
       i + 1 < sections.length ? sections[i + 1][0] : end_of_track
@@ -606,15 +606,15 @@ function pattern_to_tick_tables(pattern: Midi_file): Tick_table[] {
   return tick_tables
 }
 
-function split_voices(measures: _Measure_impl[]) {
-  function collide(a: _Note_impl, b: _Note_impl) {
+function split_voices(measures: MeasureImpl[]) {
+  function collide(a: NoteImpl, b: NoteImpl) {
     if (a.begin == b.begin && a.duration == b.duration) {
       // console.log(a.pitch,b.pitch)
       return a.pitch == b.pitch
     }
     return note_duration_overlap(a, b)
   }
-  function collide_with_channel(measure: _Measure_impl, index: number) {
+  function collide_with_channel(measure: MeasureImpl, index: number) {
     let channel = measure.notes[index].channel
     for (let i = 0; i < index /*measure.notes.length*/; i++) {
       // if (i == index){
@@ -631,9 +631,9 @@ function split_voices(measures: _Measure_impl[]) {
   }
   for (let i = 0; i < measures.length; i++) {
     let notes = measures[i].notes
-    let cross_ties: Cross_tie[] = measures[i].cross_ties
+    let cross_ties: CrossTie[] = measures[i].cross_ties
     for (let j = 0; j < notes.length; j++) {
-      let note: _Note_impl = notes[j]
+      let note: NoteImpl = notes[j]
       let skip: boolean = false
       for (let k = 0; k < cross_ties.length; k++) {
         if (note == cross_ties[k].right) {
@@ -706,12 +706,12 @@ function length2tick(length: number, resolution: number): number {
   return ~~num_ticks
 }
 
-function tick_table_to_measures(tick_table: Tick_table): _Measure_impl[] {
+function tick_table_to_measures(tick_table: TickTable): MeasureImpl[] {
   let time_sig = tick_table.time_signature
   let key_sig = tick_table.key_signature
   let resolution = tick_table.resolution
   let notes = tick_table.notes
-  let measures: _Measure_impl[] = []
+  let measures: MeasureImpl[] = []
 
   function getmeasurelength() {
     let ticks_per_quarter_note = resolution
@@ -732,7 +732,7 @@ function tick_table_to_measures(tick_table: Tick_table): _Measure_impl[] {
     return ~~tick2length(tick, resolution)
   }
 
-  function empty_measure(): _Measure_impl {
+  function empty_measure(): MeasureImpl {
     return {
       time_signature: time_sig,
       key_signature: key_sig,
@@ -746,7 +746,7 @@ function tick_table_to_measures(tick_table: Tick_table): _Measure_impl[] {
   }
 
   for (let i = 0; i < notes.length; i++) {
-    let note: _Note_impl = notes[i]
+    let note: NoteImpl = notes[i]
     let measure_id = ~~(note.begin / measure_duration)
 
     while (measure_id >= measures.length) {
@@ -769,12 +769,12 @@ function tick_table_to_measures(tick_table: Tick_table): _Measure_impl[] {
     measures[measure_id].notes.push(nnote)
 
     let carry_cnt = 1
-    let left: _Note_impl = nnote
+    let left: NoteImpl = nnote
     while (begin + length > measure_length) {
       if (measure_id + carry_cnt >= measures.length) {
         measures.push(empty_measure())
       }
-      let right: _Note_impl = {
+      let right: NoteImpl = {
         begin: 0,
         duration: Math.min(measure_length, begin + length - measure_length),
         channel,
@@ -793,7 +793,7 @@ function tick_table_to_measures(tick_table: Tick_table): _Measure_impl[] {
   return measures
 }
 
-function compile_staff(measure: Measure_itf, staff_idx: number) {
+function compile_staff(measure: MeasureItf, staff_idx: number) {
   let staff = measure.staves[staff_idx]
 
   let [measure_acc, num_acc] = staff.key_signature
@@ -802,7 +802,7 @@ function compile_staff(measure: Measure_itf, staff_idx: number) {
     .split('')
   let acc_history: Record<string, number> = {}
 
-  function get_beat_length(time_sig: Time_signature) {
+  function get_beat_length(time_sig: TimeSignature) {
     let beat_length = ~~(NOTE_LENGTH.WHOLE / time_sig[1])
     if (time_sig[1] == 4 && time_sig[0] >= 4) {
       beat_length *= 2
@@ -813,17 +813,17 @@ function compile_staff(measure: Measure_itf, staff_idx: number) {
   let beat_length = get_beat_length(staff.time_signature)
 
   let channels = get_existing_voices(
-    staff.notes.concat(staff.rests as Note_itf[]),
+    staff.notes.concat(staff.rests as NoteItf[]),
     [],
   )
   staff.voices = channels.length
 
-  function get_beat_idx(note: Note_itf): number {
+  function get_beat_idx(note: NoteItf): number {
     return ~~(note.begin / beat_length)
   }
 
-  function get_notes_in_beat(beat_idx: number): Note_itf[] {
-    let notes: Note_itf[] = []
+  function get_notes_in_beat(beat_idx: number): NoteItf[] {
+    let notes: NoteItf[] = []
     for (let m of staff.notes) {
       if (get_beat_idx(m) == beat_idx) {
         notes.push(m)
@@ -832,14 +832,14 @@ function compile_staff(measure: Measure_itf, staff_idx: number) {
     return notes
   }
 
-  function calc_stem_dir(note: Note_itf) {
+  function calc_stem_dir(note: NoteItf) {
     let beat_idx: number = get_beat_idx(note)
-    let notes_in_beat: Note_itf[] = get_notes_in_beat(beat_idx)
+    let notes_in_beat: NoteItf[] = get_notes_in_beat(beat_idx)
     // console.log(notes_in_beat);
 
     let avg_line: number =
       notes_in_beat.reduce(
-        (acc: number, x: Note_itf): number => acc + x.staff_pos,
+        (acc: number, x: NoteItf): number => acc + x.staff_pos,
         0,
       ) / notes_in_beat.length
 
@@ -851,7 +851,7 @@ function compile_staff(measure: Measure_itf, staff_idx: number) {
   }
 
   for (let i = 0; i < staff.notes.length; i++) {
-    let note: Note_itf = staff.notes[i]
+    let note: NoteItf = staff.notes[i]
     // console.log(note);
     let note_name = note.name
     let note_oct = Number(note_name.split('_')[1])
@@ -945,7 +945,7 @@ function compile_staff(measure: Measure_itf, staff_idx: number) {
 }
 
 function get_channel_average_pitch(
-  measures: _Measure_impl[],
+  measures: MeasureImpl[],
 ): Record<number, number> {
   let c2p: Record<number, [number, number]> = {}
   for (let m of measures) {
@@ -972,10 +972,10 @@ function assign_clef_from_pitch(pitch: number): number {
   }
 }
 
-export function score_from_midi(pattern: Midi_file): Score_itf {
-  let tick_tables: Tick_table[] = pattern_to_tick_tables(pattern)
+export function score_from_midi(pattern: MidiFile): ScoreItf {
+  let tick_tables: TickTable[] = pattern_to_tick_tables(pattern)
   // console.dir(tick_tables,{depth:null,maxArrayLength:10000});
-  let measures_: _Measure_impl[] = []
+  let measures_: MeasureImpl[] = []
   for (let i = 0; i < tick_tables.length; i++) {
     let ms = tick_table_to_measures(tick_tables[i])
     for (let j = 0; j < ms.length; j++) {
@@ -1007,7 +1007,7 @@ export function score_from_midi(pattern: Midi_file): Score_itf {
     channel_groups_[gg].push(channels[i])
   }
   let channel_groups: number[][] = Object.values(channel_groups_)
-  let score: Score_itf = {
+  let score: ScoreItf = {
     title: get_piece_title(pattern),
     instruments: [], //get_piece_instruments(pattern).map(x=>({names:[x],connect_barlines:[false],bracket:BRACKET.NONE})),
     composer: [],
@@ -1017,7 +1017,7 @@ export function score_from_midi(pattern: Midi_file): Score_itf {
   }
 
   for (let i = 0; i < measures_.length; i++) {
-    let ties: Cross_tie[] = measures_[i].cross_ties
+    let ties: CrossTie[] = measures_[i].cross_ties
     for (let j = 0; j < ties.length; j++) {
       let slur = {
         left: ties[j].left.id ?? short_id(),
@@ -1031,7 +1031,7 @@ export function score_from_midi(pattern: Midi_file): Score_itf {
   }
 
   for (let i = 0; i < measures_.length; i++) {
-    let measure: Measure_itf = {
+    let measure: MeasureItf = {
       duration: measures_[i].duration,
       barline: i == measures_.length ? BARLINE.END : BARLINE.SINGLE,
       staves: [],
@@ -1054,7 +1054,7 @@ export function score_from_midi(pattern: Midi_file): Score_itf {
             measures_[i].notes[k].pitch,
             measures_[i].key_signature,
           )
-          let note: Note_itf = {
+          let note: NoteItf = {
             begin: measures_[i].notes[k].begin,
             duration: measures_[i].notes[k].duration,
             accidental: null,
@@ -1086,9 +1086,9 @@ export function score_from_midi(pattern: Midi_file): Score_itf {
   return score
 }
 
-export function score_to_midi(score: Score_itf): Midi_file {
-  let meta_track: Midi_track = { events: [] }
-  let tracks: Midi_track[] = []
+export function score_to_midi(score: ScoreItf): MidiFile {
+  let meta_track: MidiTrack = { events: [] }
+  let tracks: MidiTrack[] = []
   let tied_lefts: Record<string, boolean> = {}
   let tied_rights: Record<string, boolean> = {}
   for (let i = 0; i < score.slurs.length; i++) {
@@ -1300,7 +1300,7 @@ export function score_to_midi(score: Score_itf): Midi_file {
     }
     tracks[j].events.push({ type: 'END_OF_TRACK', delta_time: 0, data: {} })
   }
-  let pattern: Midi_file = {
+  let pattern: MidiFile = {
     magic: 'MThd',
     tracks,
     num_tracks: tracks.length,

@@ -1,4 +1,4 @@
-import { bounding_box } from './drawing'
+import { bounding_box } from './render'
 import { Drawing, Element } from './type'
 
 let PERLIN_YWRAPB = 4

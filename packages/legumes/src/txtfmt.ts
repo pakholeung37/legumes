@@ -12,15 +12,15 @@ import {
   BRACKET
 } from './const'
 import {
-  Score_itf,
-  Staff_itf,
-  Measure_itf,
-  Note_itf,
-  Rest_itf,
-  Slur_itf,
-  Cresc_itf,
-  Time_signature,
-  Tuplet_itf,
+  ScoreItf,
+  StaffItf,
+  MeasureItf,
+  NoteItf,
+  RestItf,
+  SlurItf,
+  CrescItf,
+  TimeSignature,
+  TupletItf,
 } from './type'
 import { CONFIG } from './config'
 
@@ -43,7 +43,7 @@ let ARTICULATION_SYMBOL = Object.fromEntries(
   Object.entries(ARTICULATION_SYMBOL_LOOKUP).map((x) => [x[1], x[0]]),
 )
 
-export function parse_txt(txt: string): Score_itf {
+export function parse_txt(txt: string): ScoreItf {
   txt = txt.replace(/[\n\r\t]/g, ' ')
   let swap_sp = '￿' /*FFFF*/
   let swap_sp_re = new RegExp(swap_sp, 'g')
@@ -66,7 +66,7 @@ export function parse_txt(txt: string): Score_itf {
     .map((x) => x.replace(swap_sp_re, ' ').replace(swap_qt_re, "'"))
   // console.log(words);
 
-  let score: Score_itf = {
+  let score: ScoreItf = {
     title: [],
     instruments: [],
     composer: [],
@@ -75,12 +75,12 @@ export function parse_txt(txt: string): Score_itf {
     crescs: [],
   }
 
-  let measure: Measure_itf
-  let staff: Staff_itf
-  let note: Note_itf
-  let rest: Rest_itf
-  let slur: Slur_itf
-  let cresc: Cresc_itf
+  let measure: MeasureItf
+  let staff: StaffItf
+  let note: NoteItf
+  let rest: RestItf
+  let slur: SlurItf
+  let cresc: CrescItf
   let i = 0
   let state: string[] = []
   let begin = 0
@@ -94,7 +94,7 @@ export function parse_txt(txt: string): Score_itf {
     begin: number
     dur: number
     num: number
-    members: (Note_itf | Rest_itf)[]
+    members: (NoteItf | RestItf)[]
   }[] = []
 
   function curr_state(s: string): boolean {
@@ -641,7 +641,7 @@ export function parse_txt(txt: string): Score_itf {
   return score
 }
 
-function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
+function compile_staff(staff: StaffItf, force_stem_dir: number = 0) {
   for (let i = 0; i < staff.notes.length; i++) {
     staff.voices = Math.max(staff.notes[i].voice + 1, staff.voices)
   }
@@ -649,7 +649,7 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
     staff.voices = Math.max(staff.rests[i].voice + 1, staff.voices)
   }
 
-  function get_beat_length(time_sig: Time_signature) {
+  function get_beat_length(time_sig: TimeSignature) {
     if (CONFIG.BEAM_POLICY == 0) {
       return 1
     } else if (CONFIG.BEAM_POLICY == 1) {
@@ -666,12 +666,12 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
 
   let beat_length = get_beat_length(staff.time_signature)
 
-  function get_beat_idx(note: Note_itf): number {
+  function get_beat_idx(note: NoteItf): number {
     return ~~(note.begin / beat_length)
   }
 
-  function get_notes_in_beat(beat_idx: number): Note_itf[] {
-    let notes: Note_itf[] = []
+  function get_notes_in_beat(beat_idx: number): NoteItf[] {
+    let notes: NoteItf[] = []
     for (let m of staff.notes) {
       if (get_beat_idx(m) == beat_idx) {
         notes.push(m)
@@ -680,8 +680,8 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
     return notes
   }
 
-  function calc_stem_dir(note: Note_itf) {
-    let notes_in_beat: Note_itf[]
+  function calc_stem_dir(note: NoteItf) {
+    let notes_in_beat: NoteItf[]
 
     if (note.duration < NOTE_LENGTH.QUARTER) {
       let beat_idx: number = get_beat_idx(note)
@@ -708,7 +708,7 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
 
     let avg_line: number =
       notes_in_beat.reduce(
-        (acc: number, x: Note_itf): number => acc + x.staff_pos,
+        (acc: number, x: NoteItf): number => acc + x.staff_pos,
         0,
       ) / notes_in_beat.length
 
@@ -726,7 +726,7 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
   let acc_history: Record<string, number> = {}
 
   for (let i = 0; i < staff.notes.length; i++) {
-    let note: Note_itf = staff.notes[i]
+    let note: NoteItf = staff.notes[i]
     let note_bname = note.name
     let key = note_bname + '_' + note.octave
 
@@ -765,7 +765,7 @@ function compile_staff(staff: Staff_itf, force_stem_dir: number = 0) {
   chord_and_beam_staff(staff, beat_length)
 }
 
-export function export_txt(score: Score_itf): string {
+export function export_txt(score: ScoreItf): string {
   let o: string = ''
   o += `title '${score.title.map((x) => x.replace(/'/g, "\\'")).join("' '")}'\n`
   if (score.composer) {
@@ -826,8 +826,8 @@ export function export_txt(score: Score_itf): string {
         let items: [
           string,
           (
-            | Note_itf
-            | Rest_itf
+            | NoteItf
+            | RestItf
             | { begin: number; duration: number; [other_options: string]: any }
           ),
           boolean,
@@ -893,8 +893,8 @@ export function export_txt(score: Score_itf): string {
           items: [
             string,
             (
-              | Note_itf
-              | Rest_itf
+              | NoteItf
+              | RestItf
               | {
                   begin: number
                   duration: number
@@ -944,7 +944,7 @@ export function export_txt(score: Score_itf): string {
               let prev_tup_id: string = null
 
               for (let m = l - 1; m >= 0; m--) {
-                let e = items[m][1] as { tuplet: Tuplet_itf }
+                let e = items[m][1] as { tuplet: TupletItf }
                 if (e.tuplet) {
                   prev_tup_id = items[m][1].tuplet.id
                   break
@@ -961,7 +961,7 @@ export function export_txt(score: Score_itf): string {
             } else if (items[l - 1] && items[l - 1][1].tuplet) {
               let next_tup_id: string = null
               for (let m = l + 1; m < items.length; m++) {
-                let e = items[m][1] as { tuplet: Tuplet_itf }
+                let e = items[m][1] as { tuplet: TupletItf }
                 if (e.tuplet) {
                   next_tup_id = items[m][1].tuplet.id
                   break
@@ -974,7 +974,7 @@ export function export_txt(score: Score_itf): string {
             }
 
             if (items[l][0] == 'note') {
-              let e: Note_itf = items[l][1] as Note_itf
+              let e: NoteItf = items[l][1] as NoteItf
               while (e.prev_in_chord !== null) {
                 e = staff.notes[e.prev_in_chord]
               }
@@ -1023,7 +1023,7 @@ export function export_txt(score: Score_itf): string {
               } while (e)
               if (is_chord) o += '    end\n'
             } else if (items[l][0] == 'rest') {
-              let e: Rest_itf = items[l][1] as Rest_itf
+              let e: RestItf = items[l][1] as RestItf
               let dur = e.duration
               if (e.tuplet) {
                 dur = e.tuplet.display_duration

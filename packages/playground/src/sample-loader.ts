@@ -10,6 +10,7 @@ import yang_guan_san_die from './samples/yang_guan_san_die.leg?raw'
 import art_of_fugue from './samples/art_of_fugue.leg?raw'
 import auld_lang_syne from './samples/auld_lang_syne.leg?raw'
 import one_summers_day from './samples/one_summers_day.musicxml?raw'
+import mozart_piano_sonata from './samples/mozart_piano_sonata.musicxml?raw'
 // Sample loader utility for legumes editor
 export interface SampleFile {
   name: string
@@ -29,6 +30,7 @@ export const samples: Record<string, string> = {
   'art_of_fugue.leg': art_of_fugue,
   'auld_lang_syne.leg': auld_lang_syne,
   'one_summers_day.musicxml': one_summers_day,
+  'mozart_piano_sonata.musicxml': mozart_piano_sonata,
 }
 
 export const getSampleNames = (samples: Record<string, string>): string[] => {

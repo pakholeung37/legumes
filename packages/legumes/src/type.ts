@@ -11,16 +11,16 @@ export interface Slot {
   right_spacing: number
 }
 
-export interface Pack_interval {
+export interface PackInterval {
   x: number
   top: number
   bottom: number
   idx: number
 }
 export interface Pack {
-  intervals: Pack_interval[][]
+  intervals: PackInterval[][]
 }
-export interface Note extends Note_itf {
+export interface Note extends NoteItf {
   stem_len: number
   flag_count: number
   twisted: boolean
@@ -34,7 +34,7 @@ export interface Beam extends Array<number> {
   b: number
 }
 
-export interface Staff extends Staff_itf {
+export interface Staff extends StaffItf {
   notes: Note[]
   rests: Rest[]
   grace: Measure[]
@@ -57,7 +57,7 @@ export interface Staff extends Staff_itf {
   }
 }
 
-export interface Measure extends Measure_itf {
+export interface Measure extends MeasureItf {
   staves: Staff[]
   slots: Slot[]
   is_first_col: boolean
@@ -65,18 +65,18 @@ export interface Measure extends Measure_itf {
   pad: { left: number; right: number; inter: number }
 }
 
-export interface Rest extends Rest_itf {
+export interface Rest extends RestItf {
   staff_pos: number
 }
 
-export interface Score extends Score_itf {
+export interface Score extends ScoreItf {
   indent: number
   first_col_measure_indices: number[]
   measures: Measure[]
   slurred_ids: Record<string, boolean>
 }
 
-export interface Note_register {
+export interface NoteRegister {
   note: Note
   staff_idx: number
   measure: Measure
@@ -90,13 +90,13 @@ export interface Note_register {
   tail_y: number
 }
 
-export interface Tuplet_itf {
+export interface TupletItf {
   id: string
   display_duration: number
   label: number
 }
 
-export interface Note_itf {
+export interface NoteItf {
   id?: string
   begin: number
   duration: number
@@ -109,79 +109,79 @@ export interface Note_itf {
   prev_in_chord: number | null
   next_in_chord: number | null
   stem_dir: number
-  tuplet: Tuplet_itf | null
+  tuplet: TupletItf | null
   lyric?: string
   articulation?: number
-  cue?: Cue_itf
+  cue?: CueItf
 }
 
-export interface Cue_itf {
+export interface CueItf {
   position: number
   data: string
 }
 
-export interface Rest_itf {
+export interface RestItf {
   begin: number
   duration: number
   voice: number
-  tuplet: Tuplet_itf | null
-  cue?: Cue_itf
+  tuplet: TupletItf | null
+  cue?: CueItf
 }
 
-export interface Measure_itf {
+export interface MeasureItf {
   duration: number
   barline: number
-  staves: Staff_itf[]
+  staves: StaffItf[]
 }
 
-export type Key_signature = [number, number]
-export type Time_signature = [number, number]
+export type KeySignature = [number, number]
+export type TimeSignature = [number, number]
 
-export interface Staff_itf {
-  time_signature: Time_signature
-  key_signature: Key_signature
+export interface StaffItf {
+  time_signature: TimeSignature
+  key_signature: KeySignature
   clef: number
   voices: number
-  rests: Rest_itf[]
-  notes: Note_itf[]
-  grace: Measure_itf[]
+  rests: RestItf[]
+  notes: NoteItf[]
+  grace: MeasureItf[]
   beams: number[][]
 }
 
-export interface Slur_itf {
+export interface SlurItf {
   left: string
   right: string
   is_tie: boolean
 }
 
-export interface Cresc_itf {
+export interface CrescItf {
   left: string
   right: string
   val_left: number
   val_right: number
 }
 
-export interface Tempo_itf {
+export interface TempoItf {
   text?: string
   duration?: number
   modifier?: boolean
   bpm?: number
 }
 
-export interface Instrument_group_itf {
+export interface InstrumentGroupItf {
   bracket: number
   names: string[]
   connect_barlines: boolean[]
 }
 
-export interface Score_itf {
+export interface ScoreItf {
   title: string[]
   composer: string[]
-  tempo?: Tempo_itf
-  instruments: Instrument_group_itf[]
-  slurs: Slur_itf[]
-  measures: Measure_itf[]
-  crescs: Cresc_itf[]
+  tempo?: TempoItf
+  instruments: InstrumentGroupItf[]
+  slurs: SlurItf[]
+  measures: MeasureItf[]
+  crescs: CrescItf[]
 }
 
 export interface Element {

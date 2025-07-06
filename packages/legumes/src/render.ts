@@ -1,2044 +1,1153 @@
+import { CONFIG } from './config'
 import {
-  Drawing,
-  Element,
-  Measure,
-  Note,
-  Note_register,
-  Pack,
-  Rest,
-  Score,
-  Slot,
-  Tempo_itf,
-} from './type'
-import { note_name_to_staff_pos } from './utils'
-import {
+  NOTE_LENGTH,
   ACCIDENTAL,
-  ARTICULATION,
-  BARLINE,
-  BRACKET,
   CLEF,
-  NOTE_LENGTH, ORDER_OF_ACCIDENTALS
+  ARTICULATION,
+  CUE,
+  BRACKET,
 } from './const'
-import { CONFIG, CONTENT_WIDTH, FONT_INHERENT_HEIGHT } from './config'
-import { FONT, get_text_width } from './hershey'
-import {
-  cue_evade_slur,
-  hf_drawing_polylines,
-  slur_evade_note,
-} from './drawing'
-import { calc_num_flags, on_staff, slot_pos } from './utils'
+import { HERSHEY, ascii_map, get_text_width, FONT } from './hershey'
+import { draw_score } from './draw'
+import { Drawing, Element, Score } from './type'
 
-let id_registry: Record<string, Note_register> = {}
+function xform(
+  polylines: [number, number][][],
+  fn: (x: number, y: number) => [number, number],
+): [number, number][][] {
+  return polylines.map((p) => p.map((xy) => fn(xy[0], xy[1])))
+}
 
-function draw_staff(
-  measure: Measure,
-  staff_idx: number,
-  no_staff_lines: boolean = false,
-): Element[] {
-  let staff = measure.staves[staff_idx]
-  let notes = staff.notes
-  let rests = staff.rests
+function cubic_bezier(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  x3: number,
+  y3: number,
+  t: number,
+): [number, number] {
+  let s = 1 - t
+  let s2 = s * s
+  let s3 = s * s2
+  let t2 = t * t
+  let t3 = t2 * t
+  return [
+    s3 * x0 + 3 * s2 * t * x1 + 3 * s * t2 * x2 + t3 * x3,
+    s3 * y0 + 3 * s2 * t * y1 + 3 * s * t2 * y2 + t3 * y3,
+  ]
+}
 
-  let result: Element[] = []
-
-  let slots: Slot[] = measure.slots
-
-  let ledgers: Set<number>[] = new Array(measure.duration)
-    .fill(null)
-    .map((_) => new Set())
-
-  function put_ledgers_as_necessary(begin: number, line: number) {
-    if (line < 0) {
-      for (let i = Math.floor((line + 1) / 2) * 2; i < 0; i += 2) {
-        ledgers[begin].add(i)
-      }
-    } else if (line > 9) {
-      for (let i = 10; i < ~~(line / 2) * 2 + 1; i += 2) {
-        ledgers[begin].add(i)
-      }
-    }
-  }
-
-  function draw_ledgers() {
-    for (let i = 0; i < ledgers.length; i++) {
-      let slot = slots[i]
-      let slot_x = slot_pos(measure, i)
-
-      for (let line of ledgers[i]) {
-        result.push({
-          tag: 'line',
-          type: 'ledger',
-          x:
-            slot_x -
-            slot.left_note * CONFIG.NOTE_WIDTH -
-            (CONFIG.LEDGER_WIDTH_MUL / 2) * CONFIG.NOTE_WIDTH,
-          y: on_staff(line),
-          w:
-            CONFIG.NOTE_WIDTH *
-            (CONFIG.LEDGER_WIDTH_MUL +
-              slot.left_note +
-              slot.mid_note +
-              slot.right_note),
-          h: 0,
-        })
-      }
-    }
-  }
-
-  function note_head_center_x(note: Note, slot_x: number) {
-    let slot = slots[note.begin]
-    let x: number =
-      slot_x + CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note)
-    if (note.stem_dir < 0) {
-      if (note.twisted) {
-        x += CONFIG.NOTE_WIDTH / 2
+let symbols: Record<string, [number, number][][]> = {}
+function make_symbols() {
+  function note_var(
+    p: [number, number][][],
+    stem_dir: number,
+    twisted: boolean,
+  ): [number, number][][] {
+    if (stem_dir < 0) {
+      if (twisted) {
+        p = xform(p, (u, v) => [u + 5, v])
       } else {
-        x -= CONFIG.NOTE_WIDTH / 2
+        p = xform(p, (u, v) => [u - 6, v])
       }
     } else {
-      if (note.twisted) {
-        x -= CONFIG.NOTE_WIDTH / 2
+      if (twisted) {
+        p = xform(p, (u, v) => [u - 6, v])
       } else {
-        x += CONFIG.NOTE_WIDTH / 2
+        p = xform(p, (u, v) => [u + 5, v])
       }
     }
-    return x
+    return p
   }
+  let p: [number, number][][]
+  {
+    p = HERSHEY(2370).polylines
+    symbols['note_whole_up_twist'] = note_var(p, -1, true)
+    symbols['note_whole_down_twist'] = note_var(p, 1, true)
+    symbols['note_whole_up'] = note_var(p, -1, false)
+    symbols['note_whole_down'] = note_var(p, 1, false)
+  }
+  {
+    p = HERSHEY(2371).polylines
+    p = xform(p, (u, v) => scale_axis(u, v, 1, 0.9, 0.4634))
+    p = p
+      .slice(0, 1)
+      .concat(xform(p.slice(0, 1), (u, v) => scale_axis(u, v, 1, 0.75, 0.4634)))
+    p = xform(p, (u, v) => [u * 0.82 + 0.5, v])
+    symbols['note_half_up_twist'] = note_var(p, -1, true)
+    symbols['note_half_down_twist'] = note_var(p, 1, true)
+    symbols['note_half_up'] = note_var(p, -1, false)
+    symbols['note_half_down'] = note_var(p, 1, false)
+  }
+  {
+    p = HERSHEY(2372).polylines
+    // p = p.filter((x,i)=>!(i%2));
+    p = xform(p, (u, v) => scale_axis(u, v, 1, 0.8, 0.4634))
+    symbols['note_fill_up_twist'] = note_var(p, -1, true)
+    symbols['note_fill_down_twist'] = note_var(p, 1, true)
+    symbols['note_fill_up'] = note_var(p, -1, false)
+    symbols['note_fill_down'] = note_var(p, 1, false)
+  }
+  {
+    p = HERSHEY(2317).polylines
+    symbols['dot'] = xform(p, (u, v) => [u * 1.1, v * 1.1])
+  }
+  {
+    p = HERSHEY(2325).polylines
+    symbols['acc_flat'] = xform(p, (u, v) => [u * 0.7, v + 0.5])
+  }
+  {
+    p = HERSHEY(2324).polylines
+    symbols['acc_nat'] = xform(p, (u, v) => [u * 0.7, v])
+  }
+  {
+    p = HERSHEY(2323).polylines
+    p = xform(p, (u, v) => [u * 0.9, v * 1.1 - u * 0.2])
+    p[3] = xform(p.slice(3, 4), (u, v) => [u, v + 0.15])[0]
+    p[5] = xform(p.slice(5, 6), (u, v) => [u, v + 0.15])[0]
+    symbols['acc_sharp'] = p
+  }
+  {
+    p = HERSHEY(2380).polylines
+    symbols['clef_g'] = xform(p, (u, v) => rotate(u, v, -0.15))
+  }
+  {
+    p = HERSHEY(2381).polylines
+    symbols['clef_f'] = xform(p, (u, v) => [u - 9, v])
+  }
+  {
+    p = HERSHEY(2382).polylines
+    symbols['clef_c'] = xform(p, (u, v) => [u, v * 0.9])
+  }
+  {
+    p = HERSHEY(2376).polylines
+    symbols['rest_whole'] = xform(p, (u, v) => [u * 0.85, v * 1.25 + 2.25])
+  }
+  {
+    p = HERSHEY(2377).polylines
+    symbols['rest_half'] = xform(p, (u, v) => [u, v * 1.25 + 1])
+  }
+  {
+    p = HERSHEY(2378).polylines
+    symbols['rest_quarter'] = xform(p, (u, v) => rotate(u, v, -0.1))
+  }
+  {
+    p = HERSHEY(2379).polylines
+    symbols['rest_8'] = xform(p, (u, v) => [u, v])
+  }
+  {
+    p = HERSHEY(2379).polylines
+    let q = xform(p, (u, v) => [u, v])
+    q[q.length - 1][q[q.length - 1].length - 1][0] += 0.93
+    q[q.length - 1][q[q.length - 1].length - 1][1] -= 3
 
-  function draw_note(note: Note, slot_x: number, line: number) {
-    let slot = slots[note.begin]
-    let head_note: Note = note
-    let tail_note: Note = note
-    let modifier_x =
-      slot_x + CONFIG.NOTE_WIDTH * (slot.mid_note + slot.right_note + 0.5)
+    p = xform(p, (u, v) => [u - 3.07, v + 10])
+    symbols['rest_16'] = q.concat(p)
+  }
+  {
+    p = HERSHEY(2379).polylines
+    let q = xform(p, (u, v) => [u, v])
+    q[q.length - 1][q[q.length - 1].length - 1][0] += 0.93
+    q[q.length - 1][q[q.length - 1].length - 1][1] -= 3
 
-    slot_x += note.slot_shift
-    modifier_x += note.modifier_shift
+    let a = xform(q, (u, v) => [u + 3.07, v - 10])
+    let c = xform(p, (u, v) => [u - 3.07, v + 10])
+    symbols['rest_32'] = a.concat(q).concat(c)
+  }
+  {
+    p = HERSHEY(2379).polylines
+    let q = xform(p, (u, v) => [u, v])
+    q[q.length - 1][q[q.length - 1].length - 1][0] += 0.93
+    q[q.length - 1][q[q.length - 1].length - 1][1] -= 3
 
-    while (head_note.prev_in_chord != null) {
-      head_note = notes[head_note.prev_in_chord]
+    let a = xform(q, (u, v) => [u + 4.07, v - 10])
+    let b = xform(q, (u, v) => [u + 1, v])
+    let c = xform(p, (u, v) => [u - 2.07, v + 10])
+    let d = xform(p, (u, v) => [u - 5.14, v + 20])
+    symbols['rest_64'] = a.concat(b).concat(c).concat(d)
+  }
+  {
+    p = HERSHEY(2368).polylines
+    p = xform(p, (u, v) => [u + 5, (v + 2.5) * 1.5])
+    symbols['flag_up'] = p
+
+    p = xform(p, (u, v) => [u, v])
+    p[0].pop()
+    p[0].pop()
+    p[0][p[0].length - 1][1] += 3
+    symbols['flag_mid_up'] = p
+  }
+  {
+    p = HERSHEY(2369).polylines
+    p = xform(p, (u, v) => [u + 5, (v - 2.5) * 1.5])
+    symbols['flag_down'] = p
+
+    p = xform(p, (u, v) => [u, v])
+    p[p.length - 1].shift()
+    p[p.length - 1].shift()
+    p[p.length - 1][0][1] -= 3
+    symbols['flag_mid_down'] = p
+  }
+  {
+    for (let i = 0; i < 10; i++) {
+      p = HERSHEY(3200 + i).polylines
+      symbols['timesig_digit_' + i] = xform(p, (u, v) => [u, v * 0.85 + 1.1])
     }
-    while (tail_note.next_in_chord != null) {
-      tail_note = notes[tail_note.next_in_chord]
+  }
+  {
+    for (let i = 0; i < 10; i++) {
+      p = HERSHEY(2200 + i).polylines
+      symbols['tuplet_digit_' + i] = xform(p, (u, v) => [u * 0.5, v * 0.5])
     }
-
-    if (note.id) {
-      let x: number =
-        slot_x + CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note)
-      let reg: Note_register = {
-        note,
-        staff_idx,
-        measure,
-        row: null,
-        col: null,
-        chord_head_x: note_head_center_x(head_note, slot_x),
-        chord_head_y: on_staff(head_note.staff_pos),
-        head_x: note_head_center_x(note, slot_x),
-        tail_x: x,
-        head_y: on_staff(note.staff_pos),
-        tail_y: null,
-      }
-
-      let n = note
-      while (n.next_in_chord !== null) {
-        n = staff.notes[n.next_in_chord]
-      }
-      let y1 = on_staff(n.staff_pos)
-      y1 += n.stem_len * n.stem_dir * CONFIG.LINE_HEIGHT
-
-      reg.tail_y = y1
-
-      reg.chord_head_x += staff.coords.x
-      reg.chord_head_y += staff.coords.y
-      reg.head_x += staff.coords.x
-      reg.head_y += staff.coords.y
-      reg.tail_x += staff.coords.x
-      reg.tail_y += staff.coords.y
-      reg.row = staff.coords.row
-      reg.col = staff.coords.col
-
-      id_registry[note.id] = reg
+  }
+  {
+    p = HERSHEY(3103).polylines
+    symbols['timesig_c'] = xform(p, (u, v) => [u, v * 1.2 - 2.5])
+  }
+  {
+    p = [[]]
+    for (let i = 0; i < 8; i++) {
+      let a = (i / 7) * Math.PI
+      p[0].push([Math.cos(a) * 6, 1 - Math.sin(a) * 6])
     }
-
-    if (note.modifier) {
-      result.push({
-        tag: 'dot',
-        type: 'modifier',
-        x: modifier_x,
-        y: on_staff(line % 2 ? line : line + (note.voice % 2 ? 1 : -1)),
-        w: 0,
-        h: 0,
-      })
+    p.push([
+      [-1, 1],
+      [0, 0],
+      [1, 1],
+      [0, 2],
+    ])
+    symbols['fermata'] = p
+  }
+  {
+    p = []
+    p.push([
+      [-8, 2],
+      [-5, -1],
+      [-2, 2],
+      [1, -1],
+      [4, 2],
+      [7, -1],
+    ])
+    p.push([
+      [-4, -2],
+      [-1, 1],
+    ])
+    p.push([
+      [2, -2],
+      [5, 1],
+    ])
+    symbols['mordent'] = p
+  }
+  {
+    p = HERSHEY(2274).polylines.slice(-2)
+    p = xform(p, (u, v) => rotate(-u * 0.4, v * 0.6, Math.PI / 2))
+    symbols['turn'] = p
+  }
+  {
+    p = xform(HERSHEY(2670).polylines, (u, v) => [u * 0.8 - 4, v * 0.8]).concat(
+      xform(HERSHEY(2668).polylines, (u, v) => [u * 0.8 + 4.5, v * 0.8 - 0.5]),
+    )
+    symbols['trill'] = p
+  }
+  {
+    p = xform(HERSHEY(2218).polylines, (u, v) => [u, v + 8])
+    symbols['flageolet'] = p
+  }
+  {
+    p = xform(HERSHEY(3316).polylines, (u, v) => [u * 0.8 - 11, v * 0.8 - 3])
+      .concat(xform(HERSHEY(3405).polylines, (u, v) => [u * 0.8 + 0, v * 0.8]))
+      .concat(xform(HERSHEY(3404).polylines, (u, v) => [u * 0.8 + 8, v * 0.8]))
+      .concat([
+        [
+          [14, 6],
+          [15, 5],
+          [16, 6],
+          [15, 7],
+        ],
+      ])
+    symbols['pedal_on'] = xform(p, (u, v) => [u, v + 3])
+  }
+  {
+    p = []
+    for (let i = 0; i < 8; i++) {
+      let a = (i / 8) * Math.PI * 2
+      p = p.concat(
+        xform(
+          [
+            [
+              [2, -2],
+              [3, 0],
+              [7, -0.5],
+              [9, -2],
+              [11, 0],
+              [9, 2],
+              [7, 0.5],
+              [3, 0],
+              [2, 2],
+            ],
+          ],
+          (u, v) => rotate(u * 0.8, v * 0.8, a),
+        ),
+      )
     }
-
-    if (note.articulation) {
-      if (note.articulation != ARTICULATION.ARPEGGIATED) {
-        let [xx, yy] = note.articulation_pos
-        let x = xx
-          ? slot_x +
-            CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note)
-          : note_head_center_x(note, slot_x)
-        let y = on_staff(yy)
-
-        result.push({
-          tag: 'articulation',
-          type: note.articulation,
-          dir: (xx ? -1 : 1) * note.stem_dir,
-          x: x,
-          y: y,
-          w: CONFIG.NOTE_WIDTH,
-          h: CONFIG.LINE_HEIGHT,
-        })
-      } else {
-        let lh = head_note.staff_pos
-        let lt = tail_note.staff_pos
-        let ya = on_staff(lh - note.stem_dir)
-        // let line_b = Math.round(lt+(note.stem_len*note.stem_dir)*2);
-        let line_b = Math.round(lt + note.stem_dir)
-        let yb = on_staff(line_b)
-
-        let y0 = Math.min(ya, yb)
-        let y1 = Math.max(ya, yb)
-        result.push({
-          tag: 'squiggle',
-          type: 'arpeggiated_chord',
-          x:
-            slot_x -
-            (slot.left_deco + slot.left_note + slot.left_squiggle / 2) *
-              CONFIG.NOTE_WIDTH,
-          y: y0,
-          w: 0,
-          h: y1 - y0,
-        })
-      }
-    }
-
-    result.push({
-      tag: 'note_head',
-      x:
-        slot_x +
-        CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note),
-      y: on_staff(line),
-      w: CONFIG.NOTE_WIDTH,
-      h: CONFIG.LINE_HEIGHT,
-      twisted: note.twisted,
-      stem_dir: note.stem_dir,
-      duration: note.duration,
+    symbols['pedal_off'] = p
+  }
+  {
+    p = xform(HERSHEY(2407).polylines, (u, v) => [(u - 5) * 1.25, v / 78 + 0.5])
+    p = xform(p, (u, v) => {
+      return v < 0.5
+        ? [u - 2 * (v / 0.5) - 2, v]
+        : [u - (2 * (1 - v)) / 0.5 - 2, v]
     })
+    symbols['brace'] = p
+  }
+}
+make_symbols()
 
-    if (
-      !note.beamed &&
-      note.stem_len != 0 &&
-      note.duration < NOTE_LENGTH.WHOLE
-    ) {
-      let y0 = note.stem_len * note.stem_dir
-      let y1 = 0
-      let y = y0
-      let h = y1 - y
-      result.push({
-        tag: 'line',
-        type: 'note_stem',
-        x:
-          slot_x +
-          CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note),
-        y: on_staff(line + y * 2),
-        w: 0,
-        h: CONFIG.LINE_HEIGHT * h,
-      })
+function scale_axis(
+  x: number,
+  y: number,
+  sx: number,
+  sy: number,
+  th: number,
+): [number, number] {
+  let u = x * Math.cos(th) - y * Math.sin(th)
+  let v = x * Math.sin(th) + y * Math.cos(th)
+  u *= sx
+  v *= sy
+  return [
+    u * Math.cos(-th) - v * Math.sin(-th),
+    u * Math.sin(-th) + v * Math.cos(-th),
+  ]
+}
+function rotate(x: number, y: number, th: number): [number, number] {
+  let u = x * Math.cos(th) - y * Math.sin(th)
+  let v = x * Math.sin(th) + y * Math.cos(th)
+  return [u, v]
+}
+
+function build_slur_bezier(elt: Element) {
+  let { tag, x, y, w, h } = elt
+
+  elt.pts = []
+  elt.pts1 = []
+  let n = 20
+  let sh = 0 //elt.dir*8;
+
+  let x0 = elt.x
+  let y0 = elt.y
+  let x3 = elt.x + elt.w
+  let y3 = elt.y1
+
+  let a = Math.atan2(y3 - y0, x3 - x0) + (Math.PI / 2) * elt.dir
+  let hx = Math.cos(a) * h
+  let hy = Math.sin(a) * h
+
+  let m0x = x0 * 0.8 + x3 * 0.2
+  let m0y = y0 * 0.8 + y3 * 0.2
+  let m1x = x0 * 0.2 + x3 * 0.8
+  let m1y = y0 * 0.2 + y3 * 0.8
+  let x1a = m0x + hx
+  let y1a = m0y + hy
+  let x2a = m1x + hx
+  let y2a = m1y + hy
+
+  let x1b = elt.x + elt.w * 0.2
+  let y1b = elt.y + elt.dir * h
+  let x2b = elt.x + elt.w * 0.8
+  let y2b = elt.y1 + elt.dir * h
+
+  let x1 = x1a * 0.5 + x1b * 0.5
+  let y1 = y1a * 0.5 + y1b * 0.5
+  let x2 = x2a * 0.5 + x2b * 0.5
+  let y2 = y2a * 0.5 + y2b * 0.5
+
+  y0 += sh
+  y1 += sh
+  y2 += sh
+  y3 += sh
+
+  elt.control = [
+    [x0, y0],
+    [x1, y1],
+    [x2, y2],
+    [x3, y3],
+  ]
+
+  let p: [number, number][] = []
+  for (let i = 0; i < n; i++) {
+    let t = i / (n - 1)
+    elt.pts.push(cubic_bezier(x0, y0, x1, y1, x2, y2, x3, y3, t))
+  }
+
+  p = []
+  for (let i = 2; i < n - 2; i++) {
+    let t = 1 - i / (n - 1)
+    elt.pts1.push(
+      cubic_bezier(x0, y0, x1, y1 - elt.dir, x2, y2 - elt.dir, x3, y3, t),
+    )
+  }
+}
+
+function build_cue(elt: Element) {
+  let { tag, x, y, w, h } = elt
+
+  elt.pts = []
+  function push_all(p: [number, number][][]) {
+    for (let i = 0; i < p.length; i++) {
+      if (p[i].length <= 1) continue
+      elt.pts.push(p[i])
     }
-
-    if (!note.beamed && note.flag_count) {
-      let flagcnt = note.flag_count
-      for (let i = 0; i < flagcnt; i++) {
-        let y = (note.stem_len - i * CONFIG.FLAG_SPACING) * note.stem_dir * 2
-        result.push({
-          tag: 'flag',
-          x:
-            slot_x +
-            CONFIG.NOTE_WIDTH * (Number(note.stem_dir < 0) * slot.mid_note),
-          y: on_staff(line + y),
-          w: CONFIG.NOTE_WIDTH,
-          h: CONFIG.LINE_HEIGHT,
-          stem_dir: note.stem_dir,
-          is_last: i == flagcnt - 1,
-        })
+  }
+  if (elt.text == CUE.PEDAL_ON) {
+    let p = symbols['pedal_on']
+    let scl = elt.h / 24
+    push_all(xform(p, (u, v) => [x + u * scl, y + v * scl + h / 2]))
+  } else if (elt.text == CUE.PEDAL_OFF) {
+    let p = symbols['pedal_off']
+    let scl = elt.h / 24
+    push_all(xform(p, (u, v) => [x + u * scl, y + v * scl + h / 2]))
+  } else if (
+    elt.text == CUE.PIANISSISSIMO ||
+    elt.text == CUE.PIANISSIMO ||
+    elt.text == CUE.PIANO ||
+    elt.text == CUE.MEZZO_PIANO ||
+    elt.text == CUE.MEZZO_FORTE ||
+    elt.text == CUE.FORTE ||
+    elt.text == CUE.FORTISSIMO ||
+    elt.text == CUE.FORTISSISSIMO ||
+    elt.text == CUE.SFORZANDO
+  ) {
+    let v = get_text_width(elt.text, FONT.TRIPLEX_ITALIC)
+    let scl = elt.h / 30
+    let dx = (-v / 2) * scl
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
       }
-    }
-  }
-
-  function draw_accidental(acc: number, slot_x: number, line: number) {
-    result.push({
-      tag: 'accidental',
-      type: acc,
-      x: slot_x,
-      y: on_staff(line),
-      w: CONFIG.NOTE_WIDTH,
-      h: CONFIG.LINE_HEIGHT,
-    })
-  }
-
-  function draw_rest(rest: Rest, slot_x: number) {
-    let dur = rest.duration
-    if (rest.tuplet) {
-      dur = rest.tuplet.display_duration
-    }
-    let y: number = rest.staff_pos
-
-    if (CONFIG.WHOLE_HALF_REST_LEDGERS) {
-      if (dur == NOTE_LENGTH.WHOLE) {
-        // put_ledgers_as_necessary(rest.begin,y-2);
-        let slot = slots[rest.begin]
-        let line = y - 2
-        result.push({
-          tag: 'line',
-          type: 'ledger',
-          x:
-            slot_x -
-            slot.left_note * CONFIG.NOTE_WIDTH -
-            0.5 * CONFIG.NOTE_WIDTH,
-          y: on_staff(line),
-          w:
-            CONFIG.NOTE_WIDTH *
-            (1 + slot.left_note + slot.mid_note + slot.right_note),
-          h: 0,
-        })
-      } else if (dur == NOTE_LENGTH.HALF) {
-        // put_ledgers_as_necessary(rest.begin,y);
-        let slot = slots[rest.begin]
-        let line = y
-        result.push({
-          tag: 'line',
-          type: 'ledger',
-          x:
-            slot_x -
-            slot.left_note * CONFIG.NOTE_WIDTH -
-            0.5 * CONFIG.NOTE_WIDTH,
-          y: on_staff(line),
-          w:
-            CONFIG.NOTE_WIDTH *
-            (1 + slot.left_note + slot.mid_note + slot.right_note),
-          h: 0,
-        })
+      let a = ascii_map(elt.text[i], FONT.TRIPLEX_ITALIC)
+      if (a === undefined) {
+        continue
       }
-    } else if (dur == NOTE_LENGTH.WHOLE || dur == NOTE_LENGTH.HALF) {
-      y = Math.min(Math.max(y, 2), 8)
+      let e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 14) * scl,
+        ]),
+      )
+      dx += (e.xmax - e.xmin - 3) * scl
     }
-    let line = on_staff(y)
-    result.push({
-      tag: 'rest',
-      x: slot_x + CONFIG.NOTE_WIDTH / 2,
-      y: line,
-      w: CONFIG.NOTE_WIDTH,
-      h: CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1),
-      duration: dur,
-    })
+  } else {
+    let v = get_text_width(elt.text, FONT.DUPLEX_ITALIC)
+    let scl = elt.h / 40
+    let dx = 0
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+      let a = ascii_map(elt.text[i], FONT.DUPLEX_ITALIC)
+      if (a === undefined) {
+        continue
+      }
+      let e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 18) * scl,
+        ]),
+      )
+      dx += (e.xmax - e.xmin) * scl
+    }
   }
+}
 
-  function draw_beam(notes_spanned: Note[]) {
-    if (!notes_spanned.length) {
+export function bounding_box(p: [number, number][][] | [number, number][]): {
+  x: number
+  y: number
+  w: number
+  h: number
+} {
+  let xmin = Infinity
+  let ymin = Infinity
+  let xmax = -Infinity
+  let ymax = -Infinity
+  for (let i = 0; i < p.length; i++) {
+    if (Array.isArray(p[i][0])) {
+      for (let j = 0; j < p[i].length; j++) {
+        xmin = Math.min(xmin, p[i][j][0])
+        ymin = Math.min(ymin, p[i][j][1])
+        xmax = Math.max(xmax, p[i][j][0])
+        ymax = Math.max(ymax, p[i][j][1])
+      }
+    } else {
+      xmin = Math.min(xmin, (p[i] as [number, number])[0])
+      ymin = Math.min(ymin, (p[i] as [number, number])[1])
+      xmax = Math.max(xmax, (p[i] as [number, number])[0])
+      ymax = Math.max(ymax, (p[i] as [number, number])[1])
+    }
+  }
+  // xmin -=1;
+  // ymin -=1;
+  // xmax +=1;
+  // ymax +=1;
+  return { x: xmin, y: ymin, w: xmax - xmin, h: ymax - ymin }
+}
+function box_overlap(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+) {
+  return (
+    a.x <= b.x + b.w && a.x + a.w >= b.x && a.y <= b.y + b.h && a.y + a.h >= b.y
+  )
+}
+function point_in_box(x, y, b: { x: number; y: number; w: number; h: number }) {
+  // return b.x <= x && x <= (b.x+b.w) && b.y <= y && y <= (b.y+b.h);
+  return b.x <= x && x <= b.x + b.w && b.y <= y && y <= b.y + b.h
+}
+
+export function cue_evade_slur(elements: Element[]) {
+  let slurs: Element[] = []
+  let cues: Element[] = []
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].tag == 'cue') {
+      if (!elements[i].pts) {
+        build_cue(elements[i])
+      }
+      if (!elements[i].bbox) {
+        elements[i].bbox = bounding_box(elements[i].pts)
+      }
+      cues.push(elements[i])
+    } else if (elements[i].tag == 'slur') {
+      if (!elements[i].pts) {
+        build_slur_bezier(elements[i])
+      }
+      if (!elements[i].bbox) {
+        elements[i].bbox = bounding_box(elements[i].pts)
+      }
+      slurs.push(elements[i])
+    } else if (elements[i].tag == 'cresc') {
+      let { x, y, w, h, x1, y1, w1, h1 } = elements[i]
+      elements[i].bbox = bounding_box([
+        [x, y],
+        [x + w, y + h],
+        [x1, y1],
+        [x1 + w1, y1 + h1],
+      ])
+      cues.push(elements[i])
+    }
+  }
+  function resolve_(cue: Element, depth: number = 5) {
+    if (depth <= 0) {
       return
     }
-
-    let beat_length = ~~(NOTE_LENGTH.WHOLE / staff.time_signature[1])
-
-    // let stem_length : number = notes_spanned.reduce((acc:number,x:Note)=>(acc+x.info.stem_len),0)/notes_spanned.length;
-    let stem_dir = notes_spanned[0].stem_dir
-    let flagcnts = []
-    for (let i = 0; i < notes_spanned.length; i++) {
-      flagcnts.push(notes_spanned[i].flag_count)
-    }
-
-    // let extra_len = Math.max(0,Math.max(...flagcnts)-1)*CONFIG.FLAG_SPACING;
-
-    let pts: { x: number; y: number }[] = notes_spanned.map((n) => {
-      let stem_length = n.stem_len //+extra_len;
-      let x =
-        slot_pos(measure, n.begin) +
-        CONFIG.NOTE_WIDTH * (Number(n.stem_dir < 0) * slots[n.begin].mid_note) +
-        n.slot_shift
-      return { x, y: on_staff(2 * stem_dir * stem_length + n.staff_pos) }
-    })
-
-    let lengths = notes_spanned.map((x) => x.flag_count)
-    let bins: number[] = new Array(pts.length * 2 - 2).fill(0)
-
-    // let [m,b]:[number,number] = least_sq_regress(pts);
-    // if (Math.abs(m) > CONFIG.BEAM_MAX_SLOPE){
-    //   m = Math.sign(m)*CONFIG.BEAM_MAX_SLOPE;
-    //   let anchor : {x:number,y:number};
-    //   if (stem_dir < 0){
-    //     anchor = pts.reduce((acc:{x:number,y:number},a:{x:number,y:number}):{x:number,y:number}=>(a.y<=acc.y?a:acc),{x:0,y:Infinity});
-    //   }else{
-    //     anchor = pts.reduce((acc:{x:number,y:number},a:{x:number,y:number}):{x:number,y:number}=>(a.y>=acc.y?a:acc),{x:0,y:-Infinity});
-    //   }
-    //   // m*x+b=y b=y-m*x
-    //   b = anchor.y-m*anchor.x;
-    // }
-
-    for (let i = 0; i < pts.length; i++) {
-      let flagcnt = flagcnts[i]
-
-      let last_len: number | undefined = lengths[i - 1]
-      let next_len: number | undefined = lengths[i + 1]
-      if (i == 0) {
-        bins[i * 2] = flagcnt
-      } else if (i == pts.length - 1) {
-        bins[i * 2 - 1] = flagcnt
-      } else {
-        if (
-          Math.abs(lengths[i] - last_len) <= Math.abs(lengths[i] - next_len)
-        ) {
-          bins[i * 2 - 1] = flagcnt
-        } else {
-          bins[i * 2] = flagcnt
-        }
-
-        if (CONFIG.BEAM_POLICY == 3) {
-          let same_beat_l =
-            ~~(notes_spanned[i - 1].begin / beat_length) ==
-            ~~(notes_spanned[i].begin / beat_length)
-          let same_beat_r =
-            ~~(notes_spanned[i].begin / beat_length) ==
-            ~~(notes_spanned[i + 1].begin / beat_length)
-          if (!same_beat_l && i != 1) {
-            bins[i * 2 - 1] = 1
-          }
-          if (!same_beat_r && i != pts.length - 2) {
-            bins[i * 2] = 1
-          }
-        }
-      }
-    }
-    for (let i = 0; i < bins.length; i++) {
-      if (bins[i] == 0) {
-        let [i0, i1] = [~~(i / 2), ~~(i / 2) + 1]
-        bins[i] = Math.min(lengths[i0], lengths[i1])
-      }
-    }
-
-    let runs: [number, number, number][] = [[1, 0, bins.length]]
-
-    let on: number = -1
-    for (let i = 2; i <= 4; i++) {
-      for (let j = 0; j < bins.length; j++) {
-        if (bins[j] >= i && on < 0) {
-          on = j
-        }
-        if (bins[j] < i && on >= 0) {
-          runs.push([i, on, j])
-          on = -1
-        }
-      }
-      if (on >= 0) {
-        runs.push([i, on, bins.length])
-        on = -1
-      }
-    }
-    // console.log(bins,runs);
-
-    for (let i = 0; i < runs.length; i++) {
-      let [t0, t1] = [runs[i][1] / 2, runs[i][2] / 2]
-      let [i0, i1] = [~~t0, ~~t1]
-      let [f0, f1] = [t0 - i0, t1 - i1]
-      if (f0 > 0) {
-        f0 += 0.2
-      }
-      if (f1 > 0) {
-        f1 -= 0.2
-      }
-      let [j0, j1] = [
-        Math.min(i0 + 1, pts.length - 1),
-        Math.min(i1 + 1, pts.length - 1),
-      ]
-
-      let p0 = [pts[i0].x, pts[i0].y]
-      let p1 = [pts[j0].x, pts[j0].y]
-
-      let q0 = [pts[i1].x, pts[i1].y]
-      let q1 = [pts[j1].x, pts[j1].y]
-
-      let p = [p0[0] * (1 - f0) + p1[0] * f0, p0[1] * (1 - f0) + p1[1] * f0]
-      let q = [q0[0] * (1 - f1) + q1[0] * f1, q0[1] * (1 - f1) + q1[1] * f1]
-      result.push({
-        tag: 'beam',
-        x: p[0],
-        y:
-          p[1] -
-          (runs[i][0] - 1) *
-            stem_dir *
-            CONFIG.LINE_HEIGHT *
-            CONFIG.FLAG_SPACING,
-        w: q[0] - p[0],
-        h: q[1] - p[1],
-        stem_dir,
-      })
-    }
-    for (let i = 0; i < bins.length; i++) {
-      let [i0, i1] = [~~(i / 2), ~~(i / 2) + 1]
-      let [x0, v0, y0] = [pts[i0].x, pts[i0].y, pts[i0].y]
-      let [x1, v1, y1] = [pts[i1].x, pts[i1].y, pts[i1].y]
-      if (i % 2 == 0) {
-        let u0 =
-          v0 -
-          notes_spanned[i0].stem_len *
-            notes_spanned[i0].stem_dir *
-            CONFIG.LINE_HEIGHT
-
-        result.push({
-          tag: 'line',
-          type: 'note_stem',
-          x: x0,
-          y: y0,
-          w: 0,
-          h: u0 - y0,
-        })
-      } else if (i == bins.length - 1) {
-        let u1 =
-          v1 -
-          notes_spanned[i1].stem_len *
-            notes_spanned[i1].stem_dir *
-            CONFIG.LINE_HEIGHT
-        result.push({
-          tag: 'line',
-          type: 'note_stem',
-          x: x1,
-          y: y1,
-          w: 0,
-          h: u1 - y1,
-        })
-      }
-    }
-  }
-
-  function draw_clef() {
-    result.push({
-      tag: 'clef',
-      type: staff.clef,
-      x: measure.pad.inter + (CONFIG.NOTE_WIDTH * CONFIG.CLEF_WIDTH_MUL) / 2,
-      y: on_staff(
-        {
-          [CLEF.TREBLE]: 6,
-          [CLEF.BASS]: 2,
-          [CLEF.ALTO]: 4,
-          [CLEF.BARITONE]: 0,
-          [CLEF.SOPRANO]: 8,
-          [CLEF.TENOR]: 2,
-          [CLEF.MEZZO_SOPRANO]: 6,
-        }[staff.clef],
-      ),
-      w: CONFIG.CLEF_WIDTH_MUL * CONFIG.NOTE_WIDTH,
-      h: CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1),
-    })
-  }
-
-  function draw_key_signature() {
-    let { accidental, count } = staff.flags.need_keysig
-
-    let is_cancel: boolean = false
-    if (accidental == ~ACCIDENTAL.SHARP || accidental == ~ACCIDENTAL.FLAT) {
-      is_cancel = true
-      accidental = ~accidental
-    }
-    let targ_notes: string[] = Array.from(
-      ORDER_OF_ACCIDENTALS[accidental].slice(0, count),
-    )
-    let octs: number[] =
-      accidental == ACCIDENTAL.SHARP
-        ? [6, 6, 6, 6, 5, 6, 5]
-        : [5, 6, 5, 6, 5, 6, 5]
-    let x =
-      measure.pad.inter +
-      Number(staff.flags.need_clef) *
-        (CONFIG.NOTE_WIDTH * CONFIG.CLEF_WIDTH_MUL + measure.pad.inter)
-
-    for (let i = 0; i < targ_notes.length; i++) {
-      let n: string
-      if (staff.clef == CLEF.TREBLE) {
-        n = targ_notes[i] + '_' + octs[i]
-      } else if (staff.clef == CLEF.BASS) {
-        n = targ_notes[i] + '_' + (octs[i] - 2)
-      } else if (staff.clef == CLEF.SOPRANO) {
-        n = targ_notes[i] + '_' + (octs[i] - 1)
-      } else if (staff.clef == CLEF.ALTO) {
-        n = targ_notes[i] + '_' + (octs[i] - 1)
-      } else if (staff.clef == CLEF.TENOR) {
-        n = targ_notes[i] + '_' + (octs[i] - 1)
-      } else if (staff.clef == CLEF.BARITONE) {
-        n = targ_notes[i] + '_' + (octs[i] - 1)
-      } else if (staff.clef == CLEF.MEZZO_SOPRANO) {
-        n = targ_notes[i] + '_' + (octs[i] - 1)
-      } else {
-        n = targ_notes[i] + '_' + octs[i]
-      }
-      let line = note_name_to_staff_pos(n, staff.clef)
-      result.push({
-        tag: 'accidental',
-        type: is_cancel ? ACCIDENTAL.NATURAL : accidental,
-        x: x + i * CONFIG.NOTE_WIDTH * CONFIG.KEYSIG_WIDTH_MUL + 3,
-        y: on_staff(line),
-        w: CONFIG.NOTE_WIDTH,
-        h: CONFIG.LINE_HEIGHT,
-      })
-    }
-  }
-
-  function draw_time_signature() {
-    let x =
-      measure.pad.inter +
-      Number(staff.flags.need_clef) *
-        (CONFIG.NOTE_WIDTH * CONFIG.CLEF_WIDTH_MUL + measure.pad.inter)
-    if (staff.flags.need_keysig) {
-      x +=
-        staff.flags.need_keysig.count *
-          CONFIG.NOTE_WIDTH *
-          CONFIG.KEYSIG_WIDTH_MUL +
-        measure.pad.inter
-    }
-    x += (CONFIG.TIMESIG_WIDTH_MUL * CONFIG.NOTE_WIDTH) / 2
-
-    function draw_digit(d: number, x: number, line: number) {
-      result.push({
-        tag: 'timesig_digit',
-        value: d,
-        x: x,
-        y: on_staff(line),
-        w: CONFIG.TIMESIG_WIDTH_MUL * CONFIG.NOTE_WIDTH,
-        h: (CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1)) / 2,
-      })
-    }
-
-    function draw_num(n: number, x: number, line: number) {
-      let digits: number[] = Array.from(n.toString()).map(Number)
-      let u = CONFIG.TIMESIG_WIDTH_MUL * CONFIG.NOTE_WIDTH * 0.5
-
-      for (let i = 0; i < digits.length; i++) {
-        draw_digit(digits[i], x - (digits.length * u) / 2 + i * u + u / 2, line)
-      }
-    }
-
-    if (
-      CONFIG.TIMESIG_COMMON_TIME_C &&
-      ((staff.time_signature[0] == 2 && staff.time_signature[1] == 2) ||
-        (staff.time_signature[0] == 4 && staff.time_signature[1] == 4))
-    ) {
-      result.push({
-        tag: 'timesig_c',
-        type: staff.time_signature[0] - 2 ? 'common' : 'cut',
-        x: x,
-        y: on_staff(4),
-        w: CONFIG.TIMESIG_WIDTH_MUL * CONFIG.NOTE_WIDTH,
-        h: (CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1)) / 2,
-      })
-    } else {
-      draw_num(staff.time_signature[0], x, 2)
-      draw_num(staff.time_signature[1], x, 6)
-    }
-  }
-
-  function draw_tuplets() {
-    let tuplets: Record<
-      string,
-      {
-        label: number
-        stem_dir: number
-        xmin: number
-        xmax: number
-        ymin: number
-        ymax: number
-      }
-    > = {}
-
-    function register_note_or_rest(n: Note | Rest, is_rest: boolean) {
-      if (!n.tuplet) {
-        return
-      }
-      let r = tuplets[n.tuplet.id]
-      if (!r) {
-        r = tuplets[n.tuplet.id] = {
-          label: n.tuplet.label,
-          stem_dir: -1,
-          xmin: Infinity,
-          xmax: -Infinity,
-          ymin: Infinity,
-          ymax: -Infinity,
-        }
-      }
-
-      let slot = slots[n.begin]
-      let slot_x = slot_pos(measure, n.begin)
-
-      if (is_rest) {
-        let rest: Rest = n as Rest
-        let y0 = on_staff(rest.staff_pos)
-        r.xmin = Math.min(r.xmin, slot_x)
-        r.xmax = Math.max(r.xmax, slot_x + slot.mid_note * CONFIG.NOTE_WIDTH)
-        r.ymin = Math.min(r.ymin, y0 - CONFIG.LINE_HEIGHT * 2)
-        r.ymax = Math.max(r.ymax, y0 + CONFIG.LINE_HEIGHT * 2)
-      } else {
-        let note: Note = n as Note
-        r.stem_dir = note.stem_dir
-        let y = on_staff(note.staff_pos)
-        let y0 = y + CONFIG.LINE_HEIGHT / 2
-        let y1 =
-          y +
-          note.stem_len * note.stem_dir * CONFIG.LINE_HEIGHT +
-          Math.max(0, note.flag_count - 1) *
-            CONFIG.FLAG_SPACING *
-            note.stem_dir *
-            CONFIG.LINE_HEIGHT
-        if (note.stem_dir < 0) {
-          r.xmin = Math.min(
-            r.xmin,
-            slot_x - (slot.left_note - 0.5) * CONFIG.NOTE_WIDTH,
-          )
-          r.xmax = Math.max(r.xmax, slot_x + slot.mid_note * CONFIG.NOTE_WIDTH)
-        } else {
-          r.xmin = Math.min(r.xmin, slot_x)
-          r.xmax = Math.max(
-            r.xmax,
-            slot_x +
-              (slot.mid_note + slot.right_note - 0.5) * CONFIG.NOTE_WIDTH,
-          )
-        }
-        r.ymin = Math.min(r.ymin, y0, y1)
-        r.ymax = Math.max(r.ymax, y0, y1)
-      }
-    }
-
-    for (let i = 0; i < staff.notes.length; i++) {
-      register_note_or_rest(staff.notes[i], false)
-    }
-    for (let i = 0; i < staff.rests.length; i++) {
-      register_note_or_rest(staff.rests[i], true)
-    }
-
-    for (let k in tuplets) {
-      let { label, stem_dir, ymin, ymax, xmin, xmax } = tuplets[k]
-      let y = stem_dir < 0 ? ymin : ymax
-      result.push({
-        tag: 'tuplet_label',
-        label,
-        x: xmin,
-        y: y + stem_dir * CONFIG.LINE_HEIGHT * CONFIG.TUPLET_LABEL_SPACING,
-        w: xmax - xmin,
-        h: (stem_dir * CONFIG.LINE_HEIGHT) / 2,
-      })
-    }
-  }
-
-  function draw_lyric(note: Note, slot_x: number) {
-    let ymax_sans_lyric: number
-    ymax_sans_lyric =
-      staff.coords.local_y_max -
-      CONFIG.LYRIC_SPACING -
-      CONFIG.LYRIC_SCALE * FONT_INHERENT_HEIGHT
-
-    // console.log(y_bound,ymax_sans_lyric);
-    result.push({
-      tag: 'lyric',
-      text: note.lyric,
-      x: slot_x,
-      y: ymax_sans_lyric,
-      w: get_text_width(note.lyric) * CONFIG.LYRIC_SCALE,
-      h: FONT_INHERENT_HEIGHT * CONFIG.LYRIC_SCALE,
-    })
-  }
-
-  function draw_cue(nr: Note | Rest, slot_x: number) {
-    let slot = slots[nr.begin]
-    let ymax_sans_cue: number
-    ymax_sans_cue =
-      staff.coords.local_y_max -
-      (staff.flags.need_lyric
-        ? CONFIG.LYRIC_SPACING * 2 + CONFIG.LYRIC_SCALE * FONT_INHERENT_HEIGHT
-        : 0) -
-      CONFIG.CUE_HEIGHT
-
-    let x = slot_x
-    if (nr.cue.position == 0) {
-      x += (CONFIG.NOTE_WIDTH * slot.mid_note) / 2
-    } else if (nr.cue.position == -1) {
-      x -=
-        CONFIG.NOTE_WIDTH *
-          (slot.left_note +
-            slot.left_deco +
-            slot.left_squiggle +
-            slot.left_grace) +
-        measure.pad.inter / 2
-    } else if (nr.cue.position == 1) {
-      x +=
-        CONFIG.NOTE_WIDTH *
-          (slot.mid_note + slot.right_deco + slot.right_note) +
-        measure.pad.inter / 2
-    }
-    // console.log(y_bound,ymax_sans_cue);
-    result.push({
-      tag: 'cue',
-      text: nr.cue.data,
-      x: x,
-      y: ymax_sans_cue - (CONFIG.CUE_TEXT_SIZE - CONFIG.CUE_HEIGHT) / 2,
-      w: CONFIG.NOTE_WIDTH,
-      h: CONFIG.CUE_TEXT_SIZE,
-    })
-  }
-
-  if (CONFIG.DEBUG_BLOCKS) {
-    ;(function draw_dbg() {
-      // for (let i = 0; i < slots.length; i++){
-      //   let slot_x = slot_pos(measure,i);
-      //   result.push({
-      //     tag:'dbg', color:'red',
-      //     x:slot_x,
-      //     y:on_staff(0),
-      //     w: slots[i].mid_note*CONFIG.NOTE_WIDTH,
-      //     h: CONFIG.LINE_HEIGHT*(CONFIG.LINES_PER_STAFF-1),
-      //   })
-      // }
-      for (let i = 0; i < slots.length; i++) {
-        let slot_x = slot_pos(measure, i)
-        result.push({
-          tag: 'dbg',
-          color: ['red', 'blue', 'green'][~~(Math.random() * 3)],
-          x: slot_x,
-          y: staff.coords.local_y_min,
-          w: slots[i].mid_note * CONFIG.NOTE_WIDTH,
-          h: staff.coords.local_y_max - staff.coords.local_y_min,
-        })
-      }
-    })()
-  }
-
-  if (!no_staff_lines) {
-    let measure_render_width: number = slot_pos(measure, measure.duration)
-    for (let i = 0; i < CONFIG.LINES_PER_STAFF; i++) {
-      result.push({
-        tag: 'line',
-        type: 'staff_line',
-        x: 0,
-        y: i * CONFIG.LINE_HEIGHT,
-        w: measure_render_width,
-        h: 0,
-      })
-    }
-  }
-
-  if (staff.flags.need_clef) {
-    draw_clef()
-  }
-  if (staff.flags.need_keysig) {
-    draw_key_signature()
-  }
-  if (staff.flags.need_timesig) {
-    draw_time_signature()
-  }
-
-  for (let i = 0; i < notes.length; i++) {
-    let note = notes[i]
-
-    let line = note.staff_pos
-    let slot_x = slot_pos(measure, note.begin)
-    let slot = slots[note.begin]
-
-    put_ledgers_as_necessary(note.begin, line)
-    draw_note(note, slot_x, line)
-    if (note.lyric) {
-      draw_lyric(note, slot_x)
-    }
-    if (note.cue) {
-      draw_cue(note, slot_x)
-    }
-    if (note.accidental !== null) {
-      let x = slot.acc_pack.intervals[staff_idx].find((a) => a.idx == i).x
-      draw_accidental(
-        note.accidental,
-        slot_x -
-          CONFIG.NOTE_WIDTH * slot.left_note -
-          CONFIG.NOTE_WIDTH * CONFIG.ACCIDENTAL_WIDTH_MUL * 0.6 -
-          CONFIG.NOTE_WIDTH * CONFIG.ACCIDENTAL_WIDTH_MUL * x * 0.8,
-        line,
-      )
-    }
-  }
-
-  let beams = staff.beams
-  for (let b of beams) {
-    let notes_spanned = []
-    for (let i = 0; i < b.length; i++) {
-      notes_spanned.push(notes[b[i]])
-    }
-    if (!notes_spanned.length) {
-      continue
-    }
-    draw_beam(notes_spanned)
-  }
-
-  for (let i = 0; i < rests.length; i++) {
-    let rest = rests[i]
-    let slot_x = slot_pos(measure, rest.begin)
-    draw_rest(rest, slot_x)
-    if (rest.cue) {
-      draw_cue(rest, slot_x)
-    }
-  }
-
-  draw_tuplets()
-
-  draw_ledgers()
-
-  translate_elements(result, staff.coords.x, staff.coords.y)
-
-  for (let i = 0; i < staff.grace.length; i++) {
-    if (!staff.grace[i]) {
-      continue
-    }
-
-    let nw0 = CONFIG.NOTE_WIDTH
-    CONFIG.NOTE_WIDTH *= CONFIG.GRACE_WIDTH_MUL
-    let ret = draw_staff(staff.grace[i], 0, true)
-    CONFIG.NOTE_WIDTH = nw0
-
-    ret.forEach((x) => {
-      x.mini = true
-      result.push(x)
-    })
-  }
-
-  return result
-}
-
-function translate_elements(elts: Element[], x: number, y: number) {
-  for (let i = 0; i < elts.length; i++) {
-    elts[i].x += x
-    elts[i].y += y
-    if (elts[i].x1) {
-      elts[i].x1 += x
-    }
-    if (elts[i].y1) {
-      elts[i].y1 += y
-    }
-  }
-}
-
-function draw_measures(score: Score): Element[] {
-  let measures: Measure[] = score.measures
-  let result: Element[] = []
-  let human_measure_count = 0
-
-  for (let i = 0; i < measures.length; i++) {
-    let staves = measures[i].staves
-
-    if (CONFIG.SHOW_MEASURE_NUMBER) {
-      // console.log(measures[i].duration , staves[0].time_signature[0] * (64/staves[0].time_signature[1]))
-      if (
-        staves[0] &&
-        measures[i].duration >=
-          staves[0].time_signature[0] * (64 / staves[0].time_signature[1])
-      ) {
-        human_measure_count++
-      } else if (
-        staves[0] &&
-        measures[i + 1] &&
-        measures[i + 1].staves[0] &&
-        measures[i + 1].staves[0].key_signature[0] ==
-          staves[0].key_signature[0] &&
-        measures[i + 1].staves[0].key_signature[1] ==
-          staves[0].key_signature[1] &&
-        measures[i].duration + measures[i + 1].duration ==
-          staves[0].time_signature[0] * (64 / staves[0].time_signature[1])
-      ) {
-        human_measure_count++
-      }
-    }
-
-    if (measures[i].is_first_col) {
-      let staff_count = 0
-
-      for (let j = 0; j < score.instruments.length; j++) {
-        if (!staves[staff_count]) {
-          break
-        }
-        let y0 = staves[staff_count].coords.y
-        let y1 =
-          staves[staff_count + score.instruments[j].names.length - 1].coords.y +
-          CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1)
-
-        if (!j && i && CONFIG.SHOW_MEASURE_NUMBER) {
-          let t = human_measure_count.toString()
-          let w =
-            (get_text_width(t, FONT.DUPLEX, -2) *
-              CONFIG.MEASURE_NUMBER_TEXT_SIZE) /
-            FONT_INHERENT_HEIGHT
-          result.push({
-            tag: 'regular_text',
-            type: 'measure_number',
-            text: t,
-            x: staves[0].coords.x - w / 2,
-            y: y0 - CONFIG.MEASURE_NUMBER_TEXT_SIZE - 14,
-            w,
-            h: CONFIG.MEASURE_NUMBER_TEXT_SIZE,
-          })
-        }
-
-        if (!i && score.indent) {
-          if (new Set(score.instruments[j].names).size == 1) {
-            let w =
-              (get_text_width(score.instruments[j].names[0], FONT.DUPLEX, -2) *
-                CONFIG.INSTRUMENT_TEXT_SIZE) /
-              FONT_INHERENT_HEIGHT
-            result.push({
-              tag: 'regular_text',
-              type: 'instrument',
-              text: score.instruments[j].names[0],
-              x: staves[0].coords.x - w - CONFIG.INSTRUMENT_PAD_RIGHT,
-              y: (y0 + y1) / 2 - CONFIG.INSTRUMENT_TEXT_SIZE / 2,
-              w: w,
-              h: CONFIG.INSTRUMENT_TEXT_SIZE,
-            })
-          } else {
-            for (let k = 0; k < score.instruments[j].names.length; k++) {
-              let z0 = staves[staff_count + k].coords.y
-              let z1 =
-                staves[staff_count + k].coords.y +
-                CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1)
-              let w =
-                (get_text_width(
-                  score.instruments[j].names[k],
-                  FONT.DUPLEX,
-                  -2,
-                ) *
-                  CONFIG.INSTRUMENT_TEXT_SIZE) /
-                FONT_INHERENT_HEIGHT
-              result.push({
-                tag: 'regular_text',
-                type: 'instrument',
-                text: score.instruments[j].names[k],
-                x: staves[0].coords.x - w - CONFIG.INSTRUMENT_PAD_RIGHT,
-                y: (z0 + z1) / 2 - CONFIG.INSTRUMENT_TEXT_SIZE / 2,
-                w: w,
-                h: CONFIG.INSTRUMENT_TEXT_SIZE,
-              })
-            }
-          }
-        }
-
-        if (score.instruments[j].bracket != BRACKET.NONE) {
-          result.push({
-            tag: 'bracket',
-            type: score.instruments[j].bracket,
-            x: staves[0].coords.x,
-            y: y0,
-            w: 0,
-            h: y1 - y0,
-          })
-        }
-        staff_count += score.instruments[j].names.length
-      }
-
-      if (staves.length > 1) {
-        result.push({
-          tag: 'line',
-          type: 'barline',
-          x: staves[0].coords.x,
-          y: staves[0].coords.y,
-          w: 0,
-          h:
-            staves[staves.length - 1].coords.y +
-            CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1) -
-            staves[0].coords.y,
-        })
-      }
-
-      if (CONFIG.JOIN_STAFF_LINES) {
-        let last_measure_of_row =
-          (score.first_col_measure_indices[staves[0].coords.row + 1] ??
-            measures.length) - 1
-        let x1 =
-          measures[last_measure_of_row].staves[0].coords.x +
-          measures[last_measure_of_row].staves[0].coords.w
-        for (let j = 0; j < staves.length; j++) {
-          let y0 = staves[j].coords.y
-          for (let k = 0; k < CONFIG.LINES_PER_STAFF; k++) {
-            result.push({
-              tag: 'line',
-              type: 'staff_line',
-              x: staves[0].coords.x,
-              y: y0 + k * CONFIG.LINE_HEIGHT,
-              w: x1 - staves[0].coords.x,
-              h: 0,
-            })
-          }
-        }
-      }
-    }
-
-    for (let j = 0; j < staves.length; j++) {
-      let ret = draw_staff(measures[i], j, CONFIG.JOIN_STAFF_LINES)
-      ret.forEach((x) => result.push(x))
-    }
-    if (!score.instruments.length) {
-      result.push({
-        tag: 'line',
-        type: 'barline',
-        x: staves[0].coords.x + staves[0].coords.w,
-        y: staves[0].coords.y,
-        w: 0,
-        h:
-          staves[staves.length - 1].coords.y +
-          CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1) -
-          staves[0].coords.y,
-      })
-    }
-    let staff_count = 0
-    for (let j = 0; j < score.instruments.length; j++) {
-      for (let k = 0; k < score.instruments[j].names.length; k++) {
-        let z0 = staves[staff_count + k].coords.y
-        let z1 =
-          staves[staff_count + k].coords.y +
-          CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1)
-        let z2 = staves[staff_count + k + 1]
-          ? staves[staff_count + k + 1].coords.y
-          : z1
-        if (
-          measures[i].barline == BARLINE.SINGLE ||
-          measures[i].barline == BARLINE.REPEAT_BEGIN
-        ) {
-          result.push({
-            tag: 'line',
-            type: 'barline',
-            x:
-              staves[staff_count + k].coords.x +
-              staves[staff_count + k].coords.w,
-            y: z0,
-            w: 0,
-            h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-          })
-        }
-        if (measures[i].barline == BARLINE.DOUBLE) {
-          result.push({
-            tag: 'line',
-            type: 'barline',
-            x:
-              staves[staff_count + k].coords.x +
-              staves[staff_count + k].coords.w,
-            y: z0,
-            w: 0,
-            h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-          })
-          result.push({
-            tag: 'line',
-            type: 'barline',
-            x:
-              staves[staff_count + k].coords.x +
-              staves[staff_count + k].coords.w -
-              4,
-            y: z0,
-            w: 0,
-            h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-          })
-        }
-        if (
-          measures[i].barline == BARLINE.END ||
-          measures[i].barline == BARLINE.REPEAT_END ||
-          measures[i].barline == BARLINE.REPEAT_END_BEGIN
-        ) {
-          for (let l = 0; l < 4; l++) {
-            result.push({
-              tag: 'line',
-              type: 'barline',
-              x:
-                staves[staff_count + k].coords.x +
-                staves[staff_count + k].coords.w -
-                l,
-              y: z0,
-              w: 0,
-              h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-            })
-          }
-          result.push({
-            tag: 'line',
-            type: 'barline',
-            x:
-              staves[staff_count + k].coords.x +
-              staves[staff_count + k].coords.w -
-              8,
-            y: z0,
-            w: 0,
-            h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-          })
-          if (measures[i].barline != BARLINE.END) {
-            result.push({
-              tag: 'dot',
-              type: 'barline_repeat',
-              x:
-                staves[staff_count + k].coords.x +
-                staves[staff_count + k].coords.w -
-                12,
-              y: z0 + CONFIG.LINE_HEIGHT * 1.5,
-              w: 0,
-              h: 0,
-            })
-            result.push({
-              tag: 'dot',
-              type: 'barline_repeat',
-              x:
-                staves[staff_count + k].coords.x +
-                staves[staff_count + k].coords.w -
-                12,
-              y: z0 + CONFIG.LINE_HEIGHT * 2.5,
-              w: 0,
-              h: 0,
-            })
-          }
-        }
-        if (
-          measures[i].barline == BARLINE.REPEAT_BEGIN ||
-          measures[i].barline == BARLINE.REPEAT_END_BEGIN
-        ) {
-          // console.log('!');
-          let x0 =
-            measures[i + 1].staves[staff_count + k].coords.x +
-            slot_pos(measures[i + 1], -1)
-          let y0 = measures[i + 1].staves[staff_count + k].coords.y
-          let xl =
-            staves[staff_count + k].coords.x + staves[staff_count + k].coords.w
-          let adj =
-            measures[i].barline == BARLINE.REPEAT_END_BEGIN &&
-            Math.abs(x0 - xl) < 0.01
-          if (!adj) {
-            for (let l = 1; l < 4; l++) {
-              result.push({
-                tag: 'line',
-                type: 'barline',
-                x: x0 + l,
-                y: y0,
-                w: 0,
-                h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-              })
-            }
-          }
-          result.push({
-            tag: 'line',
-            type: 'barline',
-            x: x0 + 8 - 3 * Number(adj),
-            y: y0,
-            w: 0,
-            h: (score.instruments[j].connect_barlines[k] ? z2 : z1) - z0,
-          })
-          result.push({
-            tag: 'dot',
-            type: 'barline_repeat',
-            x: x0 + 12 - 3 * Number(adj),
-            y: y0 + CONFIG.LINE_HEIGHT * 1.5,
-            w: 0,
-            h: 0,
-          })
-          result.push({
-            tag: 'dot',
-            type: 'barline_repeat',
-            x: x0 + 12 - 3 * Number(adj),
-            y: y0 + CONFIG.LINE_HEIGHT * 2.5,
-            w: 0,
-            h: 0,
-          })
-        }
-      }
-      staff_count += score.instruments[j].names.length
-    }
-  }
-  return result
-}
-
-function draw_slurs(score: Score): Element[] {
-  // console.log(id_registry);
-  let result: Element[] = []
-  let row_yoffsets = score.measures
-    .filter((x) => x.is_first_col)
-    .map((x) => x.staves[0].coords.y)
-
-  // let been_left : Record<string,number> = {};
-
-  for (let i = 0; i < score.slurs.length; i++) {
-    let { left, right, is_tie } = score.slurs[i]
-    // console.log(score.slurs[i]);
-    let lreg = id_registry[left]
-    let rreg = id_registry[right]
-    let x0: number, y0: number, x1: number, y1: number, dir: number
-    let sh_lh = lreg.note.articulation ? 4 : 7
-    let sh_lt = lreg.note.articulation ? 2 : 5
-    let sh_rh = rreg.note.articulation ? 4 : 7
-    let sh_rt = rreg.note.articulation ? 2 : 5
-
-    let l_is_grace =
-      score.measures[score.first_col_measure_indices[lreg.row] + lreg.col] !=
-      lreg.measure
-
-    if (is_tie) {
-      if (
-        lreg.note.voice == 0 &&
-        rreg.note.voice == 0 &&
-        lreg.measure.staves[lreg.staff_idx].voices == 1 &&
-        rreg.measure.staves[rreg.staff_idx].voices == 1 &&
-        lreg.note.stem_dir == rreg.note.stem_dir
-      ) {
-        if (
-          lreg.note.next_in_chord == null &&
-          lreg.note.prev_in_chord != null &&
-          rreg.note.next_in_chord == null &&
-          rreg.note.prev_in_chord != null
-        ) {
-          dir = lreg.note.stem_dir
-        } else {
-          dir = -lreg.note.stem_dir
-        }
-        ;[x0, y0] = [lreg.head_x, lreg.head_y + sh_lh * dir]
-        ;[x1, y1] = [rreg.head_x, rreg.head_y + sh_rh * dir]
-      } else {
-        if (Math.max(lreg.note.voice, rreg.note.voice) % 2) {
-          dir = 1
-          ;[x0, y0] = [lreg.head_x, lreg.head_y + sh_lh]
-          ;[x1, y1] = [rreg.head_x, rreg.head_y + sh_rh]
-        } else {
-          dir = -1
-          ;[x0, y0] = [lreg.head_x, lreg.head_y - sh_lh]
-          ;[x1, y1] = [rreg.head_x, rreg.head_y - sh_rh]
-        }
-      }
-    } else {
-      sh_lh = lreg.note.articulation
-        ? lreg.note.articulation == ARTICULATION.STACCATO
-          ? Math.abs(
-              (lreg.note.articulation_pos[1] * CONFIG.LINE_HEIGHT) / 2 -
-                (lreg.chord_head_y -
-                  lreg.measure.staves[lreg.staff_idx].coords.y),
-            ) + 5
-          : 4
-        : 7
-      sh_rh = rreg.note.articulation
-        ? rreg.note.articulation == ARTICULATION.STACCATO
-          ? Math.abs(
-              (rreg.note.articulation_pos[1] * CONFIG.LINE_HEIGHT) / 2 -
-                (rreg.chord_head_y -
-                  rreg.measure.staves[rreg.staff_idx].coords.y),
-            ) + 5
-          : 4
-        : 7
-
-      if (
-        (lreg.measure.staves[lreg.staff_idx].voices > 1 ||
-          rreg.measure.staves[rreg.staff_idx].voices > 1) &&
-        lreg.note.stem_dir == rreg.note.stem_dir
-      ) {
-        if (lreg.note.stem_dir == 1) {
-          dir = 1
-          ;[x0, y0] = [lreg.tail_x, lreg.tail_y + sh_lt]
-          ;[x1, y1] = [rreg.tail_x, rreg.tail_y + sh_rt]
-        } else {
-          dir = -1
-          ;[x0, y0] = [lreg.tail_x, lreg.tail_y - sh_lt]
-          ;[x1, y1] = [rreg.tail_x, rreg.tail_y - sh_rt]
-        }
-      } else {
-        let head_to_tail_better =
-          Math.abs(lreg.chord_head_y - rreg.tail_y) <
-          Math.abs(lreg.tail_y - rreg.chord_head_y) + 5
-        let tail_to_tail_better =
-          Math.abs(lreg.tail_y - rreg.tail_y) <
-          Math.abs(lreg.chord_head_y - rreg.chord_head_y) - 40
-
-        if (lreg.note.stem_dir < 0 && rreg.note.stem_dir < 0) {
-          if (tail_to_tail_better) {
-            dir = -1
-            ;[x0, y0] = [lreg.tail_x, lreg.tail_y - sh_lt]
-            ;[x1, y1] = [rreg.tail_x, rreg.tail_y - sh_rt]
-          } else {
-            dir = 1
-            ;[x0, y0] = [lreg.chord_head_x, lreg.chord_head_y + sh_lh]
-            ;[x1, y1] = [rreg.chord_head_x, rreg.chord_head_y + sh_rh]
-          }
-        } else if (lreg.note.stem_dir < 0 && rreg.note.stem_dir > 0) {
-          if (head_to_tail_better) {
-            dir = 1
-            ;[x0, y0] = [lreg.chord_head_x, lreg.chord_head_y + sh_lh]
-            ;[x1, y1] = [rreg.tail_x, rreg.tail_y + sh_rt]
-          } else {
-            dir = -1
-            ;[x0, y0] = [lreg.tail_x, lreg.tail_y - sh_lt]
-            ;[x1, y1] = [rreg.chord_head_x, rreg.chord_head_y - sh_rh]
-          }
-        } else if (lreg.note.stem_dir > 0 && rreg.note.stem_dir > 0) {
-          if (tail_to_tail_better) {
-            dir = 1
-            ;[x0, y0] = [lreg.tail_x, lreg.tail_y + sh_lt]
-            ;[x1, y1] = [rreg.tail_x, rreg.tail_y + sh_rt]
-          } else {
-            dir = -1
-            ;[x0, y0] = [lreg.chord_head_x, lreg.chord_head_y - sh_lh]
-            ;[x1, y1] = [rreg.chord_head_x, rreg.chord_head_y - sh_rh]
-          }
-        } else {
-          if (head_to_tail_better) {
-            dir = -1
-            ;[x0, y0] = [lreg.chord_head_x, lreg.chord_head_y - sh_lh]
-            ;[x1, y1] = [rreg.tail_x, rreg.tail_y - sh_rt]
-          } else {
-            dir = 1
-            ;[x0, y0] = [lreg.tail_x, lreg.tail_y + sh_lt]
-            ;[x1, y1] = [rreg.chord_head_x, rreg.chord_head_y + sh_rh]
-          }
-        }
-      }
-    }
-    // if (been_left[left]){
-    // dir = - been_left[left];
-    // y0 += (CONFIG.LINE_HEIGHT+10) * dir;
-    // y1 += (CONFIG.LINE_HEIGHT+10) * dir;
-    // }
-    // been_left[left] = dir;
-
-    if (is_tie) {
-      x0 += 3
-      x1 -= 3
-    } else {
-      x0 += 2
-      x1 -= 2
-    }
-
-    function notes_ybounds(notes: Note[]): [number, number] {
-      if (!notes.length) {
-        return null
-      }
-      let ymin = Infinity
-      let ymax = -Infinity
-      for (let i = 0; i < notes.length; i++) {
-        let y0 = on_staff(notes[i].staff_pos)
-        let y1 = y0 + notes[i].stem_dir * notes[i].stem_len * CONFIG.LINE_HEIGHT
-        if (notes[i].accidental != null) {
-          y0 -= CONFIG.LINE_HEIGHT
-          y1 += CONFIG.LINE_HEIGHT
-        }
-        ymin = Math.min(y0, y1, ymin)
-        ymax = Math.max(y0, y1, ymax)
-      }
-      return [ymin, ymax]
-    }
-
-    function share_measure_ybound_in_slur(): [number, number] {
-      let m0 = score.first_col_measure_indices[lreg.row] + lreg.col
-      let m1 = score.first_col_measure_indices[rreg.row] + rreg.col
-      if (m0 != m1) {
-        return null
-      }
-      let b0 = get_begin(lreg)
-      let b1 = get_begin(rreg)
-      let notes = score.measures[m0].staves[lreg.staff_idx].notes.filter(
-        (x) => b0 < x.begin && x.begin < b1,
-      )
-      return notes_ybounds(notes)
-    }
-
-    function get_begin(reg: Note_register) {
-      let m = score.first_col_measure_indices[reg.row] + reg.col
-      if (score.measures[m] != reg.measure) {
-        for (
-          let i = 0;
-          i < score.measures[m].staves[reg.staff_idx].grace.length;
-          i++
-        ) {
-          if (score.measures[m].staves[reg.staff_idx].grace[i] == reg.measure) {
-            return i
-          }
-        }
-      }
-      return reg.note.begin
-    }
-
-    function self_measure_ybound_in_slur(
-      reg: Note_register,
-      sign: number,
-    ): [number, number] {
-      let m = score.first_col_measure_indices[reg.row] + reg.col
-
-      let begin = reg.note.begin
-      if (score.measures[m] != reg.measure) {
-        for (
-          let i = 0;
-          i < score.measures[m].staves[reg.staff_idx].grace.length;
-          i++
-        ) {
-          if (score.measures[m].staves[reg.staff_idx].grace[i] == reg.measure) {
-            begin = i
+    for (let j = 0; j < slurs.length; j++) {
+      if (box_overlap(cue.bbox, slurs[j].bbox)) {
+        let hit = false
+        let dir: number = null
+        for (let k = 0; k < slurs[j].pts.length; k++) {
+          if (point_in_box(slurs[j].pts[k][0], slurs[j].pts[k][1], cue.bbox)) {
+            hit = true
+            dir =
+              cue.bbox.y + cue.bbox.h / 2 <
+              slurs[j].bbox.y + slurs[j].bbox.h / 2
+                ? -1
+                : 1
             break
           }
         }
+        if (hit) {
+          let d = dir * Math.min(4, Math.max(2, depth))
+          cue.y += d
+          cue.bbox.y += d
+          if (cue.y1 != undefined) {
+            cue.y1 += d
+          }
+          cue.pts = null
+          return resolve_(cue, depth - 1)
+        }
       }
-      let notes = score.measures[m].staves[reg.staff_idx].notes.filter(
-        (x) => Math.sign(x.begin - begin) == sign,
-      )
-      return notes_ybounds(notes)
     }
+  }
+  for (let i = 0; i < cues.length; i++) {
+    resolve_(cues[i])
+  }
+}
 
-    function inter_ybound_in_slur(situation: number): [number, number] {
-      let m0 = score.first_col_measure_indices[lreg.row] + lreg.col
-      let m1 = score.first_col_measure_indices[rreg.row] + rreg.col
-      if (situation == 1) {
-        if (
-          score.first_col_measure_indices[lreg.row + 1] &&
-          score.first_col_measure_indices[lreg.row + 1] < m1
-        ) {
-          m1 = score.first_col_measure_indices[lreg.row + 1]
-        }
-      } else if (situation == 2) {
-        if (
-          score.first_col_measure_indices[rreg.row] &&
-          score.first_col_measure_indices[rreg.row] > m0
-        ) {
-          m0 = score.first_col_measure_indices[rreg.row] - 1
-        }
-      }
-      // if (situation == 0)console.log(m0,m1);
-      if (m0 + 1 >= m1) {
-        return null
-      }
-      let ymin = Infinity
-      let ymax = -Infinity
-      for (let i = m0 + 1; i < m1; i++) {
-        // console.log(score.measures[i].staves[lreg.staff_idx].coords)
-        // let ya = score.measures[i].staves[lreg.staff_idx].coords.local_y_min;
-        // let yb = score.measures[i].staves[rreg.staff_idx].coords.local_y_max;
-
-        // let [ya,yb] = estimate_staff_ybound(score.measures[i].staves[lreg.staff_idx]);
-        let [ya, yb] = notes_ybounds(
-          score.measures[i].staves[lreg.staff_idx].notes,
-        )
-        if (ya == null) {
-          ya = 0
-          yb = CONFIG.LINE_HEIGHT * 4
-        }
-
-        ymin = Math.min(ymin, ya)
-        ymax = Math.max(ymax, yb)
-      }
-      return [ymin, ymax]
-    }
-
-    let dy: number = null
-    let ymin: number = null
-    let ymax: number = null
-
-    function compute_slur(situation: number) {
-      dy = null
-      ymin = ymax = null
-      if (!is_tie && lreg.staff_idx == rreg.staff_idx) {
-        let m0 = score.first_col_measure_indices[lreg.row] + lreg.col
-        let m1 = score.first_col_measure_indices[rreg.row] + rreg.col
-
-        if (m0 <= m1) {
-          if (m0 == m1) {
-            let ret = share_measure_ybound_in_slur()
-            if (ret) [ymin, ymax] = ret
+export function slur_evade_note(elements: Element[]) {
+  let slurs: Element[] = []
+  let notes: Element[] = []
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].tag == 'note_head') {
+      let elt = elements[i]
+      let { x, y, w, h } = elt
+      x -= 1
+      y -= 1
+      w += 2
+      h += 2
+      if (!elt.bbox) {
+        if (elt.stem_dir < 0) {
+          if (elt.twisted) {
+            elt.bbox = { x, y: y - h / 2, w, h }
           } else {
-            let rets: [number, number][]
-
-            if (situation == 0) {
-              rets = [
-                self_measure_ybound_in_slur(lreg, 1),
-                inter_ybound_in_slur(0),
-                self_measure_ybound_in_slur(rreg, -1),
-              ]
-              if (rreg.measure.staves[rreg.staff_idx].flags.need_clef) {
-                rets.push([
-                  CONFIG.LINE_HEIGHT,
-                  CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF - 1),
-                ])
-                // console.log(rets);
-              }
-              // console.log(rets);
-            } else if (situation == 1) {
-              rets = [
-                self_measure_ybound_in_slur(lreg, 1),
-                inter_ybound_in_slur(1),
-              ]
-            } else if (situation == 2) {
-              rets = [
-                inter_ybound_in_slur(2),
-                self_measure_ybound_in_slur(rreg, -1),
-              ]
-              // console.log(rets);
-            }
-            // console.log(m0,m1,lreg.staff_idx,rets);
-            for (let i = 0; i < rets.length; i++) {
-              if (rets[i] == null) {
-                continue
-              }
-              if (ymin === null) {
-                ;[ymin, ymax] = rets[i]
-              } else {
-                ymin = Math.min(rets[i][0], ymin)
-                ymax = Math.max(rets[i][1], ymax)
-              }
-            }
+            elt.bbox = { x: x - w, y: y - h / 2, w, h }
           }
-          if (ymin !== null) {
-            let yl = y0 - lreg.measure.staves[lreg.staff_idx].coords.y
-            let yr = y1 - rreg.measure.staves[rreg.staff_idx].coords.y
-
-            let ya: number
-            let yb: number
-            if (situation == 0) {
-              ya = yl
-              yb = yr
-            } else if (situation == 1) {
-              ya = yb = yl
-            } else if (situation == 2) {
-              ya = yb = yr
-            }
-            if (dir == -1) {
-              // dy = Math.min(ya,yb)-ymin+CONFIG.LINE_HEIGHT/2;
-              dy = (Math.max(ya, yb) + (ya + yb) / 2) / 2 - ymin
-              // if (situation == 1){
-              //   console.log(ya,yb,ymin,dy)
-              // }
-            } else {
-              // dy = ymax-Math.max(ya,yb)+CONFIG.LINE_HEIGHT/2;
-              dy = ymax - (Math.min(ya, yb) + (ya + yb) / 2) / 2
-            }
-            dy *= 1.2
-            dy = Math.max(dy, 0)
-            // if (dy){
-            dy += CONFIG.LINE_HEIGHT * 2
-            // }
-          }
-        }
-      }
-    }
-
-    if (lreg.row == rreg.row) {
-      compute_slur(0)
-      let h = Math.min(
-        CONFIG.LINE_HEIGHT * (lreg.measure == rreg.measure ? 4.5 : 6.5),
-        Math.max(
-          CONFIG.LINE_HEIGHT * 1.5,
-          dy != null ? 0 : Math.abs(x1 - x0) * 0.05,
-          dy != null ? 0 : Math.abs(y1 - y0) * 0.5,
-          dy == null ? 0 : dy,
-        ),
-      )
-      if (is_tie) {
-        h *= 0.6
-      }
-      result.push({
-        tag: 'slur',
-        x: x0,
-        y: y0,
-        w: x1 - x0,
-        h: h * CONFIG.SLUR_ARC_MUL,
-        y1,
-        dir,
-        adjacent: dy == null,
-      })
-    } else {
-      compute_slur(1)
-
-      // let h = Math.min(CONFIG.LINE_HEIGHT*4.5,Math.max(CONFIG.LINE_HEIGHT*1.5,Math.abs(CONTENT_WIDTH()-x0)*0.16));
-
-      let h = Math.min(
-        CONFIG.LINE_HEIGHT * 6.5,
-        Math.max(
-          CONFIG.LINE_HEIGHT * 1.5,
-          dy != null ? 0 : Math.abs(CONTENT_WIDTH() - x0) * 0.16,
-          dy == null ? 0 : dy,
-        ),
-      )
-
-      if (is_tie) {
-        h *= 0.6
-      }
-      let y_1 = y0 + (dir * h) / 4
-      if (ymin != null) {
-        y_1 =
-          y_1 * 0.5 +
-          (lreg.measure.staves[lreg.staff_idx].coords.y +
-            (dir < 0
-              ? ymin - CONFIG.LINE_HEIGHT / 2
-              : ymax + CONFIG.LINE_HEIGHT / 2)) *
-            0.5
-      }
-      result.push({
-        tag: 'slur',
-        x: x0,
-        y: y0,
-        w: CONTENT_WIDTH() - x0,
-        h: h * CONFIG.SLUR_ARC_MUL,
-        y1: y_1,
-        dir,
-      })
-
-      function get_row_left(row: number): number {
-        let k = score.first_col_measure_indices[row]
-        let slot = score.measures[k].slots[0]
-        // let xz = slot_pos(score.measures[k],0)-(slot.left_deco+slot.left_grace+slot.left_note+slot.left_squiggle)*CONFIG.NOTE_WIDTH-score.measures[k].pad.inter;
-        let xz = slot_pos(score.measures[k], -1)
-        return Math.max(xz, 0)
-      }
-
-      for (let j = lreg.row + 1; j < rreg.row; j++) {
-        let h = Math.min(
-          CONFIG.LINE_HEIGHT * 7,
-          Math.max(CONFIG.LINE_HEIGHT * 1.5, CONTENT_WIDTH() * 0.16),
-        )
-        let xz = get_row_left(j)
-
-        // let dy = y0-row_yoffsets[lreg.row];
-        let notes = score.measures
-          .slice(
-            score.first_col_measure_indices[j],
-            score.first_col_measure_indices[j + 1] || Infinity,
-          )
-          .map((x) => x.staves[lreg.staff_idx])
-          .map((x) => x.notes)
-          .flat()
-        let bd = notes_ybounds(notes)
-
-        result.push({
-          tag: 'slur',
-          x: xz,
-          y: row_yoffsets[j] + (dir < 0 ? bd[0] : bd[1]),
-          w: CONTENT_WIDTH() - xz,
-          h: (h * CONFIG.SLUR_ARC_MUL * 3) / 4,
-          y1: row_yoffsets[j] + (dir < 0 ? bd[0] : bd[1]),
-          dir,
-        })
-      }
-
-      let xz = get_row_left(rreg.row)
-
-      compute_slur(2)
-
-      // h = Math.min(CONFIG.LINE_HEIGHT*4.5,Math.max(CONFIG.LINE_HEIGHT*1.5,Math.abs(x1)*0.16));
-      h = Math.min(
-        CONFIG.LINE_HEIGHT * 6.5,
-        Math.max(
-          CONFIG.LINE_HEIGHT * 1.5,
-          dy != null ? 0 : x1 * 0.16,
-          dy == null ? 0 : dy,
-        ),
-      )
-
-      y_1 = y1 + (dir * h) / 4
-      if (ymin != null) {
-        y_1 =
-          y_1 * 0.5 +
-          (rreg.measure.staves[rreg.staff_idx].coords.y +
-            (dir < 0
-              ? ymin - CONFIG.LINE_HEIGHT / 2
-              : ymax + CONFIG.LINE_HEIGHT / 2)) *
-            0.5
-      }
-      result.push({
-        tag: 'slur',
-        x: xz,
-        y: y_1,
-        w: x1 - xz,
-        h: h * CONFIG.SLUR_ARC_MUL,
-        y1: y1,
-        dir,
-      })
-    }
-  }
-  return result
-}
-
-function draw_crescs(score: Score): Element[] {
-  let result: Element[] = []
-  for (let i = 0; i < score.crescs.length; i++) {
-    let { left, right, val_left, val_right } = score.crescs[i]
-    let lreg = id_registry[left]
-    let rreg = id_registry[right]
-
-    let x0 = lreg.head_x + 3
-    let x1 = rreg.head_x - 3
-    let staff0 = lreg.measure.staves[lreg.staff_idx]
-    let staff1 = rreg.measure.staves[rreg.staff_idx]
-
-    let ch = CONFIG.CUE_TEXT_SIZE
-
-    let y0 =
-      staff0.coords.y +
-      staff0.coords.local_y_max -
-      (staff0.flags.need_lyric
-        ? 2 * CONFIG.LYRIC_SPACING + CONFIG.LYRIC_SCALE * FONT_INHERENT_HEIGHT
-        : 0) -
-      CONFIG.CUE_HEIGHT / 2
-    let y1 =
-      staff1.coords.y +
-      staff1.coords.local_y_max -
-      (staff1.flags.need_lyric
-        ? 2 * CONFIG.LYRIC_SPACING + CONFIG.LYRIC_SCALE * FONT_INHERENT_HEIGHT
-        : 0) -
-      CONFIG.CUE_HEIGHT / 2
-
-    if (lreg.row == rreg.row) {
-      let u0 = y0 - (ch / 2) * val_left
-      let u1 = y0 + (ch / 2) * val_left
-      let v0 = y1 - (ch / 2) * val_right
-      let v1 = y1 + (ch / 2) * val_right
-
-      result.push({
-        tag: 'cresc',
-        x: x0,
-        y: u0,
-        w: x1 - x0,
-        h: v0 - u0,
-        x1: x0,
-        y1: u1,
-        w1: x1 - x0,
-        h1: v1 - u1,
-      })
-    } else {
-      let wa = CONTENT_WIDTH() - x0
-      let ws: number[] = [0, wa]
-      for (let j = lreg.row + 1; j < rreg.row; j++) {
-        ws.push((wa += CONTENT_WIDTH()))
-      }
-      ws.push((wa += x1))
-
-      for (let j = 0; j < rreg.row - lreg.row + 1; j++) {
-        let is_first = j == 0
-        let is_last = j == rreg.row - lreg.row
-        let t0 = ws[j] / wa
-        let t1 = ws[j + 1] / wa
-
-        let xl = is_first ? x0 : 0
-        let xr = is_last ? x1 : CONTENT_WIDTH()
-
-        let y: number
-        if (is_first) {
-          y = y0
-        } else if (is_last) {
-          y = y1
         } else {
-          for (let k = 0; k < score.measures.length; k++) {
-            if (
-              score.measures[k].staves[lreg.staff_idx].coords.row ==
-              lreg.row + j
-            ) {
-              let staff = score.measures[k].staves[lreg.staff_idx]
-              y =
-                staff.coords.y +
-                staff.coords.local_y_max -
-                (staff.flags.need_lyric
-                  ? 2 * CONFIG.LYRIC_SPACING +
-                    CONFIG.LYRIC_SCALE * FONT_INHERENT_HEIGHT
-                  : 0) -
-                CONFIG.CUE_HEIGHT / 2
-              break
-            }
+          if (!elt.twisted) {
+            elt.bbox = { x: x, y: y - h / 2, w, h }
+          } else {
+            elt.bbox = { x: x - w, y: y - h / 2, w, h }
           }
         }
-        let l = val_left * (1 - t0) + val_right * t0
-        let r = val_left * (1 - t1) + val_right * t1
-        let u0 = y - (ch / 2) * l
-        let u1 = y + (ch / 2) * l
-        let v0 = y - (ch / 2) * r
-        let v1 = y + (ch / 2) * r
-        result.push({
-          tag: 'line',
-          type: 'cresc_top',
-          x: xl,
-          y: u0,
-          w: xr - xl,
-          h: v0 - u0,
-        })
-        result.push({
-          tag: 'line',
-          type: 'cresc_bottom',
-          x: xl,
-          y: u1,
-          w: xr - xl,
-          h: v1 - u1,
-        })
+      }
+      notes.push(elements[i])
+    } else if (elements[i].tag == 'slur') {
+      if (!elements[i].pts) {
+        build_slur_bezier(elements[i])
+      }
+      if (!elements[i].bbox) {
+        elements[i].bbox = bounding_box(elements[i].pts)
+      }
+      slurs.push(elements[i])
+    }
+  }
+  function resolve_(slur: Element, depth: number = 5) {
+    if (depth <= 0) {
+      return
+    }
+    for (let j = 0; j < notes.length; j++) {
+      if (box_overlap(slur.bbox, notes[j].bbox)) {
+        let hit = false
+        let dir: number = slur.dir
+        for (let k = 0; k < slur.pts.length; k++) {
+          if (point_in_box(slur.pts[k][0], slur.pts[k][1], notes[j].bbox)) {
+            hit = true
+            break
+          }
+        }
+        if (hit) {
+          let d = dir * Math.min(4, Math.max(2, depth))
+          slur.y += d
+          slur.y1 += d
+          slur.bbox.y += d
+          slur.pts.forEach((xy: [number, number]) => {
+            xy[1] += d
+          })
+          slur.pts1.forEach((xy: [number, number]) => {
+            xy[1] += d
+          })
+          return resolve_(slur, depth - 1)
+        }
       }
     }
   }
-  return result
+  for (let i = 0; i < slurs.length; i++) {
+    if (slurs[i].adjacent) {
+      continue
+    }
+    resolve_(slurs[i])
+  }
 }
 
-function draw_tempo(tempo: Tempo_itf): Element[] {
-  let result: Element[] = []
-  let dx = 0
-  if (tempo.duration != null && tempo.bpm != null) {
-    if (tempo.duration < NOTE_LENGTH.WHOLE) {
-      let num_flags = calc_num_flags(tempo.duration, tempo.modifier)
+type Component = (polylines: [number, number][][], elt: Element) => void
 
-      result.push({
-        tag: 'note_head',
-        x: CONFIG.NOTE_WIDTH,
-        y: CONFIG.TEMPO_COMPOSER_TEXT_SIZE,
-        w: CONFIG.NOTE_WIDTH,
-        h: CONFIG.LINE_HEIGHT,
-        twisted: false,
-        stem_dir: -1,
-        duration: tempo.duration,
-      })
-      dx += CONFIG.NOTE_WIDTH
+// 元素渲染器映射表
+const components: Record<Element['tag'], Component> = {
+  note_head: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let key =
+      (elt.stem_dir < 0 ? '_up' : '_down') + (elt.twisted ? '_twist' : '')
 
-      let eh = (num_flags + 1) * CONFIG.FLAG_SPACING * CONFIG.LINE_HEIGHT
-      result.push({
-        tag: 'line',
-        type: 'note_stem',
-        x: CONFIG.NOTE_WIDTH,
-        y: -eh,
-        w: 0,
-        h: CONFIG.TEMPO_COMPOSER_TEXT_SIZE + eh,
-      })
-
-      if (tempo.modifier) {
-        result.push({
-          tag: 'dot',
-          type: 'modifier',
-          x: CONFIG.NOTE_WIDTH * 1.5,
-          y: CONFIG.TEMPO_COMPOSER_TEXT_SIZE - CONFIG.LINE_HEIGHT / 2,
-          w: 0,
-          h: 0,
-        })
-      }
-
-      if (tempo.modifier || num_flags) {
-        dx += CONFIG.NOTE_WIDTH
-      }
-
-      for (let i = 0; i < num_flags; i++) {
-        result.push({
-          tag: 'flag',
-          x: CONFIG.NOTE_WIDTH,
-          y: -eh + i * CONFIG.FLAG_SPACING * CONFIG.LINE_HEIGHT,
-          w: CONFIG.NOTE_WIDTH,
-          h: CONFIG.LINE_HEIGHT,
-          stem_dir: -1,
-          is_last: i == num_flags - 1,
-        })
-      }
+    if (elt.duration >= NOTE_LENGTH.WHOLE) {
+      key = 'note_whole' + key
+    } else if (elt.duration >= NOTE_LENGTH.HALF) {
+      key = 'note_half' + key
     } else {
-      result.push({
-        tag: 'note_head',
-        x: CONFIG.NOTE_WIDTH,
-        y: CONFIG.TEMPO_COMPOSER_TEXT_SIZE / 2,
-        w: CONFIG.NOTE_WIDTH,
-        h: CONFIG.LINE_HEIGHT,
-        twisted: false,
-        stem_dir: -1,
-        duration: tempo.duration,
-      })
-      dx += CONFIG.NOTE_WIDTH
+      key = 'note_fill' + key
     }
-    let t = ' = ' + tempo.bpm
-    let tw =
-      (get_text_width(t, FONT.DUPLEX, -2) * CONFIG.TEMPO_COMPOSER_TEXT_SIZE) /
-      FONT_INHERENT_HEIGHT
-    result.push({
-      tag: 'regular_text',
-      type: 'tempo',
-      text: t,
-      x: dx,
-      y: 0,
-      w: tw,
-      h: CONFIG.TEMPO_COMPOSER_TEXT_SIZE,
-    })
-    dx += tw + CONFIG.TEMPO_COMPOSER_TEXT_SIZE
-  }
-  if (tempo.text != null) {
-    let tw =
-      (get_text_width(tempo.text, FONT.TRIPLEX, -2) *
-        CONFIG.TEMPO_COMPOSER_TEXT_SIZE) /
-      FONT_INHERENT_HEIGHT
-    result.push({
-      tag: 'bold_text',
-      type: 'tempo',
-      text: tempo.text,
-      x: dx,
-      y: 0,
-      w: tw,
-      h: CONFIG.TEMPO_COMPOSER_TEXT_SIZE,
-    })
-  }
-  return result
-}
 
-function draw_score(score: Score): [Element[], number] {
-  id_registry = {}
-  let ret = draw_measures(score)
+    let p = symbols[key]
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
 
-  ret.push(...draw_slurs(score))
-  ret.push(...draw_crescs(score))
-  let last_staff =
-    score.measures[score.measures.length - 1].staves[
-      score.measures[score.measures.length - 1].staves.length - 1
+  dot: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let p = symbols['dot']
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  accidental: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.type == ACCIDENTAL.FLAT) {
+      p = symbols['acc_flat']
+    } else if (elt.type == ACCIDENTAL.NATURAL) {
+      p = symbols['acc_nat']
+    } else if (elt.type == ACCIDENTAL.SHARP) {
+      p = symbols['acc_sharp']
+    } else {
+      return
+    }
+
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  clef: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.type == CLEF.TREBLE) {
+      p = symbols['clef_g']
+    } else if (elt.type == CLEF.BASS) {
+      p = symbols['clef_f']
+    } else {
+      p = symbols['clef_c']
+    }
+
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  rest: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.duration == NOTE_LENGTH.WHOLE) {
+      p = symbols['rest_whole']
+    } else if (elt.duration == NOTE_LENGTH.HALF) {
+      p = symbols['rest_half']
+    } else if (elt.duration == NOTE_LENGTH.QUARTER) {
+      p = symbols['rest_quarter']
+    } else if (elt.duration == NOTE_LENGTH.EIGHTH) {
+      p = symbols['rest_8']
+    } else if (elt.duration == NOTE_LENGTH.SIXTEENTH) {
+      p = symbols['rest_16']
+    } else if (elt.duration == NOTE_LENGTH.THIRTYSECOND) {
+      p = symbols['rest_32']
+    } else if (elt.duration == NOTE_LENGTH.SIXTYFOURTH) {
+      p = symbols['rest_64']
+    } else {
+      return
+    }
+
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  flag: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    let p: [number, number][][]
+
+    if (elt.stem_dir < 0) {
+      p = elt.is_last ? symbols['flag_up'] : symbols['flag_mid_up']
+    } else {
+      p = elt.is_last ? symbols['flag_down'] : symbols['flag_mid_down']
+    }
+
+    if (elt.mini) p = xform(p, (u, v) => [u / 2, v / 2])
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  beam: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w, h } = elt
+    for (let j = 0.3; j < 4.66; j += 1.09) {
+      polylines.push([
+        [x, y - j * elt.stem_dir],
+        [x + w, y + h - j * elt.stem_dir],
+      ])
+    }
+  },
+
+  line: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w, h } = elt
+    polylines.push([
+      [x, y],
+      [x + w, y + h],
+    ])
+  },
+
+  cresc: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w, h } = elt
+    const p: [number, number][][] = [
+      [
+        [x, y],
+        [x + w, y + h],
+      ],
+      [
+        [elt.x1, elt.y1],
+        [elt.x1 + elt.w1, elt.y1 + elt.h1],
+      ],
     ]
-  let H =
-    last_staff.coords.y +
-    Math.max(
-      last_staff.coords.local_y_max,
-      CONFIG.LINE_HEIGHT * (CONFIG.LINES_PER_STAFF + 1),
+    push_all(p, polylines)
+  },
+
+  slur: (polylines: [number, number][][], elt: Element) => {
+    if (!elt.pts) {
+      build_slur_bezier(elt)
+    }
+    polylines.push(elt.pts)
+    polylines.push(elt.pts1)
+  },
+
+  timesig_digit: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    const p = symbols['timesig_digit_' + elt.value]
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
+    )
+  },
+
+  timesig_c: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    const p = symbols['timesig_c']
+    push_all(
+      xform(p, (u, v) => [x + u, y + v]),
+      polylines,
     )
 
-  let result: Element[] = []
+    if (elt.type === 'cut') {
+      polylines.push([
+        [x, y - 14],
+        [x, y + 14],
+      ])
+    }
+  },
 
-  let dy = CONFIG.PAGE_MARGIN_Y
-  for (let i = 0; i < score.title.length; i++) {
-    let h = i ? CONFIG.SUBTITLE_TEXT_SIZE : CONFIG.TITLE_TEXT_SIZE
-    let w =
-      (get_text_width(score.title[i], i ? FONT.DUPLEX : FONT.TRIPLEX, -2) * h) /
-      FONT_INHERENT_HEIGHT
+  tuplet_label: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w, h } = elt
+    const digits: string[] = elt.label.toString().split('')
+    const mid = x + w / 2
+    const mw = digits.length
+    const dw = 8
+    const dp = 4
+    const ml = mid - (mw / 2) * dw - dp
+    const mr = mid + (mw / 2) * dw + dp
 
-    result.push({
-      ...(i
-        ? { tag: 'regular_text', type: 'subtitle' }
-        : { tag: 'bold_text', type: 'title' }),
-      text: score.title[i],
-      x: CONFIG.PAGE_WIDTH / 2 - w / 2,
-      y: dy,
-      w: w,
-      h: h,
-    })
-    dy += h + CONFIG.TITLE_LINE_SPACING
-  }
-  if (score.tempo || score.composer.length) {
-    dy += CONFIG.TITLE_LINE_SPACING
-    if (score.composer.length) {
-      let h = CONFIG.TEMPO_COMPOSER_TEXT_SIZE
-      for (let i = 0; i < score.composer.length; i++) {
-        let w =
-          (get_text_width(score.composer[i], FONT.DUPLEX, -2) * h) /
-          FONT_INHERENT_HEIGHT
+    if (ml >= x && mr <= x + w) {
+      polylines.push([
+        [x, y],
+        [x, y + h],
+        [ml, y + h],
+      ])
+      polylines.push([
+        [mr, y + h],
+        [x + w, y + h],
+        [x + w, y],
+      ])
+    }
 
-        result.push({
-          tag: 'regular_text',
-          type: 'composer',
-          text: score.composer[i],
-          x: CONFIG.PAGE_WIDTH - CONFIG.PAGE_MARGIN_X - w,
-          y: dy,
-          w: w,
-          h: h,
-        })
-        dy += CONFIG.TEMPO_COMPOSER_TEXT_SIZE + 4
+    for (let i = 0; i < digits.length; i++) {
+      const p = symbols['tuplet_digit_' + digits[i]]
+      push_all(
+        xform(p, (u, v) => [ml + dp + dw * i + u + 4, y + h + v]),
+        polylines,
+      )
+    }
+  },
+
+  lyric: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text)
+    let dx = -4 * scl
+
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
       }
-      dy -= CONFIG.TEMPO_COMPOSER_TEXT_SIZE + 4
+
+      const a = ascii_map(elt.text[i])
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin) * scl
+    }
+  },
+
+  bold_text: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text, FONT.TRIPLEX, -2)
+    if (isNaN(scl)) return
+
+    let dx = 0
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+
+      const a = ascii_map(elt.text[i], FONT.TRIPLEX)
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin - 2) * scl
+    }
+  },
+
+  regular_text: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, w } = elt
+    const scl = w / get_text_width(elt.text, FONT.DUPLEX, -2)
+    if (isNaN(scl)) return
+
+    let dx = 0
+    for (let i = 0; i < elt.text.length; i++) {
+      if (elt.text[i] == ' ') {
+        dx += 10 * scl
+        continue
+      }
+
+      const a = ascii_map(elt.text[i], FONT.DUPLEX)
+      if (a === undefined) continue
+
+      const e = HERSHEY(a)
+      push_all(
+        xform(e.polylines, (u, v) => [
+          x + dx + (u - e.xmin) * scl,
+          y + (v + 12) * scl,
+        ]),
+        polylines,
+      )
+      dx += (e.xmax - e.xmin - 2) * scl
+    }
+  },
+
+  bracket: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, h } = elt
+
+    if (elt.type == BRACKET.BRACE) {
+      const p = symbols['brace']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v * h]),
+        polylines,
+      )
+    } else if (elt.type == BRACKET.BRACKET) {
+      polylines.push([
+        [x + 5, y - 12],
+        [x - 2, y - 8],
+        [x - 8, y - 7],
+        [x - 8, y + h + 7],
+        [x - 2, y + h + 8],
+        [x + 5, y + h + 12],
+      ])
+      polylines.push([
+        [x + 5, y - 12],
+        [x - 1, y - 8],
+        [x - 7, y - 6],
+        [x - 7, y + h + 6],
+        [x - 1, y + h + 8],
+        [x + 5, y + h + 12],
+      ])
+      polylines.push([
+        [x - 6, y - 5],
+        [x - 6, y + h + 5],
+      ])
+    }
+  },
+
+  articulation: (polylines: [number, number][][], elt: Element) => {
+    const { x, y } = elt
+    if (typeof elt.type !== 'number') return
+
+    const a = Math.abs(elt.type)
+
+    if (a == ARTICULATION.STACCATO) {
+      const p = symbols['dot']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.ACCENT) {
+      polylines.push([
+        [x - 5, y - 3],
+        [x + 5, y],
+        [x - 5, y + 3],
+      ])
+    } else if (a == ARTICULATION.SPICCATO) {
+      polylines.push([
+        [x - 1, y - 3],
+        [x, y + 3],
+        [x + 1, y - 3],
+        [x - 1, y - 3],
+      ])
+    } else if (a == ARTICULATION.TENUTO) {
+      polylines.push([
+        [x - 4, y],
+        [x + 4, y],
+      ])
+    } else if (a == ARTICULATION.MARCATO) {
+      polylines.push([
+        [x - 3, y + 3],
+        [x, y - 3],
+        [x + 3, y + 3],
+      ])
+    } else if (a == ARTICULATION.UP_BOW) {
+      polylines.push([
+        [x - 3, y - 3],
+        [x, y + 3],
+        [x + 3, y - 3],
+      ])
+    } else if (a == ARTICULATION.TREMBLEMENT) {
+      push_all(
+        [
+          [
+            [x - 4, y],
+            [x + 4, y],
+          ],
+          [
+            [x, y - 4],
+            [x, y + 4],
+          ],
+        ],
+        polylines,
+      )
+    } else if (a == ARTICULATION.FERMATA) {
+      const p = symbols['fermata']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v * elt.dir]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.MORDENT) {
+      const p = symbols['mordent']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.TURN) {
+      const p = symbols['turn']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.TRILL) {
+      const p = symbols['trill']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else if (a == ARTICULATION.FLAGEOLET) {
+      const p = symbols['flageolet']
+      push_all(
+        xform(p, (u, v) => [x + u, y + v]),
+        polylines,
+      )
+    } else {
+      const p = HERSHEY(ascii_map(elt.type.toString(), FONT.TRIPLEX)).polylines
+      push_all(
+        xform(p, (u, v) => [x + u / 2, y + v / 2]),
+        polylines,
+      )
     }
 
-    if (score.tempo) {
-      let r = draw_tempo(score.tempo)
-      translate_elements(r, CONFIG.PAGE_MARGIN_X + score.indent, dy)
-      r.forEach((x) => result.push(x))
+    if (elt.type < 0) {
+      polylines.push([
+        [x, y - 5],
+        [x, y + 5],
+      ])
+    }
+  },
+
+  squiggle: (polylines: [number, number][][], elt: Element) => {
+    const { x, y, h } = elt
+    const p: [number, number][] = []
+    const q: [number, number][][] = []
+    let f = false
+    const h2 = Math.ceil(h / 8) * 8
+    const y2 = y - (h2 - h) / 2
+
+    for (let i = 0; i < h2; i += 4) {
+      p.push([f ? x + 2 : x - 2, y2 + i])
+      if (f && i + 4 < h2) {
+        q.push([
+          [x + 2.8, i + y2 + 0.8],
+          [x - 1.2, i + y2 + 4.8],
+        ])
+      }
+      f = !f
     }
 
-    dy += CONFIG.TEMPO_COMPOSER_TEXT_SIZE
+    polylines.push(p)
+    push_all(q, polylines)
+  },
+
+  cue: (polylines: [number, number][][], elt: Element) => {
+    if (!elt.pts) {
+      build_cue(elt)
+    }
+    push_all(elt.pts, polylines)
+  },
+
+  dbg: (polylines: [number, number][][], elt: Element) => {
+    // do nothing
+  },
+}
+
+// 辅助函数：将 polylines 添加到结果中
+function push_all(p: [number, number][][], polylines: [number, number][][]) {
+  for (let i = 0; i < p.length; i++) {
+    if (p[i].length <= 1) continue
+    polylines.push(p[i])
   }
-  dy += CONFIG.TITLE_LINE_SPACING * 1.2
+}
 
-  translate_elements(ret, CONFIG.PAGE_MARGIN_X, dy)
+export function render_polylines(
+  elements: Element[],
+  width: number,
+  height: number,
+): number[][][] {
+  const polylines: [number, number][][] = []
 
-  ret.forEach((x) => result.push(x))
-  return [result, H + CONFIG.PAGE_MARGIN_Y + dy]
+  for (let i = 0; i < elements.length; i++) {
+    const elt = elements[i]
+    const handler = components[elt.tag]
+
+    if (handler) {
+      handler(polylines, elt)
+    } else {
+      console.warn(`Unknown element tag: ${elt.tag}`)
+    }
+  }
+
+  return polylines
 }
 
 export function render_score(
@@ -2060,7 +1169,7 @@ export function render_score(
     cue_evade_slur(elements)
   }
   if (compute_polylines) {
-    ret.polylines = hf_drawing_polylines(elements, ret.w, ret.h)
+    ret.polylines = render_polylines(elements, ret.w, ret.h)
   }
   return ret
 }

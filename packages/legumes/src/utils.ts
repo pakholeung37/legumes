@@ -1,6 +1,6 @@
 import { CONFIG, NOTE_LENGTH_MODIFIER } from './config'
 import { CLEF, ACCIDENTAL, NOTE_LENGTH } from './const'
-import { Measure, Note_itf, Rest_itf, Staff_itf } from './type'
+import { Measure, NoteItf, RestItf, StaffItf } from './type'
 
 export function on_staff(line: number): number {
   return (line * CONFIG.LINE_HEIGHT) / 2
@@ -113,15 +113,17 @@ export function note_name_to_staff_pos(name: string, clef: number) {
 }
 
 export function get_note_name_accidental(name: string): number {
-  return [ACCIDENTAL.FLAT, ACCIDENTAL.NATURAL, ACCIDENTAL.SHARP]['b_s'.indexOf(name[1])]
+  return [ACCIDENTAL.FLAT, ACCIDENTAL.NATURAL, ACCIDENTAL.SHARP][
+    'b_s'.indexOf(name[1])
+  ]
 }
 
 export function get_existing_voices(
-  staff_notes: (Note_itf | Rest_itf)[],
-  filt: number[]
+  staff_notes: (NoteItf | RestItf)[],
+  filt: number[],
 ): number[] {
   return Array.from(new Set(staff_notes.map((x) => x.voice))).filter(
-    (x) => filt.includes(x) || !filt.length
+    (x) => filt.includes(x) || !filt.length,
   )
 }
 
@@ -129,14 +131,12 @@ export function short_id() {
   return (
     '_' +
     String.fromCharCode(
-      ...new Array(6).fill(0).map((x) => ~~(Math.random() * 26) + 0x41)
+      ...new Array(6).fill(0).map((x) => ~~(Math.random() * 26) + 0x41),
     )
   )
 }
 
-export function get_median_staff_pos(
-  notes: Note_itf[]
-): Record<number, number> {
+export function get_median_staff_pos(notes: NoteItf[]): Record<number, number> {
   let c2p: Record<number, number[]> = {}
 
   for (let n of notes) {
@@ -158,7 +158,7 @@ export function get_median_staff_pos(
   return c2p2
 }
 
-export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
+export function chord_and_beam_staff(staff: StaffItf, beat_length: number) {
   let beam_cnt = 1
 
   let notes_beam: number[] = new Array(staff.notes.length)
@@ -168,7 +168,7 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
     // console.log('----',i);
     let note = staff.notes[i]
     let beam = 0
-    let chord: [number, Note_itf][] = []
+    let chord: [number, NoteItf][] = []
     let stem_dir = note.stem_dir
     let disp_dur = note.duration
     if (note.tuplet) {
@@ -178,9 +178,11 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
     for (let j = 0; j < staff.notes.length; j++) {
       let own = note
       let other = staff.notes[j]
-      if (own.voice == other.voice &&
+      if (
+        own.voice == other.voice &&
         own.begin == other.begin &&
-        own.duration == other.duration) {
+        own.duration == other.duration
+      ) {
         chord.push([j, other])
       }
     }
@@ -215,8 +217,10 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
             if (staff.notes[k].voice != staff.notes[i].voice) {
               continue
             }
-            if (staff.notes[j].begin < staff.notes[k].begin &&
-              staff.notes[k].begin < staff.notes[i].begin) {
+            if (
+              staff.notes[j].begin < staff.notes[k].begin &&
+              staff.notes[k].begin < staff.notes[i].begin
+            ) {
               consecutive = false
 
               break
@@ -227,15 +231,21 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
               if (staff.rests[k].voice != staff.notes[i].voice) {
                 continue
               }
-              if (staff.notes[j].begin < staff.rests[k].begin &&
-                staff.rests[k].begin < staff.notes[i].begin) {
+              if (
+                staff.notes[j].begin < staff.rests[k].begin &&
+                staff.rests[k].begin < staff.notes[i].begin
+              ) {
                 consecutive = false
                 break
               }
             }
           }
           if (consecutive) {
-            for (let k = staff.notes[j].begin + staff.notes[j].duration; k <= staff.notes[i].begin; k++) {
+            for (
+              let k = staff.notes[j].begin + staff.notes[j].duration;
+              k <= staff.notes[i].begin;
+              k++
+            ) {
               if (staff.grace[k]) {
                 consecutive = false
                 break
@@ -257,7 +267,8 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
         } else {
           calc_consecutive()
           let same_stem_dir = stem_dir == staff.notes[j].stem_dir
-          let same_beat = ~~(other.begin / beat_length) == ~~(own.begin / beat_length)
+          let same_beat =
+            ~~(other.begin / beat_length) == ~~(own.begin / beat_length)
 
           if (other_beam != 0 && consecutive && same_stem_dir && same_beat) {
             beam = notes_beam[j]
@@ -301,6 +312,19 @@ export function chord_and_beam_staff(staff: Staff_itf, beat_length: number) {
   for (let a in beam_info) {
     for (let b in beam_info[a]) {
       staff.beams.push(beam_info[a][b])
+    }
+  }
+}
+
+export function round_polylines(polylines: number[][][], accuracy: number = 2) {
+  for (let i = 0; i < polylines.length; i++) {
+    for (let j = 0; j < polylines[i].length; j++) {
+      polylines[i][j][0] =
+        Math.round(polylines[i][j][0] * Math.pow(10, accuracy)) /
+        Math.pow(10, accuracy)
+      polylines[i][j][1] =
+        Math.round(polylines[i][j][1] * Math.pow(10, accuracy)) /
+        Math.pow(10, accuracy)
     }
   }
 }

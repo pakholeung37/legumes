@@ -56,7 +56,7 @@ let SYSTEM_EVENT_LOOKUP = Object.fromEntries(
   Object.entries(SYSTEM_EVENT).map((x) => [x[1][0], [x[0], ...x[1].slice(1)]]),
 )
 
-export interface Midi_file {
+export interface MidiFile {
   magic: string
   format: number
   num_tracks: number
@@ -64,18 +64,18 @@ export interface Midi_file {
   ticks_per_quarter_note?: number
   negative_SMPTE_format?: number
   ticks_per_frame?: number
-  tracks: Midi_track[]
+  tracks: MidiTrack[]
 }
-export interface Midi_track {
-  events: Midi_event[]
+export interface MidiTrack {
+  events: MidiEvent[]
 }
-export interface Midi_event {
+export interface MidiEvent {
   type: string
   delta_time: number
   data: Record<string, any> | number[]
 }
 
-export function parse_midi(bytes: number[]): Midi_file {
+export function parse_midi(bytes: number[]): MidiFile {
   let ptr = 0
   function read_str(n: number): string {
     let s: string = String.fromCharCode(...bytes.slice(ptr, ptr + n))
@@ -141,7 +141,7 @@ export function parse_midi(bytes: number[]): Midi_file {
     ot.ticks_per_quarter_note = read_u16() & 0x7fff
   }
 
-  let o: Midi_file = {
+  let o: MidiFile = {
     magic,
     num_tracks: hd_ntk,
     format: hd_fmt,
@@ -153,11 +153,11 @@ export function parse_midi(bytes: number[]): Midi_file {
   while (read_str(4) == 'MTrk') {
     let track_len = read_u32()
     let p0 = ptr
-    let trk: Midi_track = { events: [] }
+    let trk: MidiTrack = { events: [] }
 
     while (ptr < p0 + track_len) {
       let dt = read_vlen()
-      let e: Midi_event = { type: 'UNDEFINED', delta_time: dt, data: {} }
+      let e: MidiEvent = { type: 'UNDEFINED', delta_time: dt, data: {} }
 
       if (bytes[ptr] == 0xff) {
         let tmpl: string[] = META_EVENT[bytes[++ptr]] ?? ['UNDEFINED']
@@ -220,7 +220,7 @@ export function parse_midi(bytes: number[]): Midi_file {
   return o
 }
 
-export function export_midi(pattern: Midi_file): number[] {
+export function export_midi(pattern: MidiFile): number[] {
   let bytes: number[] = []
   function write_str(s: string) {
     for (let i = 0; i < s.length; i++) {

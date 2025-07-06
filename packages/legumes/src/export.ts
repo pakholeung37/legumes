@@ -1,6 +1,6 @@
 import { Drawing } from './type'
 
-export function create_svg(
+export function export_svg(
   dr: Drawing,
   { background = 'white' }: { background?: string } = {},
 ): string {
@@ -20,7 +20,7 @@ export function create_svg(
   return o
 }
 
-export function create_animated_svg(
+export function export_animated_svg(
   dr: Drawing,
   {
     background = 'white',
@@ -85,7 +85,7 @@ export function create_animated_svg(
   return o
 }
 
-export function create_mock_svg(dr: Drawing): string {
+export function export_mock_svg(dr: Drawing): string {
   let width = dr.w
   let height = dr.h
   let elements = dr.elements
@@ -129,7 +129,7 @@ export function create_mock_svg(dr: Drawing): string {
   return o
 }
 
-export function create_pdf(dr: Drawing): string {
+export function export_pdf(dr: Drawing): string {
   let width = dr.w
   let height = dr.h
   let polylines = dr.polylines
@@ -154,7 +154,7 @@ export function create_pdf(dr: Drawing): string {
   return head + pdf
 }
 
-export function create_gif(
+export function export_gif(
   dr: Drawing,
   { scale = 1.0, iter = 2 }: { scale?: number; iter?: number } = {},
 ): number[] {

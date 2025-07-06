@@ -2,7 +2,7 @@
 import * as Legumes from 'legumes'
 import { samples } from './sample-loader'
 import { render_score } from 'legumes/src/render.ts'
-import type { Score_itf } from 'legumes'
+import type { ScoreItf } from 'legumes'
 
 // Configuration
 const CONFIG = {
@@ -304,12 +304,13 @@ export class LegumesEditor {
     this.legumes.CONFIG.INTER_NOTE_WIDTH = 0
 
     try {
-      let score: Score_itf
+      let score: ScoreItf
       if (this.extName === 'leg') {
         score = this.legumes.parse_txt(this.getValue())
         this.codeMirror.setOption('mode', 'leg')
       } else if (this.extName === 'musicxml') {
         score = this.legumes.parse_musicxml(this.getValue())
+        console.log('score', score)
         this.codeMirror.setOption('mode', 'xml')
       } else {
         throw new Error(`Unsupported file type: ${this.extName}`)
@@ -321,7 +322,7 @@ export class LegumesEditor {
 
       this.legumes.round_polylines(drawing.polylines, 2)
 
-      const outFunc = globalState.OUT_FUNC || this.legumes.create_svg
+      const outFunc = globalState.OUT_FUNC || this.legumes.export_svg
       const svg = outFunc(drawing, { background: null })
       this.outputElement.innerHTML = svg
     } catch (e) {
@@ -459,7 +460,7 @@ export class LegumesEditor {
     const score = this.legumes.parse_txt(this.getValue())
     this.legumes.compile_score(score)
     const drawing = render_score(score as any)
-    const pdf = this.legumes.create_pdf(drawing)
+    const pdf = this.legumes.export_pdf(drawing)
     downloadPlain('score.pdf', pdf)
   }
 
@@ -556,7 +557,7 @@ export const initializeEditor = async (
     const editor = new LegumesEditor(legumes, outputElement, playheadElement)
 
     // Set default output function
-    editor.setOutputFunction(legumes.create_svg)
+    editor.setOutputFunction(legumes.export_svg)
 
     return editor
   } catch (error) {

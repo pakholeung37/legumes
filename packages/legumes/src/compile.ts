@@ -1,12 +1,12 @@
 import {
-  Cresc_itf,
+  CrescItf,
   Measure,
   Note,
-  Note_itf,
+  NoteItf,
   Pack,
   Rest,
   Score,
-  Score_itf,
+  ScoreItf,
   Slot,
   Staff,
 } from './type'
@@ -19,7 +19,7 @@ import { FONT, get_text_width } from './hershey'
 import { CONFIG, CONTENT_WIDTH, FONT_INHERENT_HEIGHT } from './config'
 import { calc_num_flags, interval_overlap, on_staff, slot_pos } from './utils'
 
-function staff_has_cue_lyric(staff: Staff, crescs: Cresc_itf[] = null): void {
+function staff_has_cue_lyric(staff: Staff, crescs: CrescItf[] = null): void {
   let has_cue = false
   for (let i = 0; i < staff.notes.length; i++) {
     if (staff.notes[i].cue) {
@@ -131,7 +131,7 @@ function has_twisted_sibling(notes: Note[], idx: number): boolean {
   return does
 }
 function compile_measure(measure: Measure) {
-  function get_index_in_chord(notes: Note_itf[], note: Note_itf) {
+  function get_index_in_chord(notes: NoteItf[], note: NoteItf) {
     let i = 0
     while (note.prev_in_chord !== null) {
       note = notes[note.prev_in_chord]
@@ -463,7 +463,7 @@ function plan_articulations(measure: Measure, staff_idx: number) {
   }
 }
 
-export function compile_score(score: Score_itf): Score {
+export function compile_score(score: ScoreItf): Score {
   let score_: Score = score as Score
   score_.indent = 0
   let instr_set: Set<string> = new Set()

@@ -2,17 +2,15 @@
 
 import fs from 'fs'
 import path from 'path'
+import { round_polylines } from './utils'
 import {
-  round_polylines,
-} from './drawing'
-import {
-  create_animated_svg,
-  create_gif,
-  create_mock_svg,
-  create_pdf,
-  create_svg
-} from './create'
-import { Drawing, Score_itf } from './type'
+  export_animated_svg,
+  export_gif,
+  export_mock_svg,
+  export_pdf,
+  export_svg
+} from './export'
+import { Drawing, ScoreItf } from './type'
 import { CONFIG } from './config'
 import { render_score } from './render'
 import { compile_score } from './compile'
@@ -120,7 +118,7 @@ if (input.ext != '.txt' && input.ext != '.mid') {
   inp_format = input.ext.slice(1)
 }
 
-let score: Score_itf
+let score: ScoreItf
 if (inp_format == 'mid') {
   const bytes = Array.from(new Uint8Array(fs.readFileSync(input_path)))
   const midi_file = parse_midi(bytes)
@@ -146,13 +144,13 @@ if (out_format == 'txt') {
 if (out_format == 'json') {
   console.dir({ score, drawing }, { depth: null, maxArrayLength: Infinity })
 } else if (out_format == 'svg') {
-  console.log(create_svg(drawing))
+  console.log(export_svg(drawing))
 } else if (out_format == 'pdf') {
-  console.log(create_pdf(drawing))
+  console.log(export_pdf(drawing))
 } else if (out_format == 'svg-mock') {
-  console.log(create_mock_svg(drawing))
+  console.log(export_mock_svg(drawing))
 } else if (out_format == 'svg-anim') {
-  console.log(create_animated_svg(drawing))
+  console.log(export_animated_svg(drawing))
 } else if (out_format == 'svg-hand') {
   console.log(export_sketch_svg(drawing))
 } else if (out_format == 'mid') {
@@ -161,7 +159,7 @@ if (out_format == 'json') {
   process.stdout.write(Buffer.from(bytes))
   // fs.writeFileSync('test.mid',Buffer.from(bytes));
 } else if (out_format == 'gif') {
-  let bytes = create_gif(drawing)
+  let bytes = export_gif(drawing)
   process.stdout.write(Buffer.from(bytes))
 } else {
   console.error('unrecognized output format: ' + out_format)

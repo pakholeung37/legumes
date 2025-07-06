@@ -1,14 +1,14 @@
 import {
-  Score_itf,
-  Staff_itf,
-  Measure_itf,
-  Note_itf,
-  Rest_itf,
-  Slur_itf,
-  Cresc_itf,
-  Tempo_itf,
-  Instrument_group_itf,
-  Tuplet_itf,
+  ScoreItf,
+  StaffItf,
+  MeasureItf,
+  NoteItf,
+  RestItf,
+  SlurItf,
+  CrescItf,
+  TempoItf,
+  InstrumentGroupItf,
+  TupletItf,
 } from './type'
 import {
   CLEF,
@@ -112,7 +112,7 @@ function parse_tuplet(tuplet: {
   number?: number
   actual?: number
   normal?: number
-}): Tuplet_itf | null {
+}): TupletItf | null {
   if (!tuplet || tuplet.type !== 'start') return null
 
   return {
@@ -199,10 +199,10 @@ function parse_barline(barline: any): number {
 }
 
 // 解析速度
-function parse_tempo(tempo: any): Tempo_itf | undefined {
+function parse_tempo(tempo: any): TempoItf | undefined {
   if (!tempo) return undefined
 
-  const result: Tempo_itf = {}
+  const result: TempoItf = {}
 
   if (tempo.text) {
     result.text = tempo.text
@@ -222,15 +222,15 @@ function parse_tempo(tempo: any): Tempo_itf | undefined {
 }
 
 // 解析乐器组
-function parse_instruments(partList: any): Instrument_group_itf[] {
+function parse_instruments(partList: any): InstrumentGroupItf[] {
   if (!partList || !partList.scorePart) return []
 
-  const instruments: Instrument_group_itf[] = []
+  const instruments: InstrumentGroupItf[] = []
 
   for (const scorePart of Array.isArray(partList.scorePart)
     ? partList.scorePart
     : [partList.scorePart]) {
-    const group: Instrument_group_itf = {
+    const group: InstrumentGroupItf = {
       bracket: BRACKET.NONE,
       names: [],
       connect_barlines: [],
@@ -255,8 +255,8 @@ function parse_instruments(partList: any): Instrument_group_itf[] {
 }
 
 // 解析连音线
-function parse_slurs(notations: any, noteId: string): Slur_itf[] {
-  const slurs: Slur_itf[] = []
+function parse_slurs(notations: any, noteId: string): SlurItf[] {
+  const slurs: SlurItf[] = []
 
   if (!notations || !notations.slur) return slurs
 
@@ -283,8 +283,8 @@ function parse_slurs(notations: any, noteId: string): Slur_itf[] {
 }
 
 // 解析渐强渐弱
-function parse_dynamics(dynamics: any, noteId: string): Cresc_itf[] {
-  const crescs: Cresc_itf[] = []
+function parse_dynamics(dynamics: any, noteId: string): CrescItf[] {
+  const crescs: CrescItf[] = []
 
   if (!dynamics) return crescs
 
@@ -317,7 +317,7 @@ function parse_dynamics(dynamics: any, noteId: string): Cresc_itf[] {
 }
 
 // 主解析函数
-export function parse_musicxml(xml: string): Score_itf {
+export function parse_musicxml(xml: string): ScoreItf {
   // 使用 DOMParser 解析 XML
   const parser = new DOMParser()
   const doc = parser.parseFromString(xml, 'text/xml')
@@ -329,7 +329,7 @@ export function parse_musicxml(xml: string): Score_itf {
     throw new Error('Invalid MusicXML document')
   }
 
-  const score: Score_itf = {
+  const score: ScoreItf = {
     title: [],
     composer: [],
     instruments: [],
@@ -375,7 +375,7 @@ export function parse_musicxml(xml: string): Score_itf {
   let currentClef: number = CLEF.TREBLE
 
   for (const measureElement of Array.from(measures)) {
-    const measure: Measure_itf = {
+    const measure: MeasureItf = {
       duration: 0,
       barline: BARLINE.SINGLE,
       staves: [],
@@ -415,7 +415,7 @@ export function parse_musicxml(xml: string): Score_itf {
     }
 
     // 创建声部
-    const staff: Staff_itf = {
+    const staff: StaffItf = {
       clef: currentClef,
       time_signature: currentTimeSignature,
       key_signature: currentKeySignature,
@@ -435,7 +435,7 @@ export function parse_musicxml(xml: string): Score_itf {
 
       if (isRest) {
         // 解析休止符
-        const rest: Rest_itf = {
+        const rest: RestItf = {
           begin: begin,
           duration: 0,
           voice: 0,
@@ -474,7 +474,7 @@ export function parse_musicxml(xml: string): Score_itf {
         measure.duration = Math.max(measure.duration, begin)
       } else {
         // 解析音符
-        const note: Note_itf = {
+        const note: NoteItf = {
           begin: begin,
           duration: 0,
           accidental: null,
@@ -602,7 +602,7 @@ export function parse_musicxml(xml: string): Score_itf {
 }
 
 // 导出 MusicXML 函数（反向转换）
-export function export_musicxml(score: Score_itf): string {
+export function export_musicxml(score: ScoreItf): string {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
   xml +=
     '<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">\n'
