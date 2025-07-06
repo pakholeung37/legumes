@@ -9,7 +9,17 @@ const legFiles = fs.readdirSync(legDir).filter((f) => f.endsWith('.leg'))
 describe('leg snapshots', () => {
   for (const file of legFiles) {
     it(`should match snapshot for ${file}`, () => {
-      const [score, drawing, svg] = testLegFile(file)
+      const [_score, _drawing, svg] = testLegFile(file)
+      console.log(JSON.stringify(_score))
+      // remove "id":"xxxx", from score
+      const score = JSON.parse(
+        JSON.stringify(_score).replaceAll(/"id":".*?",/g, ''),
+      )
+
+      const drawing = JSON.parse(
+        JSON.stringify(_drawing).replaceAll(/"id":".*?",/g, ''),
+      )
+
       expect(score).toMatchFileSnapshot(
         path.join(
           __dirname,
