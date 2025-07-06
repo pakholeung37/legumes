@@ -473,7 +473,7 @@ export function parse_leg(leg: string): ScoreItf {
     } else if (curr_state('note')) {
       if (/^[A-Z].*/.test(x)) {
         note.name = x[0]
-        note.octave = Number(x.slice(1))
+        note.octave = Number(x.slice(1)) + 1
       } else if (x[0] == 'd') {
         let [dur, mod] = parse_dur(x.slice(1))
         note.duration = dur

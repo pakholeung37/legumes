@@ -100,13 +100,13 @@ export function note_name_to_staff_pos(name: string, clef: number) {
   let base_name = name[0]
   let octave = Number(name.split('_')[1])
   let i0 = {
-    [CLEF.TREBLE]: 6 * 7 + 3,
-    [CLEF.BASS]: 5 * 7 - 2,
-    [CLEF.ALTO]: 6 * 7 - 3,
-    [CLEF.TENOR]: 6 * 7 - 5,
-    [CLEF.MEZZO_SOPRANO]: 6 * 7 - 1,
-    [CLEF.SOPRANO]: 6 * 7 + 1,
-    [CLEF.BARITONE]: 5 * 7,
+    [CLEF.TREBLE]: 5 * 7 + 3,
+    [CLEF.BASS]: 4 * 7 - 2,
+    [CLEF.ALTO]: 5 * 7 - 3,
+    [CLEF.TENOR]: 5 * 7 - 5,
+    [CLEF.MEZZO_SOPRANO]: 5 * 7 - 1,
+    [CLEF.SOPRANO]: 5 * 7 + 1,
+    [CLEF.BARITONE]: 4 * 7,
   }[clef]
   let idx = i0 - ('CDEFGAB'.indexOf(base_name) + octave * 7)
   return idx
