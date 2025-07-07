@@ -511,7 +511,7 @@ function draw_staff(
       x: measure.pad.inter + (CONFIG.NOTE_WIDTH * CONFIG.CLEF_WIDTH_MUL) / 2,
       y: on_staff(
         {
-          [CLEF.TREBLE]: 6,
+          [CLEF.TREBLE]: 4,
           [CLEF.BASS]: 2,
           [CLEF.ALTO]: 4,
           [CLEF.BARITONE]: 0,
@@ -527,7 +527,6 @@ function draw_staff(
 
   function draw_key_signature() {
     let { accidental, count } = staff.flags.need_keysig
-
     let is_cancel: boolean = false
     if (accidental == ~ACCIDENTAL.SHARP || accidental == ~ACCIDENTAL.FLAT) {
       is_cancel = true
@@ -538,8 +537,8 @@ function draw_staff(
     )
     let octs: number[] =
       accidental == ACCIDENTAL.SHARP
-        ? [6, 6, 6, 6, 5, 6, 5]
-        : [5, 6, 5, 6, 5, 6, 5]
+        ? [5, 5, 5, 5, 4, 5, 4]
+        : [4, 5, 4, 5, 4, 5, 4]
     let x =
       measure.pad.inter +
       Number(staff.flags.need_clef) *
