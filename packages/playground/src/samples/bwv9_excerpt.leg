@@ -8,7 +8,7 @@ instruments
 measure
   staff G ### 2/4
     rest d4
-    note E6 d4    $46-1
+    note E5 d4    $46-1
   end
   staff G ### 2/4
     rest d2
@@ -20,41 +20,41 @@ measure
     rest d2
   end
   staff F ### 2/4
-    note A3 d8
-    note A4
-    note C5
-    note E5
+    note A2 d8
+    note A3
+    note C4
+    note E4
   end
 end
 
 measure
   staff
-    note E6 d16 $47-1
-    note F6     $47-2
-    note E6
-    note D6     $47-3
-    note E6     $47-4
-    note C6
-    note B5
-    note A5     $47-5
+    note E5 d16 $47-1
+    note F5     $47-2
+    note E5
+    note D5     $47-3
+    note E5     $47-4
+    note C5
+    note B4
+    note A4     $47-5
   end
   staff
     rest d4
-    note A5 d4  $47-6
+    note A4 d4  $47-6
   end
   staff
     rest d2
   end
   staff
     rest d8
-    note E5 d4   l'nur'
-    note D5 d16  l'den'
-    note C5
+    note E4 d4   l'nur'
+    note D4 d16  l'den'
+    note C4
   end
   staff
-    note A4 d8
+    note A3 d8
     rest d8
-    note G4 ~ d8
+    note G3 ~ d8
     rest d8
     
   end
@@ -67,34 +67,34 @@ slur $47-4 $47-5
 
 measure
   staff
-    note F6 d2 $48-6
+    note F5 d2 $48-6
   end
   staff
-    note A5 d16 $48-1
-    note B5     $48-2
-    note A5     
-    note G5     $48-3
-    note A5     $48-4
-    note F5
-    note E5
-    note D5     $48-5
+    note A4 d16 $48-1
+    note B4     $48-2
+    note A4     
+    note G4     $48-3
+    note A4     $48-4
+    note F4
+    note E4
+    note D4     $48-5
   end
   staff
     rest d8
-    note A5 d4   l'nur'
-    note G5 d16  l'den'
-    note F5
+    note A4 d4   l'nur'
+    note G4 d16  l'den'
+    note F4
   end
   staff
-    note D5 d8   l'Glau-'
-    note F5      l'ben'
-    note A5      l'nimmst'
-    note C6      l'du'
+    note D4 d8   l'Glau-'
+    note F4      l'ben'
+    note A4      l'nimmst'
+    note C5      l'du'
   end
   staff
-    note F4 d8
+    note F3 d8
     rest d8
-    note D4 d8
+    note D3 d8
     rest d8
   end
 end
@@ -105,33 +105,33 @@ slur $48-4 $48-5
 
 measure
   staff
-    note F6 d16 $49-1
-    note G6     $49-2
-    note F6
-    note E6     $49-3
-    note F6     $49-4
-    note D6
-    note C6
-    note B5     $49-5
+    note F5 d16 $49-1
+    note G5     $49-2
+    note F5
+    note E5     $49-3
+    note F5     $49-4
+    note D5
+    note C5
+    note B4     $49-5
   end
   staff
-    note B5 d2  $49-6
+    note B4 d2  $49-6
   end
   staff
-    note G5 d8   l'Glau-'
-    note B5      l'ben'
-    note D6      l'nimmst'
-    note F6      l'du'
+    note G4 d8   l'Glau-'
+    note B4      l'ben'
+    note D5      l'nimmst'
+    note F5      l'du'
   end
   staff
-    note B5 d4 l'an,'
+    note B4 d4 l'an,'
     rest d8
-    note B4 d8 l'den'
+    note B3 d8 l'den'
   end
   staff
+    note G2 d8
+    rest d8
     note G3 d8
-    rest d8
-    note G4 d8
     rest d8
   end
 end
@@ -143,33 +143,33 @@ slur $49-4 $49-5
 
 measure
   staff
-    note E6 d2  $50-6
+    note E5 d2  $50-6
   end
   staff
-    note B5 d16 $50-1
-    note C6     $50-2
-    note B5
-    note A5     $50-3
-    note B5     $50-4
-    note G5
-    note F5
-    note E5     $50-5
+    note B4 d16 $50-1
+    note C5     $50-2
+    note B4
+    note A4     $50-3
+    note B4     $50-4
+    note G4
+    note F4
+    note E4     $50-5
   end
   staff
-    note E6 d4 l'an,'
+    note E5 d4 l'an,'
     rest d8
-    note E5 d8 l'den'
+    note E4 d8 l'den'
   end
   staff
-    note C5 d8 l'Glau-'
-    note E5    l'ben'
-    note G5    l'nimmst'
-    note B5    l'du'
+    note C4 d8 l'Glau-'
+    note E4    l'ben'
+    note G4    l'nimmst'
+    note B4    l'du'
   end
   staff
+    note C3 d8
+    rest d8
     note C4 d8
-    rest d8
-    note C5 d8
     rest d8
   end
 end
@@ -180,33 +180,33 @@ slur $50-4 $50-5
 
 measure
   staff
-    note E6 d16 $51-1
-    note F6     $51-2
-    note E6
-    note D6     $51-3
-    note C6     $51-4
-    note B5
-    note A5
-    note G5     $51-5
+    note E5 d16 $51-1
+    note F5     $51-2
+    note E5
+    note D5     $51-3
+    note C5     $51-4
+    note B4
+    note A4
+    note G4     $51-5
   end
   staff
-    note A5 d2  $51-6
+    note A4 d2  $51-6
   end
   staff
-    note F5 d8 l'Glau-'
-    note A5    l'ben'
-    note C6    l'nimmst'
-    note E6    l'du'
+    note F4 d8 l'Glau-'
+    note A4    l'ben'
+    note C5    l'nimmst'
+    note E5    l'du'
   end
   staff
-    note A5 d8 l'an,'
-    note F5 d4 l'nur'
-    note F5 d8 l'den'
+    note A4 d8 l'an,'
+    note F4 d4 l'nur'
+    note F4 d8 l'den'
   end
   staff
-    note F4 d8
-    rest d8
     note F3 d8
+    rest d8
+    note F2 d8
     rest d8
   end
 end
@@ -217,35 +217,35 @@ slur $51-4 $51-5
 
 measure
   staff
-    note F5 d4
+    note F4 d4
     rest d8
-    note B6 d8 $52-6
+    note B5 d8 $52-6
   end
   staff
-    note A5 d16 $52-1
-    note B5     $52-2
-    note A5
-    note G5     $52-3
-    note F5     $52-4
-    note E5
-    note D5
-    note C5     $52-5
+    note A4 d16 $52-1
+    note B4     $52-2
+    note A4
+    note G4     $52-3
+    note F4     $52-4
+    note E4
+    note D4
+    note C4     $52-5
   end
   staff
-    note D6 d8 l'an,'
-    note B5 d4 l'nur'
-    note B5 d8 l'den'
+    note D5 d8 l'an,'
+    note B4 d4 l'nur'
+    note B4 d8 l'den'
   end
   staff
-    note F5 d8 l'Glau-'
-    note D5    l'ben'
-    note B5    l'nimmst'
-    note F5    l'du'
+    note F4 d8 l'Glau-'
+    note D4    l'ben'
+    note B4    l'nimmst'
+    note F4    l'du'
   end
   staff
-    note B3 d8 
+    note B2 d8 
     rest d8    
-    note D4    
+    note D3    
     rest d8    
   end
 end
@@ -256,33 +256,33 @@ slur $52-4 $52-5
 
 measure
   staff
-    note B6 d16 $53-1
-    note C7     $53-2
-    note B6
-    note A6     $53-3
-    note G6     $53-4
-    note F6
-    note E6
-    note D6     $53-5
+    note B5 d16 $53-1
+    note C6     $53-2
+    note B5
+    note A5     $53-3
+    note G5     $53-4
+    note F5
+    note E5
+    note D5     $53-5
   end
   staff
-    note B4 d4
+    note B3 d4
     rest d8
-    note E6 d8  $53-6
+    note E5 d8  $53-6
   end
   staff
-    note B5 d8 l'Glau-'
-    note G5    l'ben'
-    note E6    l'nimmst'
-    note B5    l'du'
+    note B4 d8 l'Glau-'
+    note G4    l'ben'
+    note E5    l'nimmst'
+    note B4    l'du'
   end
   staff
-    note G5 d2 l'an,'
+    note G4 d2 l'an,'
   end
   staff
-    note E4 d8
-    rest d8
     note E3 d8
+    rest d8
+    note E2 d8
     rest d8
   end
 end
@@ -294,30 +294,30 @@ slur $53-4 $53-5
 
 measure
   staff
-    note C6 d4
+    note C5 d4
     rest d4
   end
   staff
-    note E6 d16 $54-1
-    note F6     $54-2
-    note E6
-    note D6     $54-3
-    note C6     $54-4
-    note B5
-    note A5
-    note G5     $54-5
+    note E5 d16 $54-1
+    note F5     $54-2
+    note E5
+    note D5     $54-3
+    note C5     $54-4
+    note B4
+    note A4
+    note G4     $54-5
   end
   staff
-    note C6 d2 l'an,'
+    note C5 d2 l'an,'
   end
   staff
     rest d2
   end
   staff
-    note A3 d8
-    note A4
-    note B4
-    note C5
+    note A2 d8
+    note A3
+    note B3
+    note C4
   end
 end
 
@@ -330,7 +330,7 @@ measure
     rest d2
   end
   staff
-    note F5 d4
+    note F4 d4
     rest d4
   end
   staff
@@ -340,9 +340,9 @@ measure
     rest d2
   end
   staff
-    note D5 d8
-    note B4
-    note C5
-    note F4
+    note D4 d8
+    note B3
+    note C4
+    note F3
   end
 end

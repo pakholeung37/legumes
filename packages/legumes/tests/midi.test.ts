@@ -6,25 +6,25 @@ import { testMidiFile } from './test-utils'
 const midiDir = path.resolve(__dirname, './midi')
 const midiFiles = fs.readdirSync(midiDir).filter((f) => f.endsWith('.mid'))
 
-describe('MIDI snapshots', () => {
+describe('MIDI snapshots', async () => {
   for (const file of midiFiles) {
-    it(`should match snapshot for ${file}`, () => {
+    it(`should match snapshot for ${file}`, async () => {
       const [score, drawing, svg] = testMidiFile(file)
-      expect(score).toMatchFileSnapshot(
+      await expect(score).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/midi/',
           file.replace('.mid', '_score.json'),
         ),
       )
-      expect(drawing).toMatchFileSnapshot(
+      await expect(drawing).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/midi/',
           file.replace('.mid', '_drawing.json'),
         ),
       )
-      expect(svg).toMatchFileSnapshot(
+      await expect(svg).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/midi/',

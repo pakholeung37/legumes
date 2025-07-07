@@ -8,43 +8,43 @@ tempo 'Allegretto semplice.'
 measure
   staff G ## 6/8
     voice
-      note B5 d8 a> |p $1
+      note B4 d8 a> |p $1
     end
     voice
-      note D5 d8       $6
+      note D4 d8       $6
     end
   end
   staff F ## 6/8
-    note B4 d8 a>      $3
+    note B3 d8 a>      $3
   end
 end
 
 measure
   staff
     voice
-      note A5 d8.
-      note G5 d16
-      note F5 d8
-      note F5 d4    $2
-      note B5 d8 a> $9
+      note A4 d8.
+      note G4 d16
+      note F4 d8
+      note F4 d4    $2
+      note B4 d8 a> $9
     end
     voice
-      note D5 d4.   $7
-      note D5 d4    $8
-      note D5 d8    $11
+      note D4 d4.   $7
+      note D4 d4    $8
+      note D4 d8    $11
     end
   end
   staff
     voice
-      note B4 d4.    $4
-      note B4 d4     $5
+      note B3 d4.    $4
+      note B3 d4     $5
     end
     voice
-      note A4 d8.
-      note G4 d16
-      note F4 d8
-      note F4 d4
-      note B4 d8 a>  $14
+      note A3 d8.
+      note G3 d16
+      note F3 d8
+      note F3 d4
+      note B3 d8 a>  $14
     end
   end
 end
@@ -60,34 +60,34 @@ measure
   staff
     voice
       grace
-        note A5 d16
-        note B5
+        note A4 d16
+        note B4
       end
-      note A5 d8.
-      note G5 d16
-      note F5 d8
-      note F5 d4    $10
-      note D5 d16   $17
-      note E5
+      note A4 d8.
+      note G4 d16
+      note F4 d8
+      note F4 d4    $10
+      note D4 d16   $17
+      note E4
     end
     voice
-      note D5 d4.   $12
-      note D5 d4    $13
+      note D4 d4.   $12
+      note D4 d4    $13
       rest d8
     end
   end
   staff
     voice
-      note B4 d4.   $15
-      note B4 d4    $16
-      note B3 d16   $19
-      note C4 d16
+      note B3 d4.   $15
+      note B3 d4    $16
+      note B2 d16   $19
+      note C3 d16
     end
     voice
-      note A4 d8. 
-      note G4 d16
-      note F4 d8
-      note F4 d4
+      note A3 d8. 
+      note G3 d16
+      note F3 d8
+      note F3 d4
     end
   end
 end
@@ -102,31 +102,31 @@ tie  $15 $16
 measure
   staff
     voice
-      note F5 d4.    $18
-      note F5 d8.    $23
-      note A5 # d16
-      note C6
-      note D6        $32
+      note F4 d4.    $18
+      note F4 d8.    $23
+      note A4 # d16
+      note C5
+      note D5        $32
     end
     voice
-      note B4 d4.
-      note A4 # d8.
-      note C5 d16
-      note E5
-      note F5
+      note B3 d4.
+      note A3 # d8.
+      note C4 d16
+      note E4
+      note F4
     end
   end
   staff
     voice
-      note D4 d4.   $20
-      note E4 d8.
-      note F4 d16
-      note G4 d8
+      note D3 d4.   $20
+      note E3 d8.
+      note F3 d16
+      note G3 d8
     end
     voice
       rest d4
-      note F3 d8    $21
-      note F3 d4.   $22
+      note F2 d8    $21
+      note F2 d4.   $22
     end
   end
 end
@@ -141,32 +141,32 @@ cresc 0 1 $23 $32
 measure
   staff
     voice
-      note C6 d8 
-      note B5 d4     $25
-      note B5 d8     $24
+      note C5 d8 
+      note B4 d4     $25
+      note B4 d8     $24
       rest d8
-      note D6 d8 a>  $34
+      note D5 d8 a>  $34
     end
     voice
-      note E5 d8   $33
-      note D5 d4   $26
-      note D5 d8   $27
+      note E4 d8   $33
+      note D4 d4   $26
+      note D4 d8   $27
       rest d8
-      note F5 d8   $36
+      note F4 d8   $36
     end
   end
   staff
     voice
-      note G4 d8
-      note F4 d4   $28
-      note F4 d8   $29
+      note G3 d8
+      note F3 d4   $28
+      note F3 d8   $29
     end
     voice
-      note B3 d4  |ped $30
-      note F3 d8
-      note B2 d8       $31
+      note B2 d4  |ped $30
+      note F2 d8
+      note B1 d8       $31
       rest d8     ]*
-      note D5 d8  a>   $39
+      note D4 d8  a>   $39
     end
   end
 end
@@ -185,29 +185,29 @@ cresc 1 0 $33 $26
 measure
   staff
     voice
-      note C6 d8.
-      note B5 d16
-      note A5 d8
-      note A5 d4    $35
-      note D6 d8 a> $42
+      note C5 d8.
+      note B4 d16
+      note A4 d8
+      note A4 d4    $35
+      note D5 d8 a> $42
     end
     voice
-      note F5 d4.   $37
-      note F5 d4    $38
-      note F5 d8    $44
+      note F4 d4.   $37
+      note F4 d4    $38
+      note F4 d8    $44
     end
   end
   staff
     voice
-      note D5 d4.   $40
-      note D5 d4    $41
+      note D4 d4.   $40
+      note D4 d4    $41
     end
     voice
-      note C5 d8.
-      note B4 d16
-      note A4 d8
-      note A4 d4
-      note D5 d8 a> $46
+      note C4 d8.
+      note B3 d16
+      note A3 d8
+      note A3 d4
+      note D4 d8 a> $46
     end
   end
 end

@@ -1,20 +1,20 @@
 measure
   staff
-    note D5 d8
-    note E5
-    note F5
-    note G5
-    note A5
-    note B5
+    note D4 d8
+    note E4
+    note F4
+    note G4
+    note A4
+    note B4
   end
   staff F
     voice
       rest d4
       rest d4
-      note F4 d4
+      note F3 d4
     end
     voice
-      note D4 d2.
+      note D3 d2.
     end
   end
 end

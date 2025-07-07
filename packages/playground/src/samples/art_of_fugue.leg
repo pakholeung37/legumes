@@ -10,8 +10,8 @@ measure
     rest d1
   end
   staff Ca b 2/2
-    note D5 d2
-    note A5 d2
+    note D4 d2
+    note A4 d2
   end
   staff Ct b 2/2
     rest d1
@@ -24,8 +24,8 @@ measure
       rest d1
     end
     voice
-      note D5 d2
-      note A5 d2
+      note D4 d2
+      note A4 d2
     end
   end
   staff F  b 2/2
@@ -44,8 +44,8 @@ measure
     rest d1
   end
   staff Ca b 2/2
-    note F5 d2
-    note D5 d2
+    note F4 d2
+    note D4 d2
   end
   staff Ct b 2/2
     rest d1
@@ -58,8 +58,8 @@ measure
       rest d1
     end
     voice
-      note F5 d2
-      note D5 d2
+      note F4 d2
+      note D4 d2
     end
   end
   staff F  b 2/2
@@ -78,9 +78,9 @@ measure
     rest d1
   end
   staff Ca b 2/2
-    note C5 # d2
-    note D5 d4
-    note E5
+    note C4 # d2
+    note D4 d4
+    note E4
   end
   staff Ct b 2/2
     rest d1
@@ -93,9 +93,9 @@ measure
       rest d1
     end
     voice
-      note C5 # d2
-      note D5 d4
-      note E5
+      note C4 # d2
+      note D4 d4
+      note E4
     end
   end
   staff F  b 2/2
@@ -114,11 +114,11 @@ measure
     rest d1
   end
   staff Ca b 2/2
-    note F5 d2 $4-1
-    note F5 d8 $4-2
-    note G5
-    note F5
-    note E5
+    note F4 d2 $4-1
+    note F4 d8 $4-2
+    note G4
+    note F4
+    note E4
     tie $4-1 $4-2
   end
   staff Ct b 2/2
@@ -132,11 +132,11 @@ measure
       rest d1
     end
     voice
-      note F5 d2 $4-1a
-      note F5 d8 $4-2a
-      note G5
-      note F5
-      note E5
+      note F4 d2 $4-1a
+      note F4 d8 $4-2a
+      note G4
+      note F4
+      note E4
       tie $4-1a $4-2a
     end
   end
@@ -153,14 +153,14 @@ end
 
 measure
   staff Cs b 2/2
-    note A5 d2
-    note D6
+    note A4 d2
+    note D5
   end
   staff Ca b 2/2
-    note D5 d4
-    note E5
-    note F5
-    note G5
+    note D4 d4
+    note E4
+    note F4
+    note G4
   end
   staff Ct b 2/2
     rest d1
@@ -170,14 +170,14 @@ measure
   end
   staff G  b 2/2
     voice
-      note A5 d2
-      note D6
+      note A4 d2
+      note D5
     end
     voice
-      note D5 d4
-      note E5
-      note F5
-      note G5
+      note D4 d4
+      note E4
+      note F4
+      note G4
     end
   end
   staff F  b 2/2
@@ -193,16 +193,16 @@ end
 
 measure
   staff Cs b 2/2
-      note C6 d2
-      note A5
+      note C5 d2
+      note A4
   end
   staff Ca b 2/2
-      note A5 d4
-      note A4 d8
-      note B4 ~
-      note C5
-      note A4
-      note F5 d4 $6-1
+      note A4 d4
+      note A3 d8
+      note B3 ~
+      note C4
+      note A3
+      note F4 d4 $6-1
   end
   staff Ct b 2/2
     rest d1
@@ -212,16 +212,16 @@ measure
   end
   staff G  b 2/2
     voice
-      note C6 d2
-      note A5
+      note C5 d2
+      note A4
     end
     voice
-      note A5 d4
-      note A4 d8
-      note B4 ~
-      note C5
-      note A4
-      note F5 d4 $6-1a
+      note A4 d4
+      note A3 d8
+      note B3 ~
+      note C4
+      note A3
+      note F4 d4 $6-1a
     end
   end
   staff F  b 2/2
@@ -237,18 +237,18 @@ end
 
 measure
   staff Cs b 2/2
-      note G5 # d2
-      note A5 d4
-      note B5 ~
+      note G4 # d2
+      note A4 d4
+      note B4 ~
   end
   staff Ca b 2/2
-      note F5 d8 $7-1
-      note B4 ~
-      note E5 d4 $7-2
-      note E5 d8 $7-3
-      note F5
-      note E5
-      note D5
+      note F4 d8 $7-1
+      note B3 ~
+      note E4 d4 $7-2
+      note E4 d8 $7-3
+      note F4
+      note E4
+      note D4
   end
   staff Ct b 2/2
     rest d1
@@ -258,18 +258,18 @@ measure
   end
   staff G  b 2/2
     voice
-      note G5 # d2
-      note A5 d4
-      note B5 ~
+      note G4 # d2
+      note A4 d4
+      note B4 ~
     end
     voice
-      note F5 d8 $7-1a
-      note B4 ~
-      note E5 d4 $7-2a
-      note E5 d8 $7-3a
-      note F5
-      note E5
-      note D5
+      note F4 d8 $7-1a
+      note B3 ~
+      note E4 d4 $7-2a
+      note E4 d8 $7-3a
+      note F4
+      note E4
+      note D4
     end
   end
   staff F  b 2/2
@@ -291,17 +291,17 @@ tie $7-2a $7-3a
 
 measure
   staff Cs b 2/2
-      note C6 d2 $8-1
-      note C6 d8 $8-2
-      note D6
-      note C6
-      note B5 b
+      note C5 d2 $8-1
+      note C5 d8 $8-2
+      note D5
+      note C5
+      note B4 b
       tie $8-1 $8-2
   end
   staff Ca b 2/2
-      note E5 d4
-      note F5 #
-      note G5 d2 $8-3
+      note E4 d4
+      note F4 #
+      note G4 d2 $8-3
   end
   staff Ct b 2/2
     rest d1
@@ -311,17 +311,17 @@ measure
   end
   staff G  b 2/2
     voice
-      note C6 d2 $8-1a
-      note C6 d8 $8-2a
-      note D6
-      note C6
-      note B5 b
+      note C5 d2 $8-1a
+      note C5 d8 $8-2a
+      note D5
+      note C5
+      note B4 b
       tie $8-1a $8-2a
     end
     voice
-      note E5 d4
-      note F5 #
-      note G5 d2 $8-3a
+      note E4 d4
+      note F4 #
+      note G4 d2 $8-3a
     end
   end
   staff F  b 2/2
@@ -338,34 +338,34 @@ end
 
 measure
   staff Cs b 2/2
-      note A5 d8
-      note D5
-      note D6 d2
-      note C6 d4 #
+      note A4 d8
+      note D4
+      note D5 d2
+      note C5 d4 #
   end
   staff Ca b 2/2
-      note G5 d4 $9-1
-      note F5
-      note E5 d2
+      note G4 d4 $9-1
+      note F4
+      note E4 d2
   end
   staff Ct b 2/2
     rest d1
   end
   staff F  b 2/2
-      note D4 d2
-      note A4
+      note D3 d2
+      note A3
   end
   staff G  b 2/2
     voice
-      note A5 d8
-      note D5
-      note D6 d2
-      note C6 d4 #
+      note A4 d8
+      note D4
+      note D5 d2
+      note C5 d4 #
     end
     voice
-      note G5 d4 $9-1a
-      note F5
-      note E5 d2
+      note G4 d4 $9-1a
+      note F4
+      note E4 d2
     end
   end
   staff F  b 2/2
@@ -373,8 +373,8 @@ measure
       rest d1
     end
     voice
-      note D4 d2
-      note A4
+      note D3 d2
+      note A3
     end
   end
 end
@@ -385,42 +385,42 @@ tie $8-3a $9-1a
 
 measure
   staff Cs b 2/2
-      note D6 d8
-      note A5
-      note C6 d4 ~ $10-1
-      note C6 d8   $10-2
-      note A5
-      note B5 d4   $10-3
+      note D5 d8
+      note A4
+      note C5 d4 ~ $10-1
+      note C5 d8   $10-2
+      note A4
+      note B4 d4   $10-3
       tie $10-1 $10-2
   end
   staff Ca b 2/2
-      note D5 d4.
-      note E5 d8
-      note F5 d4.
-      note D5 d8
+      note D4 d4.
+      note E4 d8
+      note F4 d4.
+      note D4 d8
   end
   staff Ct b 2/2
     rest d1
   end
   staff F  b 2/2
-      note F4 d2
-      note D4
+      note F3 d2
+      note D3
   end
   staff G  b 2/2
     voice
-      note D6 d8
-      note A5
-      note C6 d4 ~ $10-1a
-      note C6 d8   $10-2a
-      note A5
-      note B5 d4   $10-3a
+      note D5 d8
+      note A4
+      note C5 d4 ~ $10-1a
+      note C5 d8   $10-2a
+      note A4
+      note B4 d4   $10-3a
       tie $10-1a $10-2a
     end
     voice
-      note D5 d4.
-      note E5 d8
-      note F5 d4.
-      note D5 d8
+      note D4 d4.
+      note E4 d8
+      note F4 d4.
+      note D4 d8
     end
   end
   staff F  b 2/2
@@ -429,8 +429,8 @@ measure
       rest d1
     end
     voice
-      note F4 d2
-      note D4
+      note F3 d2
+      note D3
     end
   end
 end
@@ -440,41 +440,41 @@ end
 
 measure
   staff Cs b 2/2
-      note B5 d8  $11-2
-      note E5
-      note A5 d2. $11-1
+      note B4 d8  $11-2
+      note E4
+      note A4 d2. $11-1
       tie $10-3 $11-2
   end
   staff Ca b 2/2
-      note G5 d4.
-      note G5 d8
-      note F5
-      note E5
-      note D5
-      note C5 #
+      note G4 d4.
+      note G4 d8
+      note F4
+      note E4
+      note D4
+      note C4 #
   end
   staff Ct b 2/2
     rest d1
   end
   staff F  b 2/2
-      note C4 # d2
-      note D4 d4
-      note E4
+      note C3 # d2
+      note D3 d4
+      note E3
   end
   staff G  b 2/2
     voice
-      note B5 d8  $11-2a
-      note E5
-      note A5 d2. $11-1a
+      note B4 d8  $11-2a
+      note E4
+      note A4 d2. $11-1a
       tie $10-3a $11-2a
     end
     voice
-      note G5 d4.
-      note G5 d8
-      note F5
-      note E5
-      note D5
-      note C5 #
+      note G4 d4.
+      note G4 d8
+      note F4
+      note E4
+      note D4
+      note C4 #
     end
   end
   staff F  b 2/2
@@ -482,9 +482,9 @@ measure
       rest d1
     end
     voice
-      note C4 # d2
-      note D4 d4
-      note E4
+      note C3 # d2
+      note D3 d4
+      note E3
     end
   end
 end
@@ -493,40 +493,40 @@ end
 
 measure
   staff Cs b 2/2
-      note A5 d8   $12-1
-      note C6 d4
-      note B5 ~ d8
-      note C6 d2   $12-4
+      note A4 d8   $12-1
+      note C5 d4
+      note B4 ~ d8
+      note C5 d2   $12-4
       tie $11-1 $12-1
   end
   staff Ca b 2/2
-      note D5 d4
-      note G5 d2
-      note C5 d4
+      note D4 d4
+      note G4 d2
+      note C4 d4
   end
   staff Ct b 2/2
     rest d1
   end
   staff F  b 2/2
-      note F4 d2 $12-2
-      note F4 d8 $12-3
-      note G4
-      note F4
-      note E4
+      note F3 d2 $12-2
+      note F3 d8 $12-3
+      note G3
+      note F3
+      note E3
       tie $12-2 $12-3
   end
   staff G  b 2/2
     voice
-      note A5 d8   $12-1a
-      note C6 d4
-      note B5 ~ d8
-      note C6 d2   $12-4a
+      note A4 d8   $12-1a
+      note C5 d4
+      note B4 ~ d8
+      note C5 d2   $12-4a
       tie $11-1a $12-1a
     end
     voice
-      note D5 d4
-      note G5 d2
-      note C5 ~ d4
+      note D4 d4
+      note G4 d2
+      note C4 ~ d4
     end
   end
   staff F  b 2/2
@@ -535,11 +535,11 @@ measure
       rest d1
     end
     voice
-      note F4 d2 $12-2a
-      note F4 d8 $12-3a
-      note G4
-      note F4
-      note E4
+      note F3 d2 $12-2a
+      note F3 d8 $12-3a
+      note G3
+      note F3
+      note E3
       tie $12-2a $12-3a
     end
   end
@@ -550,54 +550,54 @@ end
 
 measure
   staff Cs b 2/2
-      note C6 d8 $13-1
-      note D5
-      note C6 d4 $13-2
-      note C6 d8 $13-3
-      note A5
-      note B5 ~ d4 $13-4
+      note C5 d8 $13-1
+      note D4
+      note C5 d4 $13-2
+      note C5 d8 $13-3
+      note A4
+      note B4 ~ d4 $13-4
       tie $12-4 $13-1
       tie $13-2 $13-3
   end
   staff Ca b 2/2
-      note F5 d4.
-      note E5 d8
-      note F5 d4.
-      note G4 # d8
+      note F4 d4.
+      note E4 d8
+      note F4 d4.
+      note G3 # d8
   end
   staff Ct b 2/2
-      note A4 d2
-      note D5
+      note A3 d2
+      note D4
   end
   staff F  b 2/2
-      note D4 d2
+      note D3 d2
       rest d2
   end
   staff G  b 2/2
     voice
-      note C6 d8 $13-1a
-      note D5
-      note C6 d4 $13-2a
-      note C6 d8 $13-3a
-      note A5
-      note B5 ~ d4 $13-4a
+      note C5 d8 $13-1a
+      note D4
+      note C5 d4 $13-2a
+      note C5 d8 $13-3a
+      note A4
+      note B4 ~ d4 $13-4a
       tie $12-4a $13-1a
       tie $13-2a $13-3a
     end
     voice
-      note F5 d4.
-      note E5 d8
-      note F5 d4.
-      note G4 # d8
+      note F4 d4.
+      note E4 d8
+      note F4 d4.
+      note G3 # d8
     end
   end
   staff F  b 2/2
     voice
-      note A4 d2
-      note D5
+      note A3 d2
+      note D4
     end
     voice
-      note D4 d2
+      note D3 d2
       rest d2
     end
   end
@@ -607,55 +607,55 @@ end
 
 measure
   staff Cs b 2/2
-      note B5 d4 $14-1
-      note A5 d8
-      note G5 #
-      note A5 d2
+      note B4 d4 $14-1
+      note A4 d8
+      note G4 #
+      note A4 d2
       tie $13-4 $14-1
   end
   staff Ca b 2/2
-      note E5 d2.
-      note D5 d8
-      note C5
+      note E4 d2.
+      note D4 d8
+      note C4
   end
   staff Ct b 2/2
-      note C5 d2
-      note A4
+      note C4 d2
+      note A3
   end
   staff F  b 2/2
       rest d4
-      note A3 d8
-      note B3 ~ d8
-      note C4
-      note A3
-      note F4 d4 $14-2
+      note A2 d8
+      note B2 ~ d8
+      note C3
+      note A2
+      note F3 d4 $14-2
   end
   staff G  b 2/2
     voice
-      note B5 d4 $14-1a
-      note A5 d8
-      note G5 #
-      note A5 d2
+      note B4 d4 $14-1a
+      note A4 d8
+      note G4 #
+      note A4 d2
       tie $13-4a $14-1a
     end
     voice
-      note E5 d2.
-      note D5 d8
-      note C5
+      note E4 d2.
+      note D4 d8
+      note C4
     end
   end
   staff F  b 2/2
     voice
-      note C5 d2
-      note A4
+      note C4 d2
+      note A3
     end
     voice
       rest d4
-      note A3 d8
-      note B3 ~ d8
-      note C4
-      note A3
-      note F4 d4 $14-2a
+      note A2 d8
+      note B2 ~ d8
+      note C3
+      note A2
+      note F3 d4 $14-2a
     end
   end
 end
@@ -664,63 +664,63 @@ end
 
 measure
   staff Cs b 2/2
-      note B5 ~ d2
-      note C6 d4
-      note D6
+      note B4 ~ d2
+      note C5 d4
+      note D5
   end
   staff Ca b 2/2
-      note D5 d8
-      note F5
-      note E5
-      note D5
-      note C5 d4
-      rest d4
-  end
-  staff Ct b 2/2
-      note G4 # d2
-      note A4 d4
-      note B4 ~
-  end
-  staff F  b 2/2
-      note F4 d8 $15-1
-      note B3 ~
-      note E4 d4 $15-2
-      note E4 d8 $15-3
+      note D4 d8
       note F4
       note E4
       note D4
+      note C4 d4
+      rest d4
+  end
+  staff Ct b 2/2
+      note G3 # d2
+      note A3 d4
+      note B3 ~
+  end
+  staff F  b 2/2
+      note F3 d8 $15-1
+      note B2 ~
+      note E3 d4 $15-2
+      note E3 d8 $15-3
+      note F3
+      note E3
+      note D3
       tie $14-2 $15-1
       tie $15-2 $15-3
   end
   staff G  b 2/2
     voice
-      note B5 ~ d2
-      note C6 d4
-      note D6
+      note B4 ~ d2
+      note C5 d4
+      note D5
     end
     voice
-      note D5 d8
-      note F5
-      note E5
-      note D5
-      note C5 d4
+      note D4 d8
+      note F4
+      note E4
+      note D4
+      note C4 d4
       rest d4
     end
   end
   staff F  b 2/2
     voice
-      note G4 # d2
-      note A4 d4
-      note B4 ~
+      note G3 # d2
+      note A3 d4
+      note B3 ~
     end
     voice
-      note F4 d8 $15-1a
-      note B3 ~
-      note E4 d4 $15-2a
-      note E4 d8 $15-3a
-      note F4
-      note E4
-      note D4
+      note F3 d8 $15-1a
+      note B2 ~
+      note E3 d4 $15-2a
+      note E3 d8 $15-3a
+      note F3
+      note E3
+      note D3
       tie $14-2a $15-1a
       tie $15-2a $15-3a
     end

@@ -8,9 +8,8 @@ const legFiles = fs.readdirSync(legDir).filter((f) => f.endsWith('.leg'))
 
 describe('leg snapshots', () => {
   for (const file of legFiles) {
-    it(`should match snapshot for ${file}`, () => {
+    it(`should match snapshot for ${file}`, async () => {
       const [_score, _drawing, svg] = testLegFile(file)
-      console.log(JSON.stringify(_score))
       // remove "id":"xxxx", from score
       const score = JSON.parse(
         JSON.stringify(_score).replaceAll(/"id":".*?",/g, ''),
@@ -20,21 +19,21 @@ describe('leg snapshots', () => {
         JSON.stringify(_drawing).replaceAll(/"id":".*?",/g, ''),
       )
 
-      expect(score).toMatchFileSnapshot(
+      await expect(score).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/leg/',
           file.replace('.leg', '_score.json'),
         ),
       )
-      expect(drawing).toMatchFileSnapshot(
+      await expect(drawing).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/leg/',
           file.replace('.leg', '_drawing.json'),
         ),
       )
-      expect(svg).toMatchFileSnapshot(
+      await expect(svg).toMatchFileSnapshot(
         path.join(
           __dirname,
           './__snapshots__/leg/',

@@ -2,43 +2,43 @@
 measure
   staff 6/8
     chord
-      note F6 d8
-      note A6
+      note F5 d8
+      note A5
     end
     chord
-      note D7 d8.
-      note F7
+      note D6 d8.
+      note F6
     end
     chord
-      note G6 d16
-      note B6
+      note G5 d16
+      note B5
     end
     tuplet 3 d8/8.
       chord
-        note A6 d16
-        note C7
+        note A5 d16
+        note C6
       end
       chord
-        note A6 d16
-        note F6
+        note A5 d16
+        note F5
       end
       chord
-        note B6 d16
-        note D7
+        note B5 d16
+        note D6
       end
     end
     tuplet 3 d8/8.
       chord
-        note A6 d16
-        note C7
+        note A5 d16
+        note C6
       end
       chord
-        note A6 d16
-        note F6
+        note A5 d16
+        note F5
       end
       chord
-        note B6 d16
-        note D7
+        note B5 d16
+        note D6
       end
     end
   end

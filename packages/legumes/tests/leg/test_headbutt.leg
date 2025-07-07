@@ -1,26 +1,26 @@
 measure
   staff
     voice
-      note A5 d4.
+      note A4 d4.
       chord
-        note F5 d4.
-        note E5
+        note F4 d4.
+        note E4
       end
-      note E5
+      note E4
     end
     voice
-      note D5 d4.
-      note D5 d4.
+      note D4 d4.
+      note D4 d4.
     end
   end
   staff
     voice
-      note B4 d4.
-      note B4 d4 
+      note B3 d4.
+      note B3 d4 
     end
     voice
-      note A4 d4.
-      note F4 d4
+      note A3 d4.
+      note F3 d4
     end
     
   end
@@ -29,20 +29,20 @@ end
 measure
   staff
     voice
-      note A5 d4
-      note A5 d4
+      note A4 d4
+      note A4 d4
     end
     voice
-      note A5 d4
-      note A5 d8
+      note A4 d4
+      note A4 d8
     end
   end
   staff
     voice
-      note A5 d2
+      note A4 d2
     end
     voice
-      note A5 d4
+      note A4 d4
     end
   end
 end

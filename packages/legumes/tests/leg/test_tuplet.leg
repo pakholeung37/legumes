@@ -2,52 +2,52 @@ title 'Test Tuplet'
 measure
   staff G #### 2/2
     tuplet 3 d4/4.
-      note A4 d8
+      note A3 d8
       rest d8
-      note E5
+      note E4
     end
     tuplet 3 d4/4.
-      note A4 d8
-      note C5
-      chord
-      note E5
+      note A3 d8
       note C4
+      chord
+      note E4
+      note C3
       end
     end
     tuplet 3 d8/8.
-      note A4 d16
-      note C5
-      note E5
+      note A3 d16
+      note C4
+      note E4
     end
     tuplet 3 d8/8.
-      note A4 d16
-      note C5
-      note E5
+      note A3 d16
+      note C4
+      note E4
     end
     tuplet 3 d4/4.
 
-      note A4 d8
+      note A3 d8
             grace
-        note B4 d8
-        note C5 d8
+        note B3 d8
+        note C4 d8
       end
-      note C5
-      note E5
+      note C4
+      note E4
     end
   end
   staff F #### 2/2
     tuplet 3 d2/2.
-      note C4 d4
       note C3 d4
-      note A3 d4
+      note C2 d4
+      note A2 d4
     end
     chord
-      note C4 d4
       note C3 d4
+      note C2 d4
     end
     chord
-      note C4 d4
       note C3 d4
+      note C2 d4
     end
   end
 end

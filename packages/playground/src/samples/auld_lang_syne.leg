@@ -5,10 +5,10 @@ tempo 'Moderato' d4 =88
 
 measure
   staff G b 4/4
-    note C5 d4 l'Should' |mf
+    note C4 d4 l'Should' |mf
   end
   staff F b 4/4
-    note C5 d4
+    note C4 d4
   end
 end
 
@@ -16,111 +16,111 @@ end
 measure
   staff
     chord
-      note C5 d4. l'auld'
-      note F5
+      note C4 d4. l'auld'
+      note F4
     end
     chord
-      note C5 d8 l'ac-'
-      note F5
+      note C4 d8 l'ac-'
+      note F4
     end
     chord
-      note C5 d4 l'quaint-'
-      note F5
+      note C4 d4 l'quaint-'
+      note F4
     end
     chord
-      note F5 d4 l'ance'
-      note A5
+      note F4 d4 l'ance'
+      note A4
     end
   end
   staff
     chord
-      note A4 d4.
-      note F4
+      note A3 d4.
+      note F3
     end
     chord
-      note A4 d8
-      note F4
+      note A3 d8
+      note F3
     end
     chord
-      note A4 d4
-      note F4
+      note A3 d4
+      note F3
     end
     chord
-      note F4 d4
+      note F3 d4
+      note C4
+    end
+  end
+end
+
+
+measure
+  staff
+    chord
+      note E4 d4. l'be'
+      note G4
+    end
+    chord
+      note F4 d8 l'for-'
+      note D4
+    end
+    chord
+      note E4 d4 l'got,'
+      note G4
+    end
+    chord
+      note E4 d4 l'and'
+      note A4
+    end
+  end
+  staff
+    chord
+      note C4 d4.
+      note C3
+    end
+    chord
+      note C4 d8
+      note C3
+    end
+    chord
+      note C4 d4
+      note C3
+    end
+    chord
+      note C4 d4
+      note C3
+    end
+  end
+end
+
+measure
+  staff
+    note F4 d4. l'nev-'
+    note F4 d8 l'er'
+    chord
+      note F4 d4 l'bro\'t'  $brot
+      note A4
+    end
+    chord
+      note F4 d4 l'to'
       note C5
-    end
-  end
-end
-
-
-measure
-  staff
-    chord
-      note E5 d4. l'be'
-      note G5
-    end
-    chord
-      note F5 d8 l'for-'
-      note D5
-    end
-    chord
-      note E5 d4 l'got,'
-      note G5
-    end
-    chord
-      note E5 d4 l'and'
-      note A5
-    end
-  end
-  staff
-    chord
-      note C5 d4.
-      note C4
-    end
-    chord
-      note C5 d8
-      note C4
-    end
-    chord
-      note C5 d4
-      note C4
-    end
-    chord
-      note C5 d4
-      note C4
-    end
-  end
-end
-
-measure
-  staff
-    note F5 d4. l'nev-'
-    note F5 d8 l'er'
-    chord
-      note F5 d4 l'bro\'t'  $brot
-      note A5
-    end
-    chord
-      note F5 d4 l'to'
-      note C6
     end
   end
   staff
    chord
-      note A4 d4.
-      note F4
+      note A3 d4.
+      note F3
     end
     chord
-      note A4 d8
-      note F4
+      note A3 d8
+      note F3
     end
     chord
-      note F4 d4
-      note C5
+      note F3 d4
+      note C4
     end 
     chord
-      note A4 d4
-      note F4
+      note A3 d4
+      note F3
     end
   end
 end
@@ -128,17 +128,17 @@ end
 measure
   staff
     chord
-      note F5 d2. l'mind?'  $mind
-      note D6
+      note F4 d2. l'mind?'  $mind
+      note D5
     end
     chord
-      note F5 d4 l'Should'
-      note D6
+      note F4 d4 l'Should'
+      note D5
     end
   end
   staff
-    note B4 d2.
-    note B4 d4
+    note B3 d2.
+    note B3 d4
   end
 end
 
@@ -148,36 +148,36 @@ cresc 0 1 $brot $mind
 measure
   staff
     chord
-      note C6 d4. l'auld' $auld1
-      note F5
+      note C5 d4. l'auld' $auld1
+      note F4
     end
     chord
-      note A5 d8 l'ac-'
-      note F5
+      note A4 d8 l'ac-'
+      note F4
     end
     chord
-      note A5 d4 l'quaint-'  $quaint1
-      note F5
+      note A4 d4 l'quaint-'  $quaint1
+      note F4
     end
-    note F5 d4 l'ance'
+    note F4 d4 l'ance'
 
   end
   staff
     chord
-      note A4 d4.
-      note F4
+      note A3 d4.
+      note F3
     end
     chord
-      note F4 d8
-      note C5
+      note F3 d8
+      note C4
     end
     chord
-      note F4 d4
-      note C5
+      note F3 d4
+      note C4
     end
     chord
-      note A4 d4
-      note F4
+      note A3 d4
+      note F3
     end
   end
 end
@@ -188,38 +188,38 @@ cresc 1 0 $auld1 $quaint1
 measure
   staff
     chord
-      note E5 d4. l'be'
-      note G5
+      note E4 d4. l'be'
+      note G4
     end
     chord
-      note F5 d8 l'for-'
-      note D5
+      note F4 d8 l'for-'
+      note D4
     end
     chord
-      note E5 d4 l'got,'
-      note G5
+      note E4 d4 l'got,'
+      note G4
     end
     chord
-      note E5 d4 l'and'
-      note A5
+      note E4 d4 l'and'
+      note A4
     end
   end
   staff
     chord
-      note C5 d4.
-      note C4
+      note C4 d4.
+      note C3
     end
     chord
-      note C5 d8
-      note C4
+      note C4 d8
+      note C3
     end
     chord
-      note C5 d4
-      note C4
+      note C4 d4
+      note C3
     end
     chord
-      note C5 d4
-      note C4
+      note C4 d4
+      note C3
     end
   end
 end
@@ -229,41 +229,41 @@ end
 measure
   staff
     chord
-      note D5 d4. l'days'  $1
-      note F5
+      note D4 d4. l'days'  $1
+      note F4
     end
     chord
-      note D5 d8 l'of'     $2
-      note A4
+      note D4 d8 l'of'     $2
+      note A3
     end
     slur $1 $2
     chord
-      note D5 d4 l'auld'   $3
-      note B4
+      note D4 d4 l'auld'   $3
+      note B3
     end
     chord
-      note C5 d4 l'lang'   $4
-      note B4
+      note C4 d4 l'lang'   $4
+      note B3
     end
     slur $3 $4
   end
   staff
     chord
-      note A4 d4.     $5
-      note D4
+      note A3 d4.     $5
+      note D3
     end
     chord
-      note F4 d8      $6
-      note D4
+      note F3 d8      $6
+      note D3
     end
     slur $5 $6
     chord
-      note F4 d4      $7
-      note B3
+      note F3 d4      $7
+      note B2
     end
     chord
-      note E4 d4      $8
-      note C4
+      note E3 d4      $8
+      note C3
     end
     slur $7 $8
   end
@@ -273,22 +273,22 @@ end
 measure
   staff
     chord
-      note A4 d2. l'syne?'
-      note F5
+      note A3 d2. l'syne?'
+      note F4
     end
     chord
-      note F5 d4 l'For'
-      note D6
+      note F4 d4 l'For'
+      note D5
     end
   end
   staff
     chord
-      note F4 d2.
-      note F3
+      note F3 d2.
+      note F2
     end
     chord
-      note B4 d4
-      note F4
+      note B3 d4
+      note F3
     end
   end
 end
@@ -297,29 +297,29 @@ end
 measure
   staff
     voice
-      note C6 d4.  l'auld'  $9
-      note A5 d8            $10
-      note A5 d4   l'lang'  $11
-      note F5 d4            $12
+      note C5 d4.  l'auld'  $9
+      note A4 d8            $10
+      note A4 d4   l'lang'  $11
+      note F4 d4            $12
       slur $9 $10
       slur $11 $12
     end
     voice
-      note F5 d2
-      note F5 d2
+      note F4 d2
+      note F4 d2
     end
   end
   staff
     voice
-      note A4 d4.   $13
-      note C5 d8    $14
-      note C5 d2
+      note A3 d4.   $13
+      note C4 d8    $14
+      note C4 d2
       slur $13 $14
     end
     voice
-      note F4 d2
-      note F4 d4    $15
-      note A3 d4    $16
+      note F3 d2
+      note F3 d4    $15
+      note A2 d4    $16
       slur $15 $16
     end
   end
@@ -330,38 +330,38 @@ end
 measure
   staff
     chord
-      note E5 d4. l'syne,'
-      note G5
+      note E4 d4. l'syne,'
+      note G4
     end
     chord
-      note F5 d8 l'my'
+      note F4 d8 l'my'
+      note D4
+    end
+    chord
+      note E4 d4 l'dear,'
+      note G4
+    end
+    chord
+      note E4 d4 l'for'
       note D5
-    end
-    chord
-      note E5 d4 l'dear,'
-      note G5
-    end
-    chord
-      note E5 d4 l'for'
-      note D6
     end
   end
   staff
     chord
-      note C5 d4.
-      note C4
+      note C4 d4.
+      note C3
     end
     chord
-      note C5 d8
-      note C4
+      note C4 d8
+      note C3
     end
     chord
-      note C5 d4
-      note C4
+      note C4 d4
+      note C3
     end
     chord
-      note B4 d4
-      note C4
+      note B3 d4
+      note C3
     end
   end
 end
@@ -372,30 +372,30 @@ end
 measure
   staff
     voice
-      note C6 d4.  l'auld'  $17
-      note A5 d8            $18
-      note A5 d4   l'lang'  $19
-      note C6 d4            $20
+      note C5 d4.  l'auld'  $17
+      note A4 d8            $18
+      note A4 d4   l'lang'  $19
+      note C5 d4            $20
       slur $17 $18
       slur $19 $20
     end
     voice
-      note F5 d2
-      note F5 d2
+      note F4 d2
+      note F4 d2
     end
   end
   staff
     voice
-      note A4 d4.   $21
-      note C5 d8    $22
-      note C5 d4    $23
-      note A4 d4    $24
+      note A3 d4.   $21
+      note C4 d8    $22
+      note C4 d4    $23
+      note A3 d4    $24
       slur $21 $22
       slur $23 $24
     end
     voice
-      note F4 d2
-      note F4 d2
+      note F3 d2
+      note F3 d2
     end
   end
 end
@@ -404,19 +404,19 @@ end
 measure
   staff
     chord
-      note F5 d2. l'syne.' $syne1
-      note D6
+      note F4 d2. l'syne.' $syne1
+      note D5
     end
     chord
-      note F5 d4 l'We\'ll'
-      note F6
+      note F4 d4 l'We\'ll'
+      note F5
     end
   end
   staff
-    note B4 d2.
+    note B3 d2.
     chord
-      note D5 d4
-      note B3
+      note D4 d4
+      note B2
     end
   end
 end
@@ -426,36 +426,36 @@ cresc 0 1 $19 $syne1
 measure
   staff
     chord
-      note C6 d4. l'tak\''  $tak
-      note F5
+      note C5 d4. l'tak\''  $tak
+      note F4
     end
     chord
-      note A5 d8 l'a'  $a
-      note F5
+      note A4 d8 l'a'  $a
+      note F4
     end
     chord
-      note A5 d4 l'cup'
-      note F5
+      note A4 d4 l'cup'
+      note F4
     end
-    note F5 d4 l'of'
+    note F4 d4 l'of'
 
   end
   staff
     chord
-      note A4 d4.
-      note F4
+      note A3 d4.
+      note F3
     end
     chord
-      note F4 d8
-      note C5
+      note F3 d8
+      note C4
     end
     chord
-      note F4 d4
-      note C5
+      note F3 d4
+      note C4
     end
     chord
-      note A4 d4
-      note F4
+      note A3 d4
+      note F3
     end
   end
 end
@@ -465,38 +465,38 @@ cresc 1 0 $tak $a
 measure
   staff
     chord
-      note E5 d4. l'kind-'
-      note G5
+      note E4 d4. l'kind-'
+      note G4
     end
     chord
-      note F5 d8 l'ness'
-      note D5
+      note F4 d8 l'ness'
+      note D4
     end
     chord
-      note E5 d4 l'yet'
-      note G5
+      note E4 d4 l'yet'
+      note G4
     end
     chord
-      note E5 d4 l'for'
-      note A5
+      note E4 d4 l'for'
+      note A4
     end
   end
   staff
     chord
-      note C5 d4.
-      note C4
+      note C4 d4.
+      note C3
     end
     chord
-      note C5 d8
-      note C4
+      note C4 d8
+      note C3
     end
     chord
-      note C5 d4
-      note C4
+      note C4 d4
+      note C3
     end
     chord
-      note C5 d4
-      note C4
+      note C4 d4
+      note C3
     end
   end
 end
@@ -506,38 +506,38 @@ measure
   staff
     voice
       chord
-        note D5 d4. l'auld' $25
-        note F5
+        note D4 d4. l'auld' $25
+        note F4
       end
       chord
-        note D5 d8          $26
-        note A4
+        note D4 d8          $26
+        note A3
       end
-      note D5 d4   l'lang'  $27
-      note C5 d4            $28
+      note D4 d4   l'lang'  $27
+      note C4 d4            $28
       slur $25 $26
       slur $27 $28
     end
     voice
       rest d2
-      note B4 d2
+      note B3 d2
     end
   end
   staff
     voice
-      note A4 d4.    $29
-      note F4 d8     $30
+      note A3 d4.    $29
+      note F3 d8     $30
       rest d2
     end
     voice
-      note D4 d2
+      note D3 d2
       chord
-        note F4 d4   $31
-        note B3
+        note F3 d4   $31
+        note B2
       end
       chord
-        note E4 d4   $32
-        note C4
+        note E3 d4   $32
+        note C3
       end
     end
     slur $29 $30
@@ -549,14 +549,14 @@ end
 measure
   staff
     chord
-      note A4 d2.  l'syne.'
-      note F5
+      note A3 d2.  l'syne.'
+      note F4
     end
   end
   staff
     chord
-      note F4 d2.
-      note F3
+      note F3 d2.
+      note F2
     end
   end
   |||

@@ -5,7 +5,9 @@
     "legumes": "pnpm --filter legumes",
     "dev": "pnpm --filter playground dev",
     "build": "pnpm --recursive build",
-    "test": "vitest"
+    "test": "vitest",
+    "clean-pkgs": "pnpm -r exec rm -rf dist .turbo .swc *.log node_modules",
+    "clean": "pnpm clean-pkgs && rm -rf node_modules"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

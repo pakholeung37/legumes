@@ -1,12 +1,12 @@
 title 'Test Articulation'
 measure
   staff G 4/4
-    note B5 b d2 at
+    note B4 b d2 at
     chord
-      note C5 d2 a~
-      note E5
-      note G5
-      note C6
+      note C4 d2 a~
+      note E4
+      note G4
+      note C5
     end
   end
 end
