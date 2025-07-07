@@ -1155,7 +1155,6 @@ export function render_score(
   { compute_polylines = true }: { compute_polylines?: boolean } = {},
 ): Drawing {
   let [elements, h] = draw_score(score)
-  debugger
   let ret = {
     w: CONFIG.PAGE_WIDTH,
     h,

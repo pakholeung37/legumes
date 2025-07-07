@@ -796,7 +796,6 @@ function compile_staff(measure: MeasureItf, staff_idx: number) {
     let note_name = note.name
     let note_oct = Number(note_name.split('_')[1])
     let note_staff = note_name_to_staff_pos(note_name, staff.clef)
-    debugger
     note.octave = note_oct
     note.staff_pos = note_staff
 
