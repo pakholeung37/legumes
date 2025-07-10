@@ -1,5 +1,5 @@
 {
-  "name": "playground",
+  "name": "@chihiro/playground",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
     "lodash-es": "^4.17.21",
-    "legumes": "workspace:*",
+    "@chihiro/legumes": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

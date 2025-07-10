@@ -1,0 +1,30 @@
+{
+  "name": "@chihiro/vexml",
+  "version": "0.1.8",
+  "private": false,
+  "description": "MusicXML to Vexflow",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/@types/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "README.md"
+  ],
+  "keywords": [
+    "vexflow",
+    "musicxml"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --global-name vexml",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "jszip": "3.10.1",
+    "vexflow": "5.0.0"
+  },
+  "devDependencies": {}
+}

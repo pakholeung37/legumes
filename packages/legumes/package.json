@@ -1,5 +1,5 @@
 {
-  "name": "legumes",
+  "name": "@chihiro/legumes",
   "version": "0.0.1",
   "description": "",
   "main": "src/index.ts",
@@ -31,7 +31,6 @@
     "tsup": "^8.0.2",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^3.17.1",
-    "typescript": "~5.4.0",
-    "vitest": "^3.2.0"
+    "typescript": "~5.4.0"
   }
 }

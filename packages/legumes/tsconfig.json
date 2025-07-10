@@ -4,6 +4,7 @@
   "compilerOptions": {
     "target": "esnext",
     "lib": ["ESNext", "DOM"],
+    "types": ["node", "vitest"],
     "module": "esnext",
     "moduleResolution": "node",
     "esModuleInterop": true
