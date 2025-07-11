@@ -9,7 +9,16 @@ const midiFiles = fs.readdirSync(midiDir).filter((f) => f.endsWith('.mid'))
 describe('MIDI snapshots', async () => {
   for (const file of midiFiles) {
     it(`should match snapshot for ${file}`, async () => {
-      const [score, drawing, svg] = testMidiFile(file)
+      const [_score, _drawing, svg] = testMidiFile(file)
+      // remove "id":"xxxx", from score
+      const score = JSON.parse(
+        JSON.stringify(_score).replaceAll(/"(_.*?)"/g, '"mock"'),
+      )
+
+      const drawing = JSON.parse(
+        JSON.stringify(_drawing).replaceAll(/"(_.*?)",/g, ''),
+      )
+
       await expect(score).toMatchFileSnapshot(
         path.join(
           __dirname,
