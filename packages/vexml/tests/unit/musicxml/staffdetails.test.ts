@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { STAVE_TYPES, StaveDetails } from '@/musicxml'
 import { xml } from '@/util'
 

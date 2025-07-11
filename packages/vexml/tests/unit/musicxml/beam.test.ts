@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { xml } from '@/util'
 import { Beam } from '@/musicxml/beam'
 import { BEAM_VALUES } from '@/musicxml/enums'

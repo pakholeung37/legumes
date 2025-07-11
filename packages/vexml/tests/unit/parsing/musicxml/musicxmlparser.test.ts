@@ -1,3 +1,4 @@
+import { describe, beforeAll, it, expect } from 'vitest'
 import { MusicXMLParser } from '@/parsing'
 import path from 'path'
 import fs from 'fs'

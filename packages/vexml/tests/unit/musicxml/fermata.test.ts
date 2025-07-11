@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { FERMATA_SHAPES, FERMATA_TYPES, Fermata } from '@/musicxml'
 import { xml } from '@/util'
 

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { ABOVE_BELOW, LINE_TYPES, START_STOP_CONTINUE, Slur } from '@/musicxml'
 import { xml } from '@/util'
 

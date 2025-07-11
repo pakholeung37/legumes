@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect } from 'vitest'
 import * as vexml from '@/index'
 import * as path from 'path'
 import { DefaultCursorFrame, ElementDescriber, Timeline } from '@/playback'

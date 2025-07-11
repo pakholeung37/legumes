@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Print } from '@/musicxml/print'
 import { xml } from '@/util'
 

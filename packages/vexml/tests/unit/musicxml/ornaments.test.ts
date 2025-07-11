@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { AccidentalMark, Ornaments, TrillMark, WavyLine } from '@/musicxml'
 import { xml } from '@/util'
 

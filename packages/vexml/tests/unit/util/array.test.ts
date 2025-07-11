@@ -1,3 +1,4 @@
+import { describe, it, expect, vi } from 'vitest';
 import { first, forEachTriple, last } from '@/util'
 
 describe('first', () => {
@@ -26,7 +27,7 @@ describe('last', () => {
 
 describe('forEachTriple', () => {
   it('iterates over each [previous, current, next] triple providing an index', () => {
-    const callback = jest.fn()
+    const callback = vi.fn()
 
     forEachTriple([1, 2, 3], callback)
 
@@ -38,7 +39,7 @@ describe('forEachTriple', () => {
   })
 
   it('does not iterate over anything when the array is empty', () => {
-    const callback = jest.fn()
+    const callback = vi.fn()
     forEachTriple([], callback)
     expect(callback).not.toHaveBeenCalled()
   })

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import * as vexml from '@/index'
 import * as path from 'path'
 import fs from 'fs'

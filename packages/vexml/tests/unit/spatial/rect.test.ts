@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Rect } from '@/spatial/rect'
 import { Point } from '@/spatial/point'
 

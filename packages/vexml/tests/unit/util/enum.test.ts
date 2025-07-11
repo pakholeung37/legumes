@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Enum } from '@/util'
 
 describe(Enum, () => {

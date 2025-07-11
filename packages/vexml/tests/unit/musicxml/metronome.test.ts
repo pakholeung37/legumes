@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Metronome } from '@/musicxml'
 import { xml } from '@/util'
 

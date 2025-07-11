@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Clef } from '@/musicxml/clef'
 import { xml } from '@/util'
 

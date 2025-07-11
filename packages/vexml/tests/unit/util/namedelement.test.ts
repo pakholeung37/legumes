@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { NamedElement } from '@/util'
 import { xml } from '@/util'
 

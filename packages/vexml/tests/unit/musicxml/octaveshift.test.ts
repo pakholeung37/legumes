@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { OctaveShift, UP_DOWN_STOP_CONTINUE } from '@/musicxml'
 import { xml } from '@/util'
 

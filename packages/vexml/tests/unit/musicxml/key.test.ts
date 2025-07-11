@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Key } from '@/musicxml/key'
 import { xml } from '@/util'
 import { KEY_MODES } from '@/musicxml/enums'

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Attributes } from '@/musicxml/attributes'
 import { Barline } from '@/musicxml/barline'
 import { Measure } from '@/musicxml/measure'

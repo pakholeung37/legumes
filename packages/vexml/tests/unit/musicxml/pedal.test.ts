@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { PEDAL_TYPES, Pedal } from '@/musicxml'
 import { xml } from '@/util'
 

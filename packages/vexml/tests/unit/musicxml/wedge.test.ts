@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { WEDGE_TYPES, Wedge } from '@/musicxml'
 import { xml } from '@/util'
 

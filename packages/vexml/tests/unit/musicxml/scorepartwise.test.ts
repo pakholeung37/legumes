@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Part } from '@/musicxml/part'
 import { ScorePartwise } from '@/musicxml/scorepartwise'
 import { xml } from '@/util'

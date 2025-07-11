@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Fraction } from '@/util/fraction'
 
 describe(Fraction, () => {

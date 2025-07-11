@@ -1,5 +1,6 @@
 import { Rootfile } from '@/mxl'
 import { xml } from '@/util'
+import { describe, it, expect } from 'vitest'
 
 describe(Rootfile, () => {
   describe('getFullPath', () => {
