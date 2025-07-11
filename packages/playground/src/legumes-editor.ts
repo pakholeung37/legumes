@@ -1,8 +1,8 @@
 // ES Module version of legumes editor for Vite playground
-import * as Legumes from 'legumes'
+import * as Legumes from '@chihiro/legumes'
 import { samples } from './sample-loader'
-import { render_score } from 'legumes/src/render.ts'
-import type { ScoreItf } from 'legumes'
+import { render_score } from '@chihiro/legumes'
+import type { ScoreItf } from '@chihiro/legumes'
 
 // Configuration
 const CONFIG = {

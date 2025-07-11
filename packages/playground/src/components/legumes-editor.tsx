@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { initializeEditor, LegumesEditor } from '../legumes-editor'
 import { samples } from '../sample-loader'
-import * as Legumes from 'legumes'
+import * as Legumes from '@chihiro/legumes'
 import { Menu } from './menu'
 
 const SAMPLE_FILE = Object.keys(samples)[0]
