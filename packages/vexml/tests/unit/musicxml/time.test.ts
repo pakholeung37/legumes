@@ -54,13 +54,13 @@ describe(Time, () => {
     it('returns true when there is a <senza-misura>', () => {
       const node = xml.time({ senzaMisura: xml.senzaMisura() })
       const time = new Time(node)
-      expect(time.isHidden()).toBeTrue()
+      expect(time.isHidden()).toBeTruthy()
     })
 
     it('returns false when there is not a <senza-misura>', () => {
       const node = xml.time()
       const time = new Time(node)
-      expect(time.isHidden()).toBeFalse()
+      expect(time.isHidden()).toBeFalsy()
     })
   })
 

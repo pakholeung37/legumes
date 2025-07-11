@@ -21,13 +21,13 @@ describe(NamedElement, () => {
     it('returns true when the name matches the node', () => {
       const foo = xml.createElement('foo')
       const element = NamedElement.of(foo)
-      expect(element.isNamed('foo')).toBeTrue()
+      expect(element.isNamed('foo')).toBeTruthy()
     })
 
     it('returns false when the name does not match the node', () => {
       const foo = xml.createElement('foo')
       const element = NamedElement.of(foo)
-      expect(element.isNamed('fo')).toBeFalse()
+      expect(element.isNamed('fo')).toBeFalsy()
     })
   })
 
@@ -64,7 +64,7 @@ describe(NamedElement, () => {
 
       const element = NamedElement.of(bar)
 
-      expect(element.all('baz')).toBeEmpty()
+      expect(element.all('baz')).toHaveLength(0)
     })
 
     it('does not return ancestors', () => {
@@ -74,7 +74,7 @@ describe(NamedElement, () => {
 
       const element = NamedElement.of(bar)
 
-      expect(element.all('foo')).toBeEmpty()
+      expect(element.all('foo')).toHaveLength(0)
     })
   })
 

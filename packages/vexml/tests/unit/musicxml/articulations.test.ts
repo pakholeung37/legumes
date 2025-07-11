@@ -20,7 +20,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no accents', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getAccents()).toBeEmpty()
+      expect(articulations.getAccents()).toHaveLength(0)
     })
 
     it('does not conflate strong accents', () => {
@@ -28,7 +28,7 @@ describe(Articulations, () => {
         strongAccents: [xml.strongAccent({ placement: 'above' })],
       })
       const articulations = new Articulations(node)
-      expect(articulations.getAccents()).toBeEmpty()
+      expect(articulations.getAccents()).toHaveLength(0)
     })
   })
 
@@ -51,7 +51,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no strong accents', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getStrongAccents()).toBeEmpty()
+      expect(articulations.getStrongAccents()).toHaveLength(0)
     })
 
     it('does not conflate normal accents', () => {
@@ -59,7 +59,7 @@ describe(Articulations, () => {
         accents: [xml.accent({ placement: 'above' })],
       })
       const articulations = new Articulations(node)
-      expect(articulations.getStrongAccents()).toBeEmpty()
+      expect(articulations.getStrongAccents()).toHaveLength(0)
     })
   })
 
@@ -80,7 +80,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no staccatos', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getStaccatos()).toBeEmpty()
+      expect(articulations.getStaccatos()).toHaveLength(0)
     })
   })
 
@@ -101,7 +101,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no tenutos', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getTenutos()).toBeEmpty()
+      expect(articulations.getTenutos()).toHaveLength(0)
     })
   })
 
@@ -124,7 +124,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no detached legatos', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getDetachedLegatos()).toBeEmpty()
+      expect(articulations.getDetachedLegatos()).toHaveLength(0)
     })
   })
 
@@ -147,7 +147,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no staccatissimos', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getStaccatissimos()).toBeEmpty()
+      expect(articulations.getStaccatissimos()).toHaveLength(0)
     })
   })
 
@@ -179,7 +179,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no scoops', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getScoops()).toBeEmpty()
+      expect(articulations.getScoops()).toHaveLength(0)
     })
   })
 
@@ -211,7 +211,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no plops', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getPlops()).toBeEmpty()
+      expect(articulations.getPlops()).toHaveLength(0)
     })
   })
 
@@ -243,7 +243,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no doits', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getDoits()).toBeEmpty()
+      expect(articulations.getDoits()).toHaveLength(0)
     })
   })
 
@@ -277,7 +277,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no falloffs', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getFalloffs()).toBeEmpty()
+      expect(articulations.getFalloffs()).toHaveLength(0)
     })
   })
 
@@ -300,7 +300,7 @@ describe(Articulations, () => {
     it('returns an empty array if there are no breath marks', () => {
       const node = xml.articulations()
       const articulations = new Articulations(node)
-      expect(articulations.getBreathMarks()).toBeEmpty()
+      expect(articulations.getBreathMarks()).toHaveLength(0)
     })
   })
 })

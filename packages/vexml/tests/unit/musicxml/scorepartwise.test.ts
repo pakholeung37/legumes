@@ -76,7 +76,7 @@ describe(ScorePartwise, () => {
     it('defaults to an empty array when missing', () => {
       const node = xml.scorePartwise()
       const partList = new ScorePartwise(node)
-      expect(partList.getPartDetails()).toBeEmpty()
+      expect(partList.getPartDetails()).toHaveLength(0)
     })
 
     it('defaults id to an empty string when missing', () => {

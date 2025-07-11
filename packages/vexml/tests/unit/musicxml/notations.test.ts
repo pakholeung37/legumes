@@ -17,13 +17,13 @@ describe(Notations, () => {
     it('returns true when arpeggiate is present', () => {
       const node = xml.notations({ arpeggiate: xml.arpeggiate() })
       const notations = new Notations(node)
-      expect(notations.isArpeggiated()).toBeTrue()
+      expect(notations.isArpeggiated()).toBeTruthy()
     })
 
     it('returns false when arpeggiate is absent', () => {
       const node = xml.notations()
       const notations = new Notations(node)
-      expect(notations.isArpeggiated()).toBeFalse()
+      expect(notations.isArpeggiated()).toBeFalsy()
     })
   })
 
@@ -58,13 +58,13 @@ describe(Notations, () => {
     it('returns true when there is at least one tuplet', () => {
       const node = xml.notations({ tuplets: [xml.tuplet()] })
       const notations = new Notations(node)
-      expect(notations.hasTuplets()).toBeTrue()
+      expect(notations.hasTuplets()).toBeTruthy()
     })
 
     it('returns false when there are no tuplets', () => {
       const node = xml.notations()
       const notations = new Notations(node)
-      expect(notations.hasTuplets()).toBeFalse()
+      expect(notations.hasTuplets()).toBeFalsy()
     })
   })
 
@@ -175,7 +175,7 @@ describe(Notations, () => {
     it('defaults to an empty array when missing', () => {
       const node = xml.notations()
       const notations = new Notations(node)
-      expect(notations.getArticulations()).toBeEmpty()
+      expect(notations.getArticulations()).toHaveLength(0)
     })
   })
 
@@ -192,7 +192,7 @@ describe(Notations, () => {
     it('defaults to an empty array when missing', () => {
       const node = xml.notations()
       const notations = new Notations(node)
-      expect(notations.getAccidentalMarks()).toBeEmpty()
+      expect(notations.getAccidentalMarks()).toHaveLength(0)
     })
 
     it('does not return ornament accidental marks', () => {
@@ -200,7 +200,7 @@ describe(Notations, () => {
         ornaments: [xml.ornaments({ contents: [xml.accidentalMark()] })],
       })
       const notations = new Notations(node)
-      expect(notations.getAccidentalMarks()).toBeEmpty()
+      expect(notations.getAccidentalMarks()).toHaveLength(0)
     })
   })
 })

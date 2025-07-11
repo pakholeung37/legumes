@@ -52,7 +52,7 @@ describe(Attributes, () => {
     it('returns an empty array when times are missing', () => {
       const node = xml.attributes()
       const attributes = new Attributes(node)
-      expect(attributes.getTimes()).toBeEmpty()
+      expect(attributes.getTimes()).toHaveLength(0)
     })
   })
 
@@ -67,7 +67,7 @@ describe(Attributes, () => {
     it('returns an empty array when keys are missing', () => {
       const node = xml.attributes()
       const attributes = new Attributes(node)
-      expect(attributes.getKeys()).toBeEmpty()
+      expect(attributes.getKeys()).toHaveLength(0)
     })
   })
 
@@ -82,7 +82,7 @@ describe(Attributes, () => {
     it('returns an empty array when keys are missing', () => {
       const node = xml.attributes()
       const attributes = new Attributes(node)
-      expect(attributes.getClefs()).toBeEmpty()
+      expect(attributes.getClefs()).toHaveLength(0)
     })
   })
 
@@ -105,7 +105,7 @@ describe(Attributes, () => {
     it('returns an empty array when staff details are missing', () => {
       const node = xml.attributes({})
       const attributes = new Attributes(node)
-      expect(attributes.getStaveDetails()).toBeEmpty()
+      expect(attributes.getStaveDetails()).toHaveLength(0)
     })
   })
 
@@ -128,7 +128,7 @@ describe(Attributes, () => {
     it('returns an empty array when measure styles are missing', () => {
       const node = xml.attributes({})
       const attributes = new Attributes(node)
-      expect(attributes.getMeasureStyles()).toBeEmpty()
+      expect(attributes.getMeasureStyles()).toHaveLength(0)
     })
   })
 

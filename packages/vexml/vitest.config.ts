@@ -8,6 +8,7 @@ export default defineConfig({
     },
   },
   test: {
+    setupFiles: ['vitest-canvas-mock'],
     environment: 'jsdom',
     // include only unit tests for now
     include: ['tests/unit/**/*.test.ts'],

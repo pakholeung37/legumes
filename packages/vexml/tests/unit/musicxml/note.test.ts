@@ -76,13 +76,13 @@ describe(Note, () => {
     it('returns true when the note has a grace', () => {
       const node = xml.note({ grace: xml.grace() })
       const note = new Note(node)
-      expect(note.isGrace()).toBeTrue()
+      expect(note.isGrace()).toBeTruthy()
     })
 
     it('returns false when the note does not have a grace', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.isGrace()).toBeFalse()
+      expect(note.isGrace()).toBeFalsy()
     })
   })
 
@@ -90,25 +90,25 @@ describe(Note, () => {
     it('returns true when the note has a grace when slash is yes', () => {
       const node = xml.note({ grace: xml.grace({ slash: 'yes' }) })
       const note = new Note(node)
-      expect(note.hasGraceSlash()).toBeTrue()
+      expect(note.hasGraceSlash()).toBeTruthy()
     })
 
     it('returns false when the note has a grace when slash is no', () => {
       const node = xml.note({ grace: xml.grace({ slash: 'no' }) })
       const note = new Note(node)
-      expect(note.hasGraceSlash()).toBeFalse()
+      expect(note.hasGraceSlash()).toBeFalsy()
     })
 
     it('returns false when the note has an invalid slash', () => {
       const node = xml.note({ grace: xml.grace({ slash: 'foo' }) })
       const note = new Note(node)
-      expect(note.hasGraceSlash()).toBeFalse()
+      expect(note.hasGraceSlash()).toBeFalsy()
     })
 
     it('returns false when the note has no grace', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.hasGraceSlash()).toBeFalse()
+      expect(note.hasGraceSlash()).toBeFalsy()
     })
   })
 
@@ -127,7 +127,7 @@ describe(Note, () => {
     it('returns an empty array when missing', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.getNotations()).toBeEmpty()
+      expect(note.getNotations()).toHaveLength(0)
     })
   })
 
@@ -320,7 +320,7 @@ describe(Note, () => {
         accidental: xml.accidental({ cautionary: 'yes' }),
       })
       const note = new Note(node)
-      expect(note.hasAccidentalCautionary()).toBeTrue()
+      expect(note.hasAccidentalCautionary()).toBeTruthy()
     })
 
     it('returns false when the cautionary value is invalid', () => {
@@ -328,13 +328,13 @@ describe(Note, () => {
         accidental: xml.accidental({ cautionary: 'foo' }),
       })
       const note = new Note(node)
-      expect(note.hasAccidentalCautionary()).toBeFalse()
+      expect(note.hasAccidentalCautionary()).toBeFalsy()
     })
 
     it('returns false when the accidental is missing', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.hasAccidentalCautionary()).toBeFalse()
+      expect(note.hasAccidentalCautionary()).toBeFalsy()
     })
   })
 
@@ -392,7 +392,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2] })
 
-      expect(new Note(note1).isChordHead()).toBeTrue()
+      expect(new Note(note1).isChordHead()).toBeTruthy()
     })
 
     it('returns false when the next note does not have a chord element', () => {
@@ -401,7 +401,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2] })
 
-      expect(new Note(note1).isChordHead()).toBeFalse()
+      expect(new Note(note1).isChordHead()).toBeFalsy()
     })
 
     it('returns false when the current note has a chord element', () => {
@@ -410,13 +410,13 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2] })
 
-      expect(new Note(note1).isChordHead()).toBeFalse()
+      expect(new Note(note1).isChordHead()).toBeFalsy()
     })
 
     it('returns false when there is no next note', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.isChordHead()).toBeFalse()
+      expect(note.isChordHead()).toBeFalsy()
     })
   })
 
@@ -427,7 +427,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2] })
 
-      expect(new Note(note2).isChordTail()).toBeTrue()
+      expect(new Note(note2).isChordTail()).toBeTruthy()
     })
 
     it('returns false when the note does not have a chord element', () => {
@@ -436,7 +436,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2] })
 
-      expect(new Note(note2).isChordTail()).toBeFalse()
+      expect(new Note(note2).isChordTail()).toBeFalsy()
     })
   })
 
@@ -462,7 +462,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2, note3, note4] })
 
-      expect(new Note(note1).getChordTail()).toBeEmpty()
+      expect(new Note(note1).getChordTail()).toHaveLength(0)
     })
 
     it('returns an empty array if the note is part of a chord tail', () => {
@@ -472,7 +472,7 @@ describe(Note, () => {
 
       xml.measure({ notes: [note1, note2, note3] })
 
-      expect(new Note(note2).getChordTail()).toBeEmpty()
+      expect(new Note(note2).getChordTail()).toHaveLength(0)
     })
 
     it('does not include non-chord tail notes before or after the chord', () => {
@@ -495,13 +495,13 @@ describe(Note, () => {
     it('returns true when the note has a rest element', () => {
       const node = xml.note({ rest: xml.rest() })
       const note = new Note(node)
-      expect(note.isRest()).toBeTrue()
+      expect(note.isRest()).toBeTruthy()
     })
 
     it('returns false when the note does not have a rest element', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.isRest()).toBeFalse()
+      expect(note.isRest()).toBeFalsy()
     })
   })
 
@@ -561,25 +561,25 @@ describe(Note, () => {
     it('returns true when print object is yes', () => {
       const node = xml.note({ printObject: 'yes' })
       const note = new Note(node)
-      expect(note.printObject()).toBeTrue()
+      expect(note.printObject()).toBeTruthy()
     })
 
     it('returns false when print object is no', () => {
       const node = xml.note({ printObject: 'no' })
       const note = new Note(node)
-      expect(note.printObject()).toBeFalse()
+      expect(note.printObject()).toBeFalsy()
     })
 
     it('returns true when print object is invalid', () => {
       const node = xml.note({ printObject: 'foo' })
       const note = new Note(node)
-      expect(note.printObject()).toBeTrue()
+      expect(note.printObject()).toBeTruthy()
     })
 
     it('returns true when print object is missing', () => {
       const node = xml.note()
       const note = new Note(node)
-      expect(note.printObject()).toBeTrue()
+      expect(note.printObject()).toBeTruthy()
     })
   })
 })

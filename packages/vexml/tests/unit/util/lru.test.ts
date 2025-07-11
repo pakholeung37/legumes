@@ -21,9 +21,9 @@ describe(LRU, () => {
       lru.get(1)
       lru.put(3, 3)
 
-      expect(lru.has(1)).toBeTrue()
-      expect(lru.has(2)).toBeFalse()
-      expect(lru.has(3)).toBeTrue()
+      expect(lru.has(1)).toBeTruthy()
+      expect(lru.has(2)).toBeFalsy()
+      expect(lru.has(3)).toBeTruthy()
     })
   })
 
@@ -32,7 +32,7 @@ describe(LRU, () => {
       const lru = new LRU(1)
       lru.put(1, 1)
 
-      expect(lru.has(1)).toBeTrue()
+      expect(lru.has(1)).toBeTruthy()
     })
 
     it('resets the LRU order of the keys', () => {
@@ -41,9 +41,9 @@ describe(LRU, () => {
       lru.put(2, 2)
       lru.put(3, 3)
 
-      expect(lru.has(1)).toBeFalse()
-      expect(lru.has(2)).toBeTrue()
-      expect(lru.has(3)).toBeTrue()
+      expect(lru.has(1)).toBeFalsy()
+      expect(lru.has(2)).toBeTruthy()
+      expect(lru.has(3)).toBeTruthy()
     })
 
     it('overrides keys that already exist', () => {
@@ -51,7 +51,7 @@ describe(LRU, () => {
       lru.put(1, 1)
       lru.put(1, 2)
 
-      expect(lru.has(1)).toBeTrue()
+      expect(lru.has(1)).toBeTruthy()
       expect(lru.get(1)).toBe(2)
     })
 
@@ -69,19 +69,19 @@ describe(LRU, () => {
     it('returns true when the key is in the cache', () => {
       const lru = new LRU(1)
       lru.put(1, 1)
-      expect(lru.has(1)).toBeTrue()
+      expect(lru.has(1)).toBeTruthy()
     })
 
     it('returns false when the key was never in the cache', () => {
       const lru = new LRU(1)
-      expect(lru.has(1)).toBeFalse()
+      expect(lru.has(1)).toBeFalsy()
     })
 
     it('returns false when the key was evicted', () => {
       const lru = new LRU(1)
       lru.put(1, 1)
       lru.put(2, 2)
-      expect(lru.has(1)).toBeFalse()
+      expect(lru.has(1)).toBeFalsy()
     })
   })
 })

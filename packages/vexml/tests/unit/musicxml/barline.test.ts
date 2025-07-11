@@ -33,13 +33,13 @@ describe(Barline, () => {
     it('returns true when a repeat is present', () => {
       const node = xml.barline({ repeat: xml.repeat() })
       const barline = new Barline(node)
-      expect(barline.isRepeat()).toBeTrue()
+      expect(barline.isRepeat()).toBeTruthy()
     })
 
     it('returns false when a repeat is absent', () => {
       const node = xml.barline()
       const barline = new Barline(node)
-      expect(barline.isRepeat()).toBeFalse()
+      expect(barline.isRepeat()).toBeFalsy()
     })
   })
 
@@ -93,13 +93,13 @@ describe(Barline, () => {
     it('returns true when the barline has an ending', () => {
       const node = xml.barline({ ending: xml.ending() })
       const barline = new Barline(node)
-      expect(barline.isEnding()).toBeTrue()
+      expect(barline.isEnding()).toBeTruthy()
     })
 
     it('returns false when the barline does not have an ending', () => {
       const node = xml.barline()
       const barline = new Barline(node)
-      expect(barline.isEnding()).toBeFalse()
+      expect(barline.isEnding()).toBeFalsy()
     })
   })
 

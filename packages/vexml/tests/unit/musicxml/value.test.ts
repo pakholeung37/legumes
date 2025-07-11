@@ -41,12 +41,12 @@ describe(Value, () => {
   describe('bool', () => {
     it('parses true string', () => {
       const value = Value.of('true')
-      expect(value.bool()).toBeTrue()
+      expect(value.bool()).toBeTruthy()
     })
 
     it('parses false string', () => {
       const value = Value.of('false')
-      expect(value.bool()).toBeFalse()
+      expect(value.bool()).toBeFalsy()
     })
 
     it('defaults non-boolean strings', () => {

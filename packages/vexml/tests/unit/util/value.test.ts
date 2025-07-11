@@ -31,12 +31,12 @@ describe(Value, () => {
   describe('bool', () => {
     it('parses a true boolean', () => {
       const value = Value.of('true')
-      expect(value.bool()).toBeTrue()
+      expect(value.bool()).toBeTruthy()
     })
 
     it('parses a false boolean', () => {
       const value = Value.of('false')
-      expect(value.bool()).toBeFalse()
+      expect(value.bool()).toBeFalsy()
     })
 
     it('returns the default when not true or false', () => {

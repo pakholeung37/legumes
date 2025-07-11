@@ -26,7 +26,7 @@ describe(Direction, () => {
     it('defaults to an empty array when direction types are missing', () => {
       const node = xml.direction()
       const direction = new Direction(node)
-      expect(direction.getTypes()).toBeEmpty()
+      expect(direction.getTypes()).toHaveLength(0)
     })
   })
 

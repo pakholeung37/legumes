@@ -5,7 +5,7 @@ describe(LegacyMeasureSequenceIterator, () => {
   it('is empty when there are no measures', () => {
     const iterator = new LegacyMeasureSequenceIterator([])
 
-    expect(iterator).toBeEmpty()
+    expect([...iterator]).toHaveLength(0)
   })
 
   it('is the same as the input when there are no repeats', () => {

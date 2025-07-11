@@ -26,7 +26,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(4)
     // stave0: 0 1 2 3
@@ -64,7 +64,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(4)
     // stave0: 0 1 2 3
@@ -102,7 +102,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(8)
     // stave0: 0   1   2   3
@@ -173,7 +173,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber1,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(2)
     expect(framesPart0).toHaveLength(4)
     // part0, stave0: 0 1 2 3
@@ -235,7 +235,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(8)
     // stave0: 0 1 2 3 4 | 5 6 7 8
@@ -293,7 +293,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(8)
     // stave0: 0 1 2 3 :||
@@ -351,7 +351,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     expect(frames).toHaveLength(6)
     // stave0: 0 | [ending1 -> 1] :|| [ending2 -> 2] :|| [ending3 -> 3]
@@ -401,7 +401,7 @@ describe(DefaultCursorFrame, () => {
       elementDescriber,
     )
 
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     expect(timelines).toHaveLength(1)
     // system0, stave0: 0
     // system1, stave0: 1
@@ -431,7 +431,7 @@ describe(DefaultCursorFrame, () => {
     )
 
     expect(timelines).toHaveLength(1)
-    expect(log.getLogs()).toBeEmpty()
+    expect(log.getLogs()).toHaveLength(0)
     // stave0, voice0: 0     1  2  3  4  5  6  7     8  9 10 11 12 13
     // stave1, voice0: 14 15       16          17 18      19
     // stave2, voice1: 20                      21

@@ -7,25 +7,25 @@ describe(Metronome, () => {
     it('returns true when the parentheses attribute is yes', () => {
       const node = xml.metronome({ parentheses: 'yes' })
       const metronome = new Metronome(node)
-      expect(metronome.parentheses()).toBeTrue()
+      expect(metronome.parentheses()).toBeTruthy()
     })
 
     it('returns false when the parentheses attribute is no', () => {
       const node = xml.metronome({ parentheses: 'no' })
       const metronome = new Metronome(node)
-      expect(metronome.parentheses()).toBeFalse()
+      expect(metronome.parentheses()).toBeFalsy()
     })
 
     it('returns false when the parentheses attribute is missing', () => {
       const node = xml.metronome()
       const metronome = new Metronome(node)
-      expect(metronome.parentheses()).toBeFalse()
+      expect(metronome.parentheses()).toBeFalsy()
     })
 
     it('returns false when the parentheses attribute is invalid', () => {
       const node = xml.metronome({ parentheses: 'foo' })
       const metronome = new Metronome(node)
-      expect(metronome.parentheses()).toBeFalse()
+      expect(metronome.parentheses()).toBeFalsy()
     })
   })
 

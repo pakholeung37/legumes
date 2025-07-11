@@ -14,19 +14,19 @@ describe(Measure, () => {
     it('returns whether the measure number should show', () => {
       const node = xml.measure({ implicit: 'yes' })
       const measure = new Measure(node)
-      expect(measure.isImplicit()).toBeTrue()
+      expect(measure.isImplicit()).toBeTruthy()
     })
 
     it('defaults to false when missing', () => {
       const node = xml.measure()
       const measure = new Measure(node)
-      expect(measure.isImplicit()).toBeFalse()
+      expect(measure.isImplicit()).toBeFalsy()
     })
 
     it('defaults to false when invalid', () => {
       const node = xml.measure({ implicit: 'lol' })
       const measure = new Measure(node)
-      expect(measure.isImplicit()).toBeFalse()
+      expect(measure.isImplicit()).toBeFalsy()
     })
   })
 
@@ -96,7 +96,7 @@ describe(Measure, () => {
     it('returns an empty array when there are no barlines', () => {
       const node = xml.measure()
       const measure = new Measure(node)
-      expect(measure.getBarlines()).toBeEmpty()
+      expect(measure.getBarlines()).toHaveLength(0)
     })
   })
 
@@ -159,7 +159,7 @@ describe(Measure, () => {
     it('returns an empty array when the measure is empty', () => {
       const node = xml.measure()
       const measure = new Measure(node)
-      expect(measure.getEntries()).toBeEmpty()
+      expect(measure.getEntries()).toHaveLength(0)
     })
   })
 

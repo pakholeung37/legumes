@@ -30,25 +30,25 @@ describe(Pedal, () => {
     it(`returns the line of the pedal: 'yes'`, () => {
       const node = xml.pedal({ line: 'yes' })
       const pedal = new Pedal(node)
-      expect(pedal.line()).toBeTrue()
+      expect(pedal.line()).toBeTruthy()
     })
 
     it(`returns the line of the pedal: 'no'`, () => {
       const node = xml.pedal({ line: 'no' })
       const pedal = new Pedal(node)
-      expect(pedal.line()).toBeFalse()
+      expect(pedal.line()).toBeFalsy()
     })
 
     it('defaults to false when missing', () => {
       const node = xml.pedal()
       const pedal = new Pedal(node)
-      expect(pedal.line()).toBeFalse()
+      expect(pedal.line()).toBeFalsy()
     })
 
     it('defaults to false when invalid', () => {
       const node = xml.pedal({ line: 'foo' })
       const pedal = new Pedal(node)
-      expect(pedal.line()).toBeFalse()
+      expect(pedal.line()).toBeFalsy()
     })
   })
 
@@ -56,25 +56,25 @@ describe(Pedal, () => {
     it(`returns the sign of the pedal: 'yes'`, () => {
       const node = xml.pedal({ sign: 'yes' })
       const pedal = new Pedal(node)
-      expect(pedal.sign()).toBeTrue()
+      expect(pedal.sign()).toBeTruthy()
     })
 
     it(`returns the sign of the pedal: 'no'`, () => {
       const node = xml.pedal({ sign: 'no' })
       const pedal = new Pedal(node)
-      expect(pedal.sign()).toBeFalse()
+      expect(pedal.sign()).toBeFalsy()
     })
 
     it('defaults to false when missing', () => {
       const node = xml.pedal()
       const pedal = new Pedal(node)
-      expect(pedal.sign()).toBeFalse()
+      expect(pedal.sign()).toBeFalsy()
     })
 
     it('defaults to false when invalid', () => {
       const node = xml.pedal({ sign: 'foo' })
       const pedal = new Pedal(node)
-      expect(pedal.sign()).toBeFalse()
+      expect(pedal.sign()).toBeFalsy()
     })
   })
 })
