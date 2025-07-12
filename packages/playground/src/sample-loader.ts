@@ -4,6 +4,11 @@ export const SAMPLE_GLOBS = {
     query: '?raw',
     import: 'default',
   }),
+  // load vexml samples
+  ...import.meta.glob('../../vexml/tests/__data__/**/*.musicxml', {
+    query: '?raw',
+    import: 'default',
+  }),
 }
 
 console.log('SAMPLE_GLOBS:', SAMPLE_GLOBS)

@@ -4,14 +4,18 @@ import {
   MenubarItem,
   MenubarMenu,
   MenubarSeparator,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
   MenubarTrigger,
 } from '@/components/ui/menubar'
 import type { LegumesEditor } from '../legumes-editor'
 import { SAMPLES } from '../sample-loader'
 import packageJson from '../../package.json'
 import { Hammer, Play, Pause, Sun, Moon, Bug } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useTheme } from './theme-provider'
+import { Button } from './ui/button'
 
 interface MenuItem {
   label: string
@@ -21,13 +25,40 @@ interface MenuItem {
 
 interface MenuGroup {
   label: string
-  items: MenuItem[]
+  items: MenuItem[] | MenuGroup[]
 }
 
 export const Menu = (props: { editor: LegumesEditor }) => {
   const { editor } = props
   const [isPlaying, setIsPlaying] = useState(false)
   const { theme, setTheme } = useTheme()
+
+  // Memoize samples menu items with stable references
+  const samplesMenuItems = useMemo(() => {
+    const result: Record<string, MenuItem[]> = {}
+    SAMPLES.forEach((samplePath) => {
+      const [category, sampleName] = samplePath.split('/').slice(-2)
+      if (!result[category]) {
+        result[category] = []
+      }
+      result[category].push({
+        label: sampleName,
+        action: () => editor.loadSample(samplePath),
+      })
+    })
+    return result
+  }, [editor])
+
+  // Memoize all action handlers to prevent re-renders
+  const handleCompile = useCallback(() => editor.compile(), [editor])
+  const handleTogglePlay = useCallback(() => {
+    editor.toggleMidiPlay()
+    setIsPlaying(editor.getIsPlaying())
+  }, [editor])
+  const handleDebug = useCallback(() => editor.debugCodeMirror(), [editor])
+  const handleToggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }, [theme, setTheme])
 
   const menuGroups: MenuGroup[] = useMemo(
     () => [
@@ -83,9 +114,9 @@ export const Menu = (props: { editor: LegumesEditor }) => {
       },
       {
         label: 'Samples',
-        items: SAMPLES.map((sampleName) => ({
-          label: sampleName.split('/').pop() || sampleName,
-          action: () => editor.loadSample(sampleName),
+        items: Object.keys(samplesMenuItems).map((category) => ({
+          label: category,
+          items: samplesMenuItems[category],
         })),
       },
       {
@@ -218,7 +249,7 @@ export const Menu = (props: { editor: LegumesEditor }) => {
         ],
       },
     ],
-    [editor],
+    [editor, samplesMenuItems],
   )
 
   return (
@@ -228,49 +259,68 @@ export const Menu = (props: { editor: LegumesEditor }) => {
           <MenubarMenu key={group.label}>
             <MenubarTrigger>{group.label}</MenubarTrigger>
             <MenubarContent>
-              {group.items.map((item, index) => (
-                <div key={index}>
-                  {item.isSeparator ? (
-                    <MenubarSeparator />
-                  ) : (
-                    <MenubarItem onClick={item.action}>
-                      {item.label}
-                    </MenubarItem>
-                  )}
-                </div>
-              ))}
+              {group.items.map((item, index) =>
+                // If the item is a group, render a submenu
+                'items' in item ? (
+                  <MenubarSub key={index}>
+                    <MenubarSubTrigger>{item.label}</MenubarSubTrigger>
+                    <MenubarSubContent className="max-h-96 overflow-auto">
+                      {item.items.map((subItem: MenuItem, subIndex) => (
+                        <MenubarItem key={subIndex} onClick={subItem.action}>
+                          {subItem.label}
+                        </MenubarItem>
+                      ))}
+                    </MenubarSubContent>
+                  </MenubarSub>
+                ) : (
+                  <div key={index}>
+                    {item.isSeparator ? (
+                      <MenubarSeparator />
+                    ) : (
+                      <MenubarItem onClick={item.action}>
+                        {item.label}
+                      </MenubarItem>
+                    )}
+                  </div>
+                ),
+              )}
             </MenubarContent>
           </MenubarMenu>
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <MenubarMenu>
-          <MenubarTrigger onClick={() => editor.compile()}>
-            <Hammer size={16} />
-          </MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger
-            onClick={() => {
-              editor.toggleMidiPlay()
-              setIsPlaying(editor.getIsPlaying())
-            }}
-          >
-            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-          </MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger onClick={() => editor.debugCodeMirror()}>
-            <Bug size={16} />
-          </MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </MenubarTrigger>
-        </MenubarMenu>
+        <Button
+          className="h-6"
+          onClick={handleCompile}
+          variant={'ghost'}
+          size={'icon'}
+        >
+          <Hammer />
+        </Button>
+        <Button
+          className="h-6"
+          onClick={handleTogglePlay}
+          variant={'ghost'}
+          size={'icon'}
+        >
+          {isPlaying ? <Pause /> : <Play />}
+        </Button>
+        <Button
+          className="h-6"
+          onClick={handleDebug}
+          variant={'ghost'}
+          size={'icon'}
+        >
+          <Bug />
+        </Button>
+        <Button
+          className="h-6"
+          onClick={handleToggleTheme}
+          variant={'ghost'}
+          size={'icon'}
+        >
+          {theme === 'dark' ? <Sun /> : <Moon />}
+        </Button>
       </div>
     </Menubar>
   )
