@@ -1,6 +1,6 @@
 // ES Module version of legumes editor for Vite playground
 import * as Legumes from '@chihiro/legumes'
-import { samples } from './sample-loader'
+import { loadSample, SAMPLES } from './sample-loader'
 import { render_score } from '@chihiro/legumes'
 import type { ScoreItf } from '@chihiro/legumes'
 
@@ -490,8 +490,8 @@ export class LegumesEditor {
     })
   }
 
-  public loadSample(sampleName: string) {
-    const sample = samples[sampleName]
+  public async loadSample(sampleName: string) {
+    const sample = await loadSample(sampleName)
     if (sample) {
       this.setValue(sample)
       this.extName = sampleName.split('.').pop() || 'leg'

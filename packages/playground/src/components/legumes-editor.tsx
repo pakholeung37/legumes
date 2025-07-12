@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { initializeEditor, LegumesEditor } from '../legumes-editor'
-import { samples } from '../sample-loader'
+import { SAMPLES } from '../sample-loader'
 import * as Legumes from '@chihiro/legumes'
 import { Menu } from './menu'
 
-const SAMPLE_FILE = Object.keys(samples)[0]
 export const LegumesEditorComponent: React.FC = () => {
   const [editor, setEditor] = useState<LegumesEditor | null>(null)
 
@@ -14,8 +13,8 @@ export const LegumesEditorComponent: React.FC = () => {
         const editor = await initializeEditor(Legumes)
         if (editor) {
           setEditor(editor)
-          editor.setValue(samples[SAMPLE_FILE])
-          editor.compile()
+          const firstFile = SAMPLES[0]
+          await editor.loadSample(firstFile)
         } else {
           console.error('Failed to initialize editor')
         }
@@ -26,7 +25,6 @@ export const LegumesEditorComponent: React.FC = () => {
 
     initEditor()
 
-    // Cleanup function
     return () => {
       if (editor) {
         editor.abortPlay()
@@ -35,50 +33,13 @@ export const LegumesEditorComponent: React.FC = () => {
   }, [])
 
   return (
-    <>
+    <div className="h-screen flex flex-col">
       {editor && <Menu editor={editor} />}
-      <div
-        style={{
-          background: 'floralwhite',
-          overflow: 'hidden',
-          height: 'calc(100vh - 32px)',
-          position: 'relative',
-          display: 'flex',
-        }}
-      >
-        {/* Playhead element */}
-        <div
-          id="playhead"
-          style={{
-            zIndex: 10000,
-            position: 'absolute',
-            left: '0px',
-            top: '0px',
-            width: '2px',
-            height: '0px',
-            background: 'red',
-          }}
-        />
-
-        {/* Output area */}
-        <div
-          id="out"
-          style={{
-            width: '70%',
-            height: '100%',
-            overflow: 'scroll',
-          }}
-        />
-
-        {/* Code editor area */}
-        <div
-          id="code"
-          style={{
-            width: '30%',
-            height: '100%',
-          }}
-        />
+      <div className="flex-1 flex overflow-hidden">
+        <div id="playhead" className="w-0.5 bg-red-500 absolute z-10" />
+        <div id="out" className="w-2/3 h-full overflow-auto" />
+        <div id="code" className="w-1/3 h-full leading-none" />
       </div>
-    </>
+    </div>
   )
 }
