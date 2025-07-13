@@ -1,8 +1,10 @@
 // ES Module version of legumes editor for Vite playground
 import * as Legumes from '@chihiro/legumes'
-import { loadSample, SAMPLES } from './sample-loader'
+import { create } from 'zustand'
+import { loadSample } from './sample-loader'
 import { render_score } from '@chihiro/legumes'
 import type { ScoreItf } from '@chihiro/legumes'
+import type { IEditorInstance, IEditorProps } from './editor/types'
 
 // Configuration
 const CONFIG = {
@@ -135,106 +137,17 @@ const nameMidiKey: Record<number, string> = {
 
 // Utility functions
 
-// CodeMirror mode definition
-const defineLegumesMode = () => {
-  if (typeof window !== 'undefined' && (window as any).CodeMirror) {
-    const CodeMirror = (window as any).CodeMirror
-
-    CodeMirror.defineSimpleMode('leg', {
-      meta: {
-        blockCommentStart: ';',
-        blockCommentEnd: ';',
-      },
-      start: [
-        // 注释 - 分号包围的内容 (最高优先级)
-        { regex: /;.*?;/g, token: 'comment' },
-
-        // 字符串 - 单引号包围的内容
-        { regex: /'(?:[^'\\]|\\.)*?'/g, token: 'string' },
-
-        // 引用标记 - $开头的标识符
-        { regex: /\$([a-zA-Z0-9_-]+)/, token: 'atom' },
-
-        // 音符定义 - 字母+数字 (如 C4, G5)
-        { regex: /(?:(A|B|C|D|E|F|G)\d+)\b/, token: 'def' },
-
-        // 变音记号 - 升号和降号
-        { regex: /(?:(b+)|(#+))/, token: 'variable-2' },
-
-        // 时值 - 如 d4, d8, d16, d4.
-        { regex: /d\d+\.?/, token: 'number' },
-
-        // 拍号 - 如 2/4, 3/4
-        { regex: /\d+\/\d+/, token: 'number' },
-
-        // 数字 - 包括小数、十六进制等
-        {
-          regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
-          token: 'number',
-        },
-
-        // 表情符号 - 如 a., a>, |p, |pp
-        { regex: /a\.|a>|\|[a-z]+/, token: 'variable' },
-
-        // 连音符号 - 如 ~
-        { regex: /~/, token: 'variable' },
-
-        // 结构关键字 - 需要缩进
-        {
-          regex: /(?:measure|staff|tuplet|chord|grace|voice)\b/,
-          indent: true,
-          token: 'type',
-        },
-
-        // 结束关键字 - 需要减少缩进
-        { regex: /(?:end)\b/, dedent: true, token: 'type' },
-
-        // 关键字 - 主要命令
-        {
-          regex: /(?:title|composer|instruments|tempo)\b/,
-          token: 'keyword',
-        },
-
-        // 音符和休止符
-        { regex: /(?:note|rest)\b/, token: 'keyword' },
-
-        // 音乐符号
-        { regex: /(?:cresc|slur|tie)\b/, token: 'keyword' },
-
-        // 其他标识符 (最低优先级)
-        { regex: /[a-zA-Z_][a-zA-Z0-9_]*/, token: 'variable' },
-      ],
-    })
-    /* Example definition of a simple mode that understands a subset of
-     * JavaScript:
-     */
-  }
-}
-
-const defineMusicXmlMode = () => {
-  if (typeof window !== 'undefined' && (window as any).CodeMirror) {
-    const CodeMirror = (window as any).CodeMirror
-
-    CodeMirror.defineSimpleMode('xml', {
-      start: [
-        { regex: /<[^>]*>/g, token: 'tag' },
-        { regex: /<![^>]*>/g, token: 'tag' },
-        { regex: /<\?[^>]*>/g, token: 'tag' },
-      ],
-    })
-  }
-}
-
 // Main editor class
-export class LegumesEditor {
+export class LegumesEditor implements IEditorInstance {
+  store
+  getState
+  setState
+  useState
   public legumes: typeof Legumes
-  private codeMirror: any
   private outputElement: HTMLElement
   private playheadElement: HTMLElement
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private synths: Record<string, any> = {}
-  private isPlaying: boolean = false
-
   private extName: string = 'leg'
 
   constructor(
@@ -245,73 +158,43 @@ export class LegumesEditor {
     this.legumes = legumes
     this.outputElement = outputElement
     this.playheadElement = playheadElement
-    this.initializeCodeMirror()
-    this.setupEventListeners()
+    this.store = create<IEditorProps>(() => ({
+      source: '',
+      sourcePath: '',
+      isPlaying: false,
+    }))
+    this.getState = this.store.getState
+    this.setState = this.store.setState
+    this.useState = this.store
+    this.setOutputFunction(this.legumes.export_svg)
   }
 
-  private initializeCodeMirror() {
-    if (typeof window !== 'undefined' && (window as any).CodeMirror) {
-      const CodeMirror = (window as any).CodeMirror
-      const codeElement = document.getElementById('code')
-
-      if (codeElement) {
-        this.codeMirror = CodeMirror(codeElement, {
-          lineNumbers: true,
-          matchBrackets: true,
-          mode: 'leg',
-          indentWithTabs: false,
-          indentUnit: 2,
-          extraKeys: {
-            'Ctrl-/': 'toggleComment',
-            'Cmd-/': 'toggleComment',
-            Tab: betterTab,
-          },
-        })
-        this.codeMirror.setSize(null, null)
-      }
-    }
+  public setSource(value: string) {
+    this.setState({ source: value })
   }
 
-  private setupEventListeners() {
-    // 添加 change 事件监听器来确保值更新
-    if (this.codeMirror) {
-      this.codeMirror.on('change', () => {
-        this.abortPlay()
-      })
-    }
-
-    // width change listener
-    window.addEventListener('resize', () => {
-      this.compile()
-    })
+  public getSource(state = this.getState()): string {
+    return state.source
   }
 
-  public setValue(value: string) {
-    if (this.codeMirror) {
-      this.codeMirror.setValue(value)
-    }
-  }
-
-  public getValue(): string {
-    return this.codeMirror ? this.codeMirror.getValue() : ''
+  public useSource(): string {
+    return this.useState(this.getSource)
   }
 
   public compile() {
-    if (!this.legumes || !this.codeMirror) return
+    if (!this.legumes) return
 
     // Set configuration
-    this.legumes.CONFIG.PAGE_WIDTH = window.innerWidth * 0.7 - 20
+    this.legumes.CONFIG.PAGE_WIDTH = this.outputElement.clientWidth
     this.legumes.CONFIG.INTER_NOTE_WIDTH = 0
 
     try {
       let score: ScoreItf
       if (this.extName === 'leg') {
-        score = this.legumes.parse_leg(this.getValue())
-        this.codeMirror.setOption('mode', 'leg')
+        score = this.legumes.parse_leg(this.getSource())
       } else if (this.extName === 'musicxml') {
-        score = this.legumes.parse_musicxml(this.getValue())
+        score = this.legumes.parse_musicxml(this.getSource())
         console.log('score', score)
-        this.codeMirror.setOption('mode', 'xml')
       } else {
         throw new Error(`Unsupported file type: ${this.extName}`)
       }
@@ -330,19 +213,19 @@ export class LegumesEditor {
     }
   }
 
-  public toggleMidiPlay() {
-    if (this.isPlaying) {
-      this.abortPlay()
+  public tooglePlay() {
+    if (this.getIsPlaying()) {
+      this.pause()
     } else {
-      this.playMidi()
+      this.play()
     }
   }
 
-  public playMidi() {
-    this.abortPlay()
+  public play() {
+    this.pause()
     this.compile()
 
-    this.isPlaying = true
+    this.setState({ isPlaying: true })
 
     this.synths = {}
     const offset = 1
@@ -350,7 +233,7 @@ export class LegumesEditor {
       (window as any).Tone?.now() + offset || Date.now() / 1000 + offset
     const spd = globalState.MIDI_SPD
 
-    const score = this.legumes.parse_leg(this.getValue())
+    const score = this.legumes.parse_leg(this.getSource())
     this.legumes.compile_score(score)
     const midiFile = this.legumes.score_to_midi(score)
 
@@ -396,7 +279,7 @@ export class LegumesEditor {
       const [x0, y0, _, y1] = this.legumes.playhead_coords(score as any, mul64)
       const timeoutId = setTimeout(
         () => {
-          if (this.isPlaying) {
+          if (this.getIsPlaying()) {
             // 只有在播放状态才更新 playhead
             elt.style.left = x0 - cont.scrollLeft + 'px'
             elt.style.top = y0 + 20 - cont.scrollTop + 'px'
@@ -410,10 +293,10 @@ export class LegumesEditor {
 
     const finalTimeoutId = setTimeout(
       () => {
-        if (this.isPlaying) {
+        if (this.getIsPlaying()) {
           // 只有在播放状态才重置 playhead
           this.resetPlayhead()
-          this.isPlaying = false
+          this.setIsPlaying(false)
         }
       },
       1000 * (offset + (TT + 1) * spd),
@@ -421,9 +304,8 @@ export class LegumesEditor {
     this.timeouts.push(finalTimeoutId)
   }
 
-  public abortPlay() {
-    this.isPlaying = false
-    this.resetPlayhead()
+  public pause() {
+    this.setIsPlaying(false)
 
     if (this.synths) {
       for (const key in this.synths) {
@@ -457,7 +339,7 @@ export class LegumesEditor {
   }
 
   public exportPdf() {
-    const score = this.legumes.parse_leg(this.getValue())
+    const score = this.legumes.parse_leg(this.getSource())
     this.legumes.compile_score(score)
     const drawing = render_score(score as any)
     const pdf = this.legumes.export_pdf(drawing)
@@ -465,7 +347,7 @@ export class LegumesEditor {
   }
 
   public exportMidi() {
-    const score = this.legumes.parse_leg(this.getValue())
+    const score = this.legumes.parse_leg(this.getSource())
     const midiFile = this.legumes.score_to_midi(score)
     const bytes = this.legumes.export_midi(midiFile)
     downloadBin('score.mid', new Uint8Array(bytes))
@@ -473,7 +355,7 @@ export class LegumesEditor {
 
   public importTxt() {
     uploadFile('Text', (txt) => {
-      this.setValue(txt as string)
+      this.setSource(txt as string)
       this.compile()
     })
   }
@@ -485,7 +367,7 @@ export class LegumesEditor {
       const score = this.legumes.score_from_midi(midiFile)
       this.legumes.compile_score(score)
       const txto = this.legumes.export_txt(score)
-      this.setValue(txto)
+      this.setSource(txto)
       this.compile()
     })
   }
@@ -493,7 +375,7 @@ export class LegumesEditor {
   public async loadSample(sampleName: string) {
     const sample = await loadSample(sampleName)
     if (sample) {
-      this.setValue(sample)
+      this.setSource(sample)
       this.extName = sampleName.split('.').pop() || 'leg'
       this.compile()
     }
@@ -511,58 +393,19 @@ export class LegumesEditor {
     return globalState.MIDI_SPD
   }
 
-  public getIsPlaying(): boolean {
-    return this.isPlaying
+  public getIsPlaying(state = this.getState()): boolean {
+    return state.isPlaying
   }
 
-  // 调试方法：检查 CodeMirror 状态
-  public debugCodeMirror() {
-    if (this.codeMirror) {
-      console.log('CodeMirror instance:', this.codeMirror)
-      console.log('Current value:', this.codeMirror.getValue())
-      console.log('Line count:', this.codeMirror.lineCount())
-      console.log('Is focused:', this.codeMirror.hasFocus())
-    } else {
-      console.log('CodeMirror not initialized')
-    }
+  public setIsPlaying(isPlaying: boolean) {
+    this.setState({ isPlaying })
   }
-}
-
-// Initialize the editor
-export const initializeEditor = async (
-  legumes: typeof Legumes,
-): Promise<LegumesEditor | null> => {
-  try {
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      await new Promise((resolve) => {
-        document.addEventListener('DOMContentLoaded', resolve)
-      })
-    }
-
-    // Define CodeMirror mode
-    defineLegumesMode()
-    defineMusicXmlMode()
-    // Find required elements
-    const outputElement = document.getElementById('out')
-    const playheadElement = document.getElementById('playhead')
-    const codeElement = document.getElementById('code')
-
-    if (!outputElement || !playheadElement || !codeElement) {
-      console.error('Required DOM elements not found')
-      return null
-    }
-
-    // Create and return editor instance
-    const editor = new LegumesEditor(legumes, outputElement, playheadElement)
-
-    // Set default output function
-    editor.setOutputFunction(legumes.export_svg)
-
-    return editor
-  } catch (error) {
-    console.error('Failed to initialize editor:', error)
-    return null
+  public gotoBeginning() {
+    this.resetPlayhead()
+    this.setIsPlaying(false)
+  }
+  public useIsPlaying() {
+    return this.useState(this.getIsPlaying)
   }
 }
 
@@ -610,19 +453,4 @@ const downloadBin = (filename: string, content: Uint8Array) => {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
-}
-
-// Better tab function for CodeMirror
-const betterTab = (cm: any) => {
-  if (cm.somethingSelected()) {
-    cm.indentSelection('add')
-  } else {
-    cm.replaceSelection(
-      cm.getOption('indentWithTabs')
-        ? '\t'
-        : Array(cm.getOption('indentUnit') + 1).join(' '),
-      'end',
-      '+input',
-    )
-  }
 }

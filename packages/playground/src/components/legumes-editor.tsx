@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { initializeEditor, LegumesEditor } from '../legumes-editor'
+import { LegumesEditor } from '../legumes-editor'
 import { SAMPLES } from '../sample-loader'
-import * as Legumes from '@chihiro/legumes'
-import { Menu } from './menu'
+import * as legumes from '@chihiro/legumes'
+import { Menu } from './legumes-menu'
 
 export const LegumesEditorComponent: React.FC = () => {
   const [editor, setEditor] = useState<LegumesEditor | null>(null)
@@ -10,7 +10,12 @@ export const LegumesEditorComponent: React.FC = () => {
   useEffect(() => {
     const initEditor = async () => {
       try {
-        const editor = await initializeEditor(Legumes)
+        const editor = new LegumesEditor(
+          legumes,
+          document.getElementById('out')!,
+          document.getElementById('playhead')!,
+        )
+
         if (editor) {
           setEditor(editor)
           const firstFile = SAMPLES[0]
@@ -27,7 +32,7 @@ export const LegumesEditorComponent: React.FC = () => {
 
     return () => {
       if (editor) {
-        editor.abortPlay()
+        editor.pause()
       }
     }
   }, [])

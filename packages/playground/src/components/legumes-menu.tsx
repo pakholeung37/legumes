@@ -52,10 +52,9 @@ export const Menu = (props: { editor: LegumesEditor }) => {
   // Memoize all action handlers to prevent re-renders
   const handleCompile = useCallback(() => editor.compile(), [editor])
   const handleTogglePlay = useCallback(() => {
-    editor.toggleMidiPlay()
+    editor.tooglePlay()
     setIsPlaying(editor.getIsPlaying())
   }, [editor])
-  const handleDebug = useCallback(() => editor.debugCodeMirror(), [editor])
   const handleToggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
   }, [theme, setTheme])
@@ -182,11 +181,11 @@ export const Menu = (props: { editor: LegumesEditor }) => {
         items: [
           {
             label: 'Play',
-            action: () => editor.playMidi(),
+            action: () => editor.play(),
           },
           {
             label: 'Abort',
-            action: () => editor.abortPlay(),
+            action: () => editor.pause(),
           },
           { label: '---', isSeparator: true },
           {
@@ -304,14 +303,6 @@ export const Menu = (props: { editor: LegumesEditor }) => {
           size={'icon'}
         >
           {isPlaying ? <Pause /> : <Play />}
-        </Button>
-        <Button
-          className="h-6"
-          onClick={handleDebug}
-          variant={'ghost'}
-          size={'icon'}
-        >
-          <Bug />
         </Button>
         <Button
           className="h-6"

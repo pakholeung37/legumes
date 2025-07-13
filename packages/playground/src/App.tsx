@@ -1,10 +1,10 @@
-import { LegumesEditorComponent } from './components/legumes-editor'
+import Editor from './editor/editor'
 import { ThemeProvider } from './components/theme-provider'
 
 function App() {
   return (
     <ThemeProvider defaultTheme="system">
-      <LegumesEditorComponent />
+      <Editor />
     </ThemeProvider>
   )
 }
