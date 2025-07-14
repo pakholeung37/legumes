@@ -12,21 +12,21 @@ import { LRU } from './lru'
  */
 export function memoize(
   opts: { degree: number } = { degree: 1 },
-) {
-  return function <This, Args extends any[], Return>(
-    originalMethod: (this: This, ...args: Args) => Return,
-    context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => Return>
+): MethodDecorator {
+  return function (
+    target: object,
+    propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<any>,
   ) {
-    const methodName = String(context.name)
+    const originalMethod = descriptor.value
 
     // Using symbols to ensure uniqueness and avoid potential property name collisions
-    const cacheSymbol = Symbol(`cache_${methodName}`)
+    const cacheSymbol = Symbol(`cache_${String(propertyKey)}`)
 
-    function memoizedMethod(this: This, ...args: Args): Return {
-      // Type assertion to allow cache assignment
+    descriptor.value = function (...args: any[]) {
+      // Sidestep TypeScript typings.
       const self = this as any
 
-      // Initialize cache on first access
       self[cacheSymbol] ??= new LRU(opts.degree)
 
       let node: LRU<any, any> = self[cacheSymbol]
@@ -36,14 +36,14 @@ export function memoize(
       // map in case the function is variadic.
       if (depth === 0) {
         if (!node.has(depth)) {
-          node.put(depth, originalMethod.apply(this, args))
+          node.put(depth, originalMethod.apply(self, args))
         }
         return node.get(depth)
       }
 
       // We need to traverse the LRU tree, starting with the argument length as a namespace. This takes up more space,
       // but it prevents unintentional exposure of the underlying LRU caches.
-      let value: Return
+      let value
 
       if (!node.has(depth)) {
         node.put(depth, new LRU(opts.degree))
@@ -57,7 +57,7 @@ export function memoize(
         if (isLast) {
           // We're on the last arg, so now is the time to check the value.
           if (!node.has(arg)) {
-            node.put(arg, originalMethod.apply(this, args))
+            node.put(arg, originalMethod.apply(self, args))
           }
           value = node.get(arg)
         } else {
@@ -69,9 +69,9 @@ export function memoize(
         }
       }
 
-      return value!
+      return value
     }
 
-    return memoizedMethod
+    return descriptor
   }
 }
