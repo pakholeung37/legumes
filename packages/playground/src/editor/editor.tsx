@@ -1,20 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as legumes from '@chihiro/legumes'
+import { shallow } from 'zustand/shallow'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/editor/app-sidebar'
-import { EditorInstanceProvider } from './use-editor-instance'
-import { LegumesEditor } from '@/legumes-editor'
-import type { IEditorInstance } from './types'
-import { loadSample, SAMPLES } from '@/sample-loader'
+import { LegumesEditor } from '@/editor/legumes-editor'
+import { loadSample, SAMPLES } from '@/editor/sample-loader'
 import { Header } from './header'
+import { useGlobalStore } from './use-global-store'
 
 export default function Editor() {
   const outRef = useRef<HTMLDivElement>(null)
   const playheadRef = useRef<HTMLDivElement>(null)
-  const [editorInstance, setEditorInstance] = useState<IEditorInstance>(
-    // @ts-ignore
-    useMemo(() => new LegumesEditor(legumes), []),
-  )
+  const setLegumes = useGlobalStore((state) => state.setLegumes)
+
   useEffect(() => {
     // Find required elements
     const outputElement = outRef.current
@@ -25,18 +23,18 @@ export default function Editor() {
     }
 
     // Create and return editor instance
-    const editor = new LegumesEditor(legumes, outputElement, playheadElement)
-    setEditorInstance(editor)
+    const leg = new LegumesEditor(legumes, outputElement, playheadElement)
+    setLegumes(leg)
     // load first sample
     const initEditor = async () => {
       try {
-        if (editor) {
+        if (leg) {
           const firstFile = SAMPLES[0]
-          editor.setSourcePath(firstFile)
+          leg.setSourcePath(firstFile)
           const sample = await loadSample(firstFile)
           if (sample) {
-            editor.setSource(sample)
-            editor.compile()
+            leg.setSource(sample)
+            leg.compile()
           }
         } else {
           console.error('Failed to initialize editor')
@@ -50,17 +48,15 @@ export default function Editor() {
   }, [])
 
   return (
-    <EditorInstanceProvider value={editorInstance ?? ({} as any)}>
-      <SidebarProvider>
-        {editorInstance ? <AppSidebar /> : null}
-        <SidebarInset className="flex h-dvh flex-col">
-          <Header></Header>
-          <div className="flex-1 overflow-auto">
-            <div ref={outRef} className="w-full rounded-xl overflow-auto"></div>
-            <div ref={playheadRef}></div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </EditorInstanceProvider>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className="flex h-dvh flex-col">
+        <Header></Header>
+        <div className="flex-1 overflow-auto">
+          <div ref={outRef} className="w-full rounded-xl overflow-auto"></div>
+          <div ref={playheadRef}></div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

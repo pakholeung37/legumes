@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { AudioWaveform, Command } from 'lucide-react'
 
-import { TeamSwitcher } from '@/editor/team-switcher'
+import { LogoMenu } from '@/editor/logo-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -33,7 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader className="h-12 border-b">
-        <TeamSwitcher teams={teams} />
+        <LogoMenu teams={teams} />
       </SidebarHeader>
       <SidebarContent>
         <CodeEditor />

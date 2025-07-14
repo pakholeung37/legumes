@@ -1,16 +1,16 @@
 // ES Module version of legumes editor for Vite playground
 import * as Legumes from '@chihiro/legumes'
 import { create } from 'zustand'
-import { loadSample } from './sample-loader'
 import { render_score } from '@chihiro/legumes'
 import type { ScoreItf } from '@chihiro/legumes'
-import type { IEditorInstance, IEditorProps } from './editor/types'
+import type { IEditorProps } from './types'
+import { EditorBase } from './editor-base'
 
 // Configuration
-const CONFIG = {
-  INCLUDE_CH_FONT: true,
-  NO_DEP: false, // Set to false for Vite environment
-}
+// const CONFIG = {
+//   INCLUDE_CH_FONT: true,
+//   NO_DEP: false, // Set to false for Vite environment
+// }
 
 // Global state
 let globalState = {
@@ -138,11 +138,7 @@ const nameMidiKey: Record<number, string> = {
 // Utility functions
 
 // Main editor class
-export class LegumesEditor implements IEditorInstance {
-  store
-  getState
-  setState
-  useState
+export class LegumesEditor extends EditorBase {
   public legumes: typeof Legumes
   private outputElement: HTMLElement
   private playheadElement: HTMLElement
@@ -154,6 +150,7 @@ export class LegumesEditor implements IEditorInstance {
     outputElement: HTMLElement,
     playheadElement: HTMLElement,
   ) {
+    super()
     this.legumes = legumes
     this.outputElement = outputElement
     this.playheadElement = playheadElement
@@ -162,34 +159,8 @@ export class LegumesEditor implements IEditorInstance {
       sourcePath: '',
       isPlaying: false,
     }))
-    this.getState = this.store.getState
-    this.setState = this.store.setState
-    this.useState = this.store
+
     this.setOutputFunction(this.legumes.export_svg)
-  }
-
-  public setSource(value: string) {
-    this.setState({ source: value })
-  }
-
-  public getSource(state = this.getState()): string {
-    return state.source
-  }
-
-  public useSource(): string {
-    return this.useState(this.getSource)
-  }
-
-  public setSourcePath(value: string) {
-    this.setState({ sourcePath: value })
-  }
-
-  public getSourcePath(state = this.getState()): string {
-    return state.sourcePath
-  }
-
-  public useSourcePath(): string {
-    return this.useState(this.getSourcePath)
   }
 
   private getExtName(): string {
@@ -226,14 +197,6 @@ export class LegumesEditor implements IEditorInstance {
       this.outputElement.innerHTML = svg
     } catch (e) {
       console.error(e)
-    }
-  }
-
-  public tooglePlay() {
-    if (this.getIsPlaying()) {
-      this.pause()
-    } else {
-      this.play()
     }
   }
 
@@ -400,19 +363,9 @@ export class LegumesEditor implements IEditorInstance {
     return globalState.MIDI_SPD
   }
 
-  public getIsPlaying(state = this.getState()): boolean {
-    return state.isPlaying
-  }
-
-  public setIsPlaying(isPlaying: boolean) {
-    this.setState({ isPlaying })
-  }
   public gotoBeginning() {
     this.resetPlayhead()
     this.setIsPlaying(false)
-  }
-  public useIsPlaying() {
-    return this.useState(this.getIsPlaying)
   }
 }
 

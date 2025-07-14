@@ -1,18 +1,9 @@
-import { createContext, useContext } from 'react'
-import type { IEditorInstance } from './types'
+import type { IEditor } from './types'
+import { useGlobalStore } from './use-global-store'
 
-const EditorInstanceContext = createContext<IEditorInstance>(
-  {} as IEditorInstance,
-)
-
-export const useEditorInstance = () => {
-  const context = useContext(EditorInstanceContext)
-  if (!context) {
-    // throw new Error(
-    //   'useEditorInstance must be used within an EditorInstanceProvider',
-    // )
-  }
-  return context
+export const useEditorInstance = (): IEditor => {
+  const state = useGlobalStore((state) => {
+    return state[state.lib]
+  })
+  return state
 }
-
-export const EditorInstanceProvider = EditorInstanceContext.Provider

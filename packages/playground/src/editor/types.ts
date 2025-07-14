@@ -14,7 +14,7 @@ export interface IWithStore<T> {
   getState: UseBoundStore<StoreApi<T>>['getState']
 }
 
-export interface IEditorInstance<T = IEditorProps> extends IWithStore<T> {
+export interface IEditor<T = IEditorProps> extends IWithStore<T> {
   compile: () => void
   tooglePlay: () => void
   play: () => void
@@ -29,5 +29,4 @@ export interface IEditorInstance<T = IEditorProps> extends IWithStore<T> {
   setSourcePath: (sourcePath: string) => void
   getSourcePath: () => string
   useSourcePath: () => string
-
 }

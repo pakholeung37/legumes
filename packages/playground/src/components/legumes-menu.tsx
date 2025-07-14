@@ -9,8 +9,8 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from '@/components/ui/menubar'
-import type { LegumesEditor } from '../legumes-editor'
-import { SAMPLES } from '../sample-loader'
+import type { LegumesEditor } from '../editor/legumes-editor'
+import { SAMPLES } from '../editor/sample-loader'
 import packageJson from '../../package.json'
 import { Hammer, Play, Pause, Sun, Moon, Bug } from 'lucide-react'
 import { useMemo, useState, useCallback } from 'react'

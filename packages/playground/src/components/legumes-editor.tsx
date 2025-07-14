@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { LegumesEditor } from '../legumes-editor'
-import { SAMPLES } from '../sample-loader'
+import { LegumesEditor } from '../editor/legumes-editor'
+import { SAMPLES } from '../editor/sample-loader'
 import * as legumes from '@chihiro/legumes'
 import { Menu } from './legumes-menu'
 

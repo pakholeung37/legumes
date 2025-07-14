@@ -1,11 +1,11 @@
 export const SAMPLE_GLOBS = {
-  ...import.meta.glob('./samples/*.leg', { query: '?raw', import: 'default' }),
-  ...import.meta.glob('./samples/*.musicxml', {
+  ...import.meta.glob('../samples/*.leg', { query: '?raw', import: 'default' }),
+  ...import.meta.glob('../samples/*.musicxml', {
     query: '?raw',
     import: 'default',
   }),
   // load vexml samples
-  ...import.meta.glob('../../vexml/tests/__data__/**/*.musicxml', {
+  ...import.meta.glob('../../../vexml/tests/__data__/**/*.musicxml', {
     query: '?raw',
     import: 'default',
   }),

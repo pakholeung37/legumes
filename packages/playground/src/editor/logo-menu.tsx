@@ -16,9 +16,10 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useMemo, useState, type ElementType } from 'react'
-import { loadSample, SAMPLES } from '@/sample-loader'
+import { loadSample, SAMPLES } from '@/editor/sample-loader'
 import { useEditorInstance } from './use-editor-instance'
 import { useTheme } from '@/components/theme-provider'
+import { useGlobalStore } from './use-global-store'
 
 interface MenuItem {
   label: string
@@ -27,7 +28,7 @@ interface MenuItem {
   isSeparator?: boolean
 }
 
-export function TeamSwitcher({
+export function LogoMenu({
   teams,
 }: {
   teams: {
@@ -69,6 +70,8 @@ export function TeamSwitcher({
     return result
   }, [editor])
 
+  const { setLib } = useGlobalStore()
+
   const menu: MenuItem[] = useMemo(() => {
     return [
       {
@@ -99,6 +102,23 @@ export function TeamSwitcher({
           {
             label: 'System Theme',
             action: () => setTheme('system'),
+          },
+        ],
+      },
+      {
+        label: 'Lib',
+        items: [
+          {
+            label: 'Legumes',
+            action: () => {
+              setLib('legumes')
+            },
+          },
+          {
+            label: 'Vexml',
+            action: () => {
+              setLib('vexml')
+            },
           },
         ],
       },
