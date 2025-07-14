@@ -18,6 +18,7 @@ import {
 import { useMemo, useState, type ElementType } from 'react'
 import { loadSample, SAMPLES } from '@/sample-loader'
 import { useEditorInstance } from './use-editor-instance'
+import { useTheme } from '@/components/theme-provider'
 
 interface MenuItem {
   label: string
@@ -36,15 +37,20 @@ export function TeamSwitcher({
   }[]
 }) {
   const [activeTeam, setActiveTeam] = useState(teams[0])
+  const { setTheme } = useTheme()
 
   if (!activeTeam) {
     return null
   }
 
   const editor = useEditorInstance()
+
   // Memoize samples menu items with stable references
   const samplesMenuItems = useMemo(() => {
     const result: Record<string, MenuItem[]> = {}
+    if (!editor) {
+      return result
+    }
     SAMPLES.forEach((samplePath) => {
       const [category, sampleName] = samplePath.split('/').slice(-2)
       if (!result[category]) {
@@ -53,6 +59,7 @@ export function TeamSwitcher({
       result[category].push({
         label: sampleName,
         action: async () => {
+          editor.setSourcePath(samplePath)
           const result = await loadSample(samplePath)
           editor.setSource(result)
           editor.compile()
@@ -78,8 +85,25 @@ export function TeamSwitcher({
           items,
         })),
       },
+      {
+        label: 'Theme',
+        items: [
+          {
+            label: 'Dark Theme',
+            action: () => setTheme('dark'),
+          },
+          {
+            label: 'Light Theme',
+            action: () => setTheme('light'),
+          },
+          {
+            label: 'System Theme',
+            action: () => setTheme('system'),
+          },
+        ],
+      },
     ]
-  }, [])
+  }, [setTheme, teams, samplesMenuItems])
 
   return (
     <SidebarMenu>
@@ -90,7 +114,6 @@ export function TeamSwitcher({
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-5 items-center justify-center rounded-md">
                 <activeTeam.logo className="size-3" />
               </div>
-              <span className="truncate font-medium">{activeTeam.name}</span>
               <ChevronDown className="opacity-50" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>

@@ -26,4 +26,8 @@ export interface IEditorInstance<T = IEditorProps> extends IWithStore<T> {
   setSource: (source: string) => void
   getSource: () => string
   useSource: () => string
+  setSourcePath: (sourcePath: string) => void
+  getSourcePath: () => string
+  useSourcePath: () => string
+
 }

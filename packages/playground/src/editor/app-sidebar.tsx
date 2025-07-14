@@ -31,7 +31,7 @@ const teams = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className="border-r-0" {...props}>
+    <Sidebar {...props}>
       <SidebarHeader className="h-12 border-b">
         <TeamSwitcher teams={teams} />
       </SidebarHeader>

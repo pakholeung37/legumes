@@ -1,7 +1,5 @@
 import { Play } from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
-import { useEditorInstance } from './use-editor-instance'
 
 export function NavActions() {
   // const editorInstance = useEditorInstance()

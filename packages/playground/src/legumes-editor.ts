@@ -148,7 +148,6 @@ export class LegumesEditor implements IEditorInstance {
   private playheadElement: HTMLElement
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private synths: Record<string, any> = {}
-  private extName: string = 'leg'
 
   constructor(
     legumes: typeof Legumes,
@@ -181,6 +180,22 @@ export class LegumesEditor implements IEditorInstance {
     return this.useState(this.getSource)
   }
 
+  public setSourcePath(value: string) {
+    this.setState({ sourcePath: value })
+  }
+
+  public getSourcePath(state = this.getState()): string {
+    return state.sourcePath
+  }
+
+  public useSourcePath(): string {
+    return this.useState(this.getSourcePath)
+  }
+
+  private getExtName(): string {
+    return this.getSourcePath().split('.').pop() || 'leg'
+  }
+
   public compile() {
     if (!this.legumes) return
 
@@ -190,13 +205,14 @@ export class LegumesEditor implements IEditorInstance {
 
     try {
       let score: ScoreItf
-      if (this.extName === 'leg') {
+      const extName = this.getExtName()
+      if (extName === 'leg') {
         score = this.legumes.parse_leg(this.getSource())
-      } else if (this.extName === 'musicxml') {
+      } else if (extName === 'musicxml') {
         score = this.legumes.parse_musicxml(this.getSource())
         console.log('score', score)
       } else {
-        throw new Error(`Unsupported file type: ${this.extName}`)
+        throw new Error(`Unsupported file type: ${extName}`)
       }
 
       this.legumes.compile_score(score)
@@ -370,15 +386,6 @@ export class LegumesEditor implements IEditorInstance {
       this.setSource(txto)
       this.compile()
     })
-  }
-
-  public async loadSample(sampleName: string) {
-    const sample = await loadSample(sampleName)
-    if (sample) {
-      this.setSource(sample)
-      this.extName = sampleName.split('.').pop() || 'leg'
-      this.compile()
-    }
   }
 
   public setOutputFunction(func: any) {
