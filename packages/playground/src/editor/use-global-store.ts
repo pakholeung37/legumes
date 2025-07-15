@@ -11,11 +11,12 @@ export const useGlobalStore = create<{
   setLegumes: (instance: LegumesEditor) => void
   setVexml: (instance: VexmlEditor) => void
 }>((set) => ({
-  lib: 'legumes',
+  lib: 'vexml',
   setLib: (lib) => set({ lib }),
   // @ts-ignore
   legumes: new LegumesEditor(legumes),
   setLegumes: (instance) => set({ legumes: instance }),
-  vexml: new VexmlEditor(),
+  // @ts-ignore
+  vexml: new VexmlEditor({ WIDTH: 800 }),
   setVexml: (instance) => set({ vexml: instance }),
 }))

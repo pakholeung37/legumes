@@ -78,6 +78,7 @@ export class Root {
       vexmlContainer.append(vexflowContainer)
     }
 
+    parent.innerHTML = ''
     parent.append(vexmlRoot)
 
     return new Root(vexmlRoot, overlay)
